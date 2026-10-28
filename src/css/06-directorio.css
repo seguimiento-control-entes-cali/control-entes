@@ -1,0 +1,53 @@
+/**
+ * src/css/06-directorio.css
+ * Directorio del gabinete.
+ * Los archivos se unen en orden numérico; un archivo posterior puede sobrescribir reglas de uno anterior.
+ */
+/* ---------- Directorio ---------- */
+.warn-card {
+  border-color: #f5d894;
+  background: #fffbf0;
+}
+.warn-card h3 {
+  color: var(--yelink);
+}
+.dir-list {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+.dir-row {
+  padding: 14px 16px;
+}
+.dir-h {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dir-org {
+  display: block;
+  font-size: 0.92rem;
+  color: var(--azul9);
+  margin-bottom: 6px;
+  line-height: 1.25;
+}
+.dir-f {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 12px;
+}
+.dir-f .field {
+  margin-bottom: 10px;
+}
+.dir-f .ro {
+  padding: 9px 0;
+  font-weight: 600;
+}
+.dir-a {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

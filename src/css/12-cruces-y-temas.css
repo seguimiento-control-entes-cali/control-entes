@@ -1,0 +1,283 @@
+/**
+ * src/css/12-cruces-y-temas.css
+ * Pantalla Cruces y temas.
+ * Los archivos se unen en orden numérico; un archivo posterior puede sobrescribir reglas de uno anterior.
+ */
+/* =====================================================================
+   Cruces y temas
+   ===================================================================== */
+.kpi {
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.kpi .kpi-of {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--faint);
+  margin-top: 6px;
+}
+.cx-help {
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.cx-tabs {
+  margin-bottom: 14px;
+  display: flex;
+  flex-wrap: wrap;
+}
+.cx-tabs .cnt {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--line2);
+  font-size: 0.7rem;
+  margin-left: 4px;
+}
+.cx-tabs button.on .cnt {
+  background: var(--azul2);
+  color: #fff;
+}
+.cx {
+  margin-bottom: 12px;
+  border-left: 4px solid var(--rojoCali);
+}
+.cx.tematico {
+  border-left-color: var(--yel);
+}
+.cx.rev-descartado {
+  opacity: 0.6;
+}
+.cx.rev-confirmado {
+  border-left-color: var(--verdeCali);
+}
+.cx-h {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.idtag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9px;
+  background: var(--panel2);
+  border: 1px solid var(--line2);
+  font-size: 0.8rem;
+}
+.idtag small {
+  color: var(--soft);
+  font-size: 0.7rem;
+}
+.cx-m {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 0.78rem;
+}
+.fam {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--line2);
+  background: var(--panel2);
+}
+.fam-contr {
+  color: #5fa8ff;
+  border-color: rgba(95, 168, 255, 0.45);
+}
+.fam-procu {
+  color: #c792ff;
+  border-color: rgba(199, 146, 255, 0.45);
+}
+.fam-perso {
+  color: #3fd3b0;
+  border-color: rgba(63, 211, 176, 0.45);
+}
+.fam-defen {
+  color: #ffb65c;
+  border-color: rgba(255, 182, 92, 0.45);
+}
+.tema {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--panel2);
+  border: 1px solid var(--line2);
+  color: var(--ink);
+}
+.tema-contractual {
+  color: #5fa8ff;
+  border-color: rgba(95, 168, 255, 0.5);
+}
+.tema-fiscal {
+  color: #ffc44d;
+  border-color: rgba(255, 196, 77, 0.5);
+}
+.tema-disciplinario {
+  color: #ff7a8a;
+  border-color: rgba(255, 122, 138, 0.5);
+}
+.tema-peticion {
+  color: #9fb4d8;
+}
+.tema-ddhh {
+  color: #c792ff;
+  border-color: rgba(199, 146, 255, 0.5);
+}
+.tema-obras {
+  color: #ff9f5c;
+  border-color: rgba(255, 159, 92, 0.5);
+}
+.tema-administrativo {
+  color: #3fd3b0;
+  border-color: rgba(63, 211, 176, 0.5);
+}
+.tema-servicios {
+  color: #7fd8ff;
+  border-color: rgba(127, 216, 255, 0.5);
+}
+.tema-sin {
+  color: var(--faint);
+  border-style: dashed;
+}
+.tb-contractual {
+  background: #5fa8ff;
+}
+.tb-fiscal {
+  background: #ffc44d;
+}
+.tb-disciplinario {
+  background: #ff7a8a;
+}
+.tb-peticion {
+  background: #9fb4d8;
+}
+.tb-ddhh {
+  background: #c792ff;
+}
+.tb-obras {
+  background: #ff9f5c;
+}
+.tb-administrativo {
+  background: #3fd3b0;
+}
+.tb-servicios {
+  background: #7fd8ff;
+}
+.tb-sin {
+  background: var(--faint);
+}
+.cx-rows {
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.cx-row {
+  display: grid;
+  grid-template-columns: 86px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  color: inherit;
+}
+.cx-row:hover {
+  background: var(--panel2);
+}
+.cx-d {
+  font-size: 0.78rem;
+  color: var(--soft);
+}
+.cx-t b {
+  display: block;
+  font-size: 0.84rem;
+}
+.cx-t small {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--soft);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+.cx-f {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+.lnk {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.lnk:hover {
+  text-decoration: underline;
+  color: var(--azul2);
+}
+.tm-x td,
+.tm-x th {
+  white-space: nowrap;
+}
+.tm-x .bar {
+  height: 8px;
+}
+.cx-sel {
+  min-width: 170px;
+  padding: 6px 26px 6px 8px;
+  font-size: 0.78rem;
+}
+@media (max-width: 960px) {
+  .cx-row {
+    grid-template-columns: 1fr auto;
+  }
+  .cx-d {
+    grid-column: 1 / -1;
+  }
+  .cx-f .btn {
+    flex: 1;
+  }
+}
+
+.cx-help summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cx-help summary::-webkit-details-marker {
+  display: none;
+}
+.cx-help summary::after {
+  content: "+";
+  margin-left: auto;
+  font-weight: 800;
+  color: var(--soft);
+}
+.cx-help[open] summary::after {
+  content: "−";
+}

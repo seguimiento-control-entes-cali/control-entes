@@ -1,0 +1,155 @@
+--- a/src/js/19-planes-de-mejoramiento.js	2026-10-25 02:39:37.000000000 +0000
++++ b/src/js/19-planes-de-mejoramiento.js	2026-10-28 01:56:28.027413747 +0000
+@@ -260,7 +260,7 @@
+   return out;
+ }
+ /* Dependencia mencionada en un texto ("Nora Mondragón – Secretaria de Gobierno") */
+-function pmDepMatch(txt) {
++function pmDepMatch(txt, soloNombreCompleto) {
+   const k = ' ' + orgKey(txt) + ' ';
+   if (k.trim().length < 4) return null;
+   let best = null,
+@@ -273,6 +273,7 @@
+     }
+   });
+   if (best) return best.id;
++  if (soloNombreCompleto) return null;
+   /* nombre corto: "Planeación", "Gobierno" (sin "Secretaría de", "Departamento Administrativo de") */
+   S.deps.forEach(d => {
+     const core = orgKey(d.nombre)
+@@ -289,6 +290,64 @@
+   return best ? best.id : null;
+ }
+ 
++/* Dependencia de una acción importada, en este orden: nombre completo (en el responsable o en el lugar
++   de verificación), sigla (DAGMA, DATIC, DAPM, UAESPM…), «tipo + primera palabra» cuando es única
++   («Secretaría del Deporte»), y solo al final el nombre corto. Así «Subsecretario de Infraestructura
++   Deportiva - Secretaría del Deporte» no se asigna a Infraestructura. */
++const PM_DEP_CONECTORES = new Set(['de', 'del', 'la', 'las', 'los', 'el', 'y', 'e', 'para']);
++function pmDepSigla(txt) {
++  const t =
++    ' ' +
++    String(txt || '')
++      .normalize('NFD')
++      .replace(/[\u0300-\u036f]/g, '')
++      .toUpperCase()
++      .replace(/[^A-Z0-9]+/g, ' ') +
++    ' ';
++  const hits = S.deps.filter(d => {
++    const pal = orgKey(d.nombre)
++      .split(' ')
++      .filter(w => w && !PM_DEP_CONECTORES.has(w));
++    const sigla = pal
++      .map(w => w[0])
++      .join('')
++      .toUpperCase();
++    const entre = (/\(([A-Za-z]{4,})\)/.exec(d.nombre) || [])[1];
++    return (
++      (sigla.length >= 4 && t.includes(' ' + sigla + ' ')) ||
++      (entre && t.includes(' ' + entre.toUpperCase() + ' '))
++    );
++  });
++  return hits.length === 1 ? hits[0].id : null;
++}
++function pmDepCabeza(txt) {
++  const k = ' ' + orgKey(txt) + ' ';
++  const cab = d => {
++    const w = orgKey(d.nombre).split(' ');
++    const i = w.findIndex(
++      (x, n) => n > 0 && PM_DEP_CONECTORES.has(x) && w[n + 1] && !PM_DEP_CONECTORES.has(w[n + 1])
++    );
++    return i > 0 ? w.slice(0, i + 2).join(' ') : null;
++  };
++  const cabezas = S.deps.map(d => [d, cab(d)]).filter(x => x[1]);
++  const hits = cabezas.filter(
++    ([, c]) => k.includes(' ' + c + ' ') && cabezas.filter(y => y[1] === c).length === 1
++  );
++  return hits.length === 1 ? hits[0][0].id : null;
++}
++function pmDepImport(resp, lugar) {
++  return (
++    pmDepMatch(resp, true) ||
++    pmDepMatch(lugar, true) ||
++    pmDepSigla(resp) ||
++    pmDepSigla(lugar) ||
++    pmDepCabeza(resp) ||
++    pmDepCabeza(lugar) ||
++    pmDepMatch(resp) ||
++    pmDepMatch(lugar)
++  );
++}
++
+ /* =====================================================================
+    DATOS
+    ===================================================================== */
+@@ -2869,18 +2928,25 @@
+     noviembre: 11,
+     diciembre: 12
+   };
+-  const mf = /(\d{1,2}) de ([a-záéíóú]+) de (\d{4})/i.exec(pag1.join(' '));
++  const mf =
++    /(\d{1,2}) de ([a-záéíóú]+) de (\d{4})/i.exec(pag1.join(' ')) ||
++    (m => m && [m[0], m[2], m[1], m[3]])(/([a-záéíóú]+) (\d{1,2}),? de (\d{4})/i.exec(pag1.join(' ')));
+   const fecha_informe = mf && MES[pmKey(mf[2])] ? `${mf[3]}-${pad(MES[pmKey(mf[2])])}-${pad(+mf[1])}` : null;
+   /* hallazgos: encabezado en mayúsculas que puede ocupar varias líneas; se omite la tabla de contenido */
+   const hall = [];
+   let depPrev = null;
+   const finSeccion = /^\d+\.\s*(resumen|relaci[oó]n de hallazgos|anexos)\b/i;
+-  const inicioH = t => /^(\d+(?:\.\d+)*)\s+hallazgo\b/i.test(t);
++  const inicioH = t => /^(\d+(?:\.\d+)*)\.?\s+hallazgo\b/i.test(t);
+   for (let i = 0; i < T.length; i++) {
+     if (!inicioH(T[i])) continue;
+     let j = i,
+       enc = T[i];
+-    let indice = /\s\d{1,3}$/.test(T[i]);
++    let indice = /\s\d{1,3}$/.test(T[i]) || /\.{5,}/.test(T[i]);
++    /* índice con líneas de puntos: «3.1. Hallazgo … ........ 12», aunque el título no esté en mayúsculas */
++    for (let q = i + 1; !indice && q <= i + 3 && q < T.length && lineas[q].pag === lineas[i].pag; q++) {
++      if (inicioH(T[q])) break;
++      if (/\.{5,}\s*\d{1,3}\s*$/.test(T[q])) indice = true;
++    }
+     /* el encabezado continúa en las líneas siguientes en mayúsculas, sin pasar a otra página */
+     while (
+       j + 1 < T.length &&
+@@ -2927,9 +2993,10 @@
+     if (/sancionatori/.test(ke)) conn.push('sancionatoria');
+     if (/otra incidencia|otras incidencias|otro hallazgo/.test(ke)) conn.push('otra');
+     const num =
+-      (/n\s*[°ºo.]*\s*(\d+)/i.exec(enc.replace(/^\d+(?:\.\d+)*\s+/, '')) || [])[1] || String(hall.length + 1);
++      (/n\s*[°ºo.]*\s*(\d+)/i.exec(enc.replace(/^\d+(?:\.\d+)*\.?\s+/, '')) || [])[1] ||
++      String(hall.length + 1);
+     const titulo = enc
+-      .replace(/^\d+(?:\.\d+)*\s+/, '')
++      .replace(/^\d+(?:\.\d+)*\.?\s+/, '')
+       .split(/\s+[–-]\s+|\s*[–]\s*/)
+       .map(x => x.trim())
+       .filter(x => x && !/^hallazgo\b/i.test(x) && !/^con presunta incidencia/i.test(x))
+@@ -2946,7 +3013,9 @@
+       const mq = /(?:detrimento|da[ñn]o patrimonial|cuant[ií]a)[^$]{0,120}\$\s?([\d.]+(?:,\d+)?)/i.exec(
+         texto
+       );
+-      if (mq) cuantia = Number(mq[1].replace(/\./g, '').replace(',', '.'));
++      /* también «… por $7.854.441, conllevando a un detrimento …» (la cifra antes de la palabra) */
++      const mr = mq || /\$\s?([\d.]+(?:,\d+)?)[^$]{0,80}(?:detrimento|da[ñn]o patrimonial)/i.exec(texto);
++      if (mr) cuantia = Number(mr[1].replace(/\./g, '').replace(',', '.'));
+     }
+     hall.push({
+       numero: num,
+@@ -3105,7 +3174,7 @@
+     const k0 = pmKey(all[0]);
+     const pie =
+       /^totales?\b/.test(k0) || /\b(firma del representante|nombre y firma|elaboro|convenciones)\b/.test(k0);
+-    if (pie && (!acc || pmKey(acc) === k0)) break;
++    if (pie && (!acc || pmKey(acc) === k0 || !pmFecha(g('ffin')))) break;
+     /* segunda fila de un encabezado combinado */
+     if (Object.keys(pmMapHeader(row)).length >= 4) continue;
+     if (!acc && !pmTxt(g('descripcion'))) continue;
+@@ -3271,7 +3340,7 @@
+       ffinRaw: g('ffin'),
+       ffin: pmFecha(g('ffin')),
+       responsable: resp,
+-      dependencia_id: pmDepMatch(resp),
++      dependencia_id: pmDepImport(resp, pmTxt(g('lugar'))),
+       avance: null,
+       fecha_corte: null,
+       descripcion_avance: pmTxt(g('descav')) || pmTxt(g('obs')),

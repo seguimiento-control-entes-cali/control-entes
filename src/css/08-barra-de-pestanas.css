@@ -1,0 +1,9 @@
+/**
+ * src/css/08-barra-de-pestanas.css
+ * Barra de pestañas inferior del celular.
+ * Los archivos se unen en orden numérico; un archivo posterior puede sobrescribir reglas de uno anterior.
+ */
+/* ---------- Barra de pestañas del celular ---------- */
+.tabbar {
+  display: none;
+}

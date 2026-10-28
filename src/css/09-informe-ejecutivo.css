@@ -1,0 +1,177 @@
+/**
+ * src/css/09-informe-ejecutivo.css
+ * Informe ejecutivo en pantalla y al imprimir o guardar como PDF.
+ * Los archivos se unen en orden numérico; un archivo posterior puede sobrescribir reglas de uno anterior.
+ */
+/* ---------- Informe ejecutivo ---------- */
+.paper {
+  background: #fff;
+  color: #13203a;
+  border-radius: 12px;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 34px 40px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.5;
+  box-shadow: 0 12px 40px rgba(19, 32, 58, 0.15);
+  border: 1px solid var(--line);
+  -webkit-user-select: text;
+  user-select: text;
+}
+.paper h1 {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px;
+  line-height: 1.2;
+  margin: 4px 0 6px;
+  color: #0b3d91;
+  letter-spacing: 0;
+}
+.paper h2 {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  margin: 0 0 10px;
+  color: #0b3d91;
+  border-bottom: 2px solid #2f66c9;
+  padding-bottom: 5px;
+  letter-spacing: 0;
+}
+.paper h3 {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12.5px;
+  margin: 14px 0 8px;
+  color: #0b3d91;
+  letter-spacing: 0;
+}
+.paper p {
+  margin: 0 0 9px;
+}
+.rsec {
+  margin: 0 0 20px;
+}
+.rhead {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  border-bottom: 3px solid #d4a72c;
+  padding-bottom: 14px;
+}
+.rsmall {
+  font-size: 10.5px;
+  color: #55627a;
+}
+.rgrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.rk {
+  border: 1px solid #dde3ec;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #f6f8fc;
+}
+.rk span {
+  display: block;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #55627a;
+  margin-bottom: 3px;
+}
+.rk b {
+  font-size: 18px;
+}
+.rt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+}
+.rt th {
+  background: #eaf1fb;
+  color: #0b3d91;
+  text-align: left;
+  padding: 6px 7px;
+  border: 1px solid #dde3ec;
+}
+.rt td {
+  padding: 5px 7px;
+  border: 1px solid #e6eaf2;
+  vertical-align: top;
+}
+.rt tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.rflow {
+  break-inside: auto !important;
+  page-break-inside: auto !important;
+}
+.rfoot {
+  font-size: 9.5px;
+  color: #55627a;
+  border-top: 1px solid #dde3ec;
+  padding-top: 8px;
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 11mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  .app {
+    display: block !important;
+  }
+  .sidebar,
+  .topbar,
+  .banner,
+  .no-print,
+  #toasts,
+  .mobile-ov,
+  #modalRoot,
+  .toolbar,
+  .tabbar {
+    display: none !important;
+  }
+  .main,
+  .content {
+    padding: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+  .paper {
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .paper,
+  .paper * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .rsec {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .rsec.rflow {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+  .card {
+    box-shadow: none;
+  }
+}
+@media (max-width: 700px) {
+  .paper {
+    padding: 20px 16px;
+  }
+  .rgrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

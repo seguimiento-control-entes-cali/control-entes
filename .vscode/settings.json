@@ -1,0 +1,9 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[python]": { "editor.defaultFormatter": "ms-python.python" },
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "search.exclude": { "dist": true, "build": true, "vendor": true, "datos/demo": true },
+  "files.associations": { "*.webmanifest": "json" }
+}

@@ -1,0 +1,14 @@
+# Dependencias y salidas generadas
+node_modules/
+dist/
+build/
+
+# Datos reales: NUNCA se suben al repositorio
+datos_privados/*
+!datos_privados/LEEME.md
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+*.log
+.env

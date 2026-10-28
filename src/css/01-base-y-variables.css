@@ -1,0 +1,118 @@
+/**
+ * src/css/01-base-y-variables.css
+ * Variables de color, tipografía y tamaños (paleta de la bandera de Cali y oro del escudo).
+ * Los archivos se unen en orden numérico; un archivo posterior puede sobrescribir reglas de uno anterior.
+ */
+/* =====================================================================
+   Control de Entes · Identidad Alcaldía de Santiago de Cali
+   Paleta tomada de la bandera de Cali (azul, rojo, blanco, verde) y el oro del escudo.
+   ===================================================================== */
+:root {
+  --azul: #0b3d91;
+  --azul2: #2f66c9;
+  --azul7: #082f72;
+  --azul9: #062456;
+  --azul10: #041a40;
+  --oro: #d4a72c;
+  --rojoCali: #d21f3c;
+  --verdeCali: #138a44;
+  --bg: #f3f5fa;
+  --bg2: #eaeef5;
+  --panel: #ffffff;
+  --panel2: #f6f8fc;
+  --line: #e1e6ef;
+  --line2: #cdd5e2;
+  --ink: #13203a;
+  --soft: #55627a;
+  --faint: #6a768c;
+  /* nombres heredados que usa la lógica de la app */
+  --green: #0b3d91;
+  --green2: #082f72;
+  --glow: #0e6e36;
+  --gdim: #e3f4ea;
+  --gold: #d4a72c;
+  --red: #d21f3c;
+  --redbg: #fce8eb;
+  --redink: #b0172f;
+  --yel: #f2b230;
+  --yelbg: #fdf3dc;
+  --yelink: #9a5b00;
+  --side: 276px;
+  --side-c: 78px;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(19, 32, 58, 0.06), 0 2px 8px rgba(19, 32, 58, 0.04);
+  --tab-h: 64px;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family:
+    Archivo,
+    Inter,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--azul9);
+}
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.hidden {
+  display: none !important;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+a {
+  color: var(--azul);
+}
+::selection {
+  background: rgba(11, 61, 145, 0.18);
+}
+:focus-visible {
+  outline: 3px solid var(--oro);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c3ccda;
+  border-radius: 8px;
+}

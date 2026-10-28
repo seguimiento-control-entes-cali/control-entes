@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#040A19">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>{{TITULO}}</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+{{ICONOS}}
+{{FUENTES}}
+<!-- Estilos: src/css/*.css, unidos en orden por scripts/build.mjs -->
+<style>
+{{CSS}}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen" class="login hidden">
+  <div class="card">
+    <div class="shield"><img id="loginShield" alt="Escudo de Santiago de Cali"></div>
+    <h2 style="text-align:center;font-size:1.3rem">Control de Entes</h2>
+    <p class="muted" style="text-align:center;margin:4px 0 20px;font-size:.84rem">Alcaldía de Santiago de Cali · Acceso institucional</p>
+    <form id="loginForm" autocomplete="on">
+      <div class="field"><label>Correo institucional</label><input id="loginEmail" type="email" placeholder="nombre@cali.gov.co" required autocomplete="username"></div>
+      <div class="field"><label>Contraseña</label><input id="loginPass" type="password" required autocomplete="current-password"></div>
+      <div id="loginErr" class="err hidden" style="margin-bottom:12px"></div>
+      <button class="btn primary" style="width:100%" id="loginBtn" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Ingresar</button>
+    </form>
+    <button class="btn" type="button" data-act="olvideClave" style="width:100%;margin-top:10px;border:0;background:none;box-shadow:none">¿Olvidaste tu contraseña?</button>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="app hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="shield"><img src="{{ESCUDO}}" alt="Escudo de Santiago de Cali"></div>
+      <div class="brand-t"><b>Control de Entes</b><small>Alcaldía de Santiago de Cali</small></div>
+      <button class="icon-btn" id="btnCollapse" title="Contraer menú" aria-label="Contraer menú"><i class="fa-solid fa-angles-left"></i></button>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="user">
+      <div class="avatar"><i class="fa-regular fa-user"></i></div>
+      <div class="user-t"><b id="uEmail">—</b><small id="uRole">—</small></div>
+      <button class="icon-btn logout" data-act="miClave" title="Mi cuenta y seguridad" aria-label="Mi cuenta y seguridad"><i class="fa-solid fa-key"></i></button>
+      <button class="icon-btn logout" id="btnLogout" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+  </aside>
+  <div class="mobile-ov" id="mobileOv"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn burger" id="btnBurger" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+      <div class="tb-shield"><img id="tbShield" alt="Escudo de Santiago de Cali"></div>
+      <div class="title"><h2 id="pageTitle">Tablero</h2><small id="pageSub"></small></div>
+      <div class="spacer"></div>
+      <select id="demoRole" class="hidden hide-m" title="Ver como (solo demostración)"></select>
+      <select id="demoDep" class="hidden hide-m" title="Dependencia (solo demostración)"></select>
+      <select id="selVigencia" title="Vigencia"></select>
+      <span class="hud" id="hudClock"></span><span class="mode" id="modeBadge"><i class="dot"></i><span id="modeTxt"></span></span>
+    </header>
+    <div id="banner" class="banner hidden"></div>
+    <section class="content" id="content"></section>
+  </main>
+</div>
+
+<nav class="tabbar" id="tabbar" aria-label="Secciones principales"></nav>
+<div id="modalRoot"></div>
+<div id="toasts"></div>
+
+
+{{DATOS}}{{SUPABASE}}
+<!-- Lógica: src/js/*.js, unidos en orden por scripts/build.mjs dentro de un único ámbito -->
+<script>{{JS}}</script>
+</body>
+</html>

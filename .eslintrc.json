@@ -1,0 +1,19 @@
+{
+  "root": true,
+  "env": { "browser": true, "es2022": true },
+  "parserOptions": { "ecmaVersion": 2022, "sourceType": "script" },
+  "globals": { "supabase": "readonly" },
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-undef": "error",
+    "no-dupe-keys": "error",
+    "no-unreachable": "error",
+    "no-redeclare": "error",
+    "no-unused-vars": ["warn", { "args": "none", "caughtErrors": "none" }],
+    "no-empty": ["warn", { "allowEmptyCatch": true }],
+    "no-case-declarations": "off",
+    "no-useless-escape": "off",
+    "no-cond-assign": ["error", "except-parens"],
+    "no-control-regex": "off"
+  }
+}

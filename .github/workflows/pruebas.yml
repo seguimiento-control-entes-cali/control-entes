@@ -1,0 +1,22 @@
+# Se ejecuta en cada envío y en cada solicitud de cambios: construye y prueba la app.
+name: Pruebas
+on:
+  push:
+  pull_request:
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci || npm install
+      - name: Formato del código
+        run: npm run formato:revisar
+      - name: Revisión estática (ESLint)
+        run: npm run lint
+      - name: Reglas de negocio
+        run: npm test
+      - name: Construir todas las variantes publicables
+        run: npm run build && npm run build:demo

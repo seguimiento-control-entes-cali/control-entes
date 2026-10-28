@@ -1,0 +1,10 @@
+{
+  "printWidth": 110,
+  "singleQuote": true,
+  "trailingComma": "none",
+  "arrowParens": "avoid",
+  "semi": true,
+  "quoteProps": "preserve",
+  "bracketSpacing": true,
+  "overrides": [{ "files": "*.css", "options": { "singleQuote": false } }]
+}

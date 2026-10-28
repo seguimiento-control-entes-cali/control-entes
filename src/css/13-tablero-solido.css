@@ -1,0 +1,487 @@
+/**
+ * src/css/13-tablero-solido.css
+ * Versión 2.1: superficies sólidas (sin vidrio translúcido) y tablero de teclas del centro de mando.
+ * Se carga al final y sobrescribe el tema "Sala de control" (archivo 11). El semáforo usa colores
+ * sólidos con contraste verificado (WCAG AA) y cada estado va también escrito, no solo en color.
+ */
+:root {
+  --bg: #071631;
+  --bg2: #0a1f44;
+  --panel: #0f2148;
+  --panel2: #13285a;
+  --line: #1d3466;
+  --line2: #2a4580;
+  --ink: #f2f5fb;
+  --soft: #a9b8d6;
+  --faint: #8797b8;
+  /* Semáforo: tecla (fondo), borde de relieve y tinta sobre fondo oscuro */
+  --sem-r: #c8283e;
+  --sem-r-ed: #7e1424;
+  --sem-r-ink: #ff6b7d;
+  --sem-a: #f2a900;
+  --sem-a-ed: #9a6a00;
+  --sem-a-ink: #ffc23d;
+  --sem-a-tx: #2b1f00;
+  --sem-v: #178a47;
+  --sem-v-ed: #0b5229;
+  --sem-v-ink: #3dd27a;
+  --sem-g: #22355e;
+  --sem-g-ed: #121f3c;
+  --sem-g-ink: #c9d4ea;
+  /* El verde del tema anterior era menta (#38d99a) y se confundía con el azul: ahora es verde */
+  --glow: #3dd27a;
+  --gdim: rgba(31, 165, 87, 0.18);
+  --red: #e8384f;
+  --redbg: rgba(232, 56, 79, 0.16);
+  --redink: #ff8a99;
+  --yel: #f2a900;
+  --yelbg: rgba(242, 169, 0, 0.16);
+  --yelink: #ffc23d;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Sin vidrio: fondos opacos en toda la app ---------- */
+*,
+*::before,
+*::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html,
+body {
+  background: var(--bg);
+}
+body {
+  background-image: none;
+}
+body::before {
+  display: none;
+}
+.card,
+.modal,
+.sidebar,
+.login .card {
+  background: var(--panel);
+}
+.topbar {
+  background: var(--bg) !important;
+}
+
+/* ---------- Centro de mando ---------- */
+.cmd {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  border-radius: 18px;
+}
+.cmd::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  opacity: 1;
+  -webkit-mask-image: none;
+  mask-image: none;
+  background: linear-gradient(
+    90deg,
+    #2f66c9 0 28.57%,
+    #d21f3c 28.57% 42.86%,
+    #ffffff 42.86% 57.14%,
+    #d21f3c 57.14% 71.43%,
+    #1fa557 71.43% 100%
+  );
+}
+.cmd-line {
+  margin-top: 6px;
+}
+.cmd-fig {
+  display: block;
+}
+.cmd-head {
+  margin: 14px 0 0;
+  font:
+    650 clamp(1.7rem, 4.2vw, 2.35rem) / 1.05 Archivo,
+    Inter,
+    sans-serif;
+  font-stretch: 82%;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.cmd-head span {
+  color: var(--soft);
+  font-weight: 500;
+}
+.cmd-fig p {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #c9d4ea;
+}
+.cmd-fig p b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Filtros por estado: compactos, el protagonista es el tablero */
+.states {
+  margin-top: 16px;
+  gap: 8px;
+}
+.st {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.st[data-s="rojo"] b {
+  color: var(--sem-r-ink);
+}
+.st[data-s="amarillo"] b {
+  color: var(--sem-a-ink);
+}
+.st[data-s="verde"] b {
+  color: var(--sem-v-ink);
+}
+.st[data-s="gris"] b {
+  color: var(--sem-g-ink);
+}
+.sw-r {
+  background: var(--sem-r) !important;
+  box-shadow: none !important;
+}
+.sw-y {
+  background: var(--sem-a) !important;
+  box-shadow: none !important;
+}
+.sw-g {
+  background: var(--sem-v) !important;
+  box-shadow: none !important;
+}
+.sw-n {
+  background: #3a4e7a !important;
+  box-shadow: none !important;
+}
+.st[aria-pressed="true"] {
+  border-color: var(--ink);
+}
+
+/* ---------- Tablero de teclas ---------- */
+.tm {
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 9px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #061430;
+  border: 1px solid var(--line);
+}
+.tile {
+  --ed: var(--sem-g-ed);
+  min-height: 84px;
+  padding: 10px 11px 9px;
+  border: 0 solid var(--ed);
+  border-bottom-width: 5px;
+  border-radius: 10px;
+  background: var(--sem-g);
+  color: var(--sem-g-ink);
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    transform 0.07s ease-out,
+    border-bottom-width 0.07s ease-out,
+    margin 0.07s ease-out,
+    opacity 0.25s,
+    filter 0.15s;
+}
+.tile::before,
+.tile::after {
+  display: none;
+}
+.tile b {
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  -webkit-line-clamp: 2;
+}
+.tile .num {
+  font:
+    700 1.3rem/1 Archivo,
+    Inter,
+    sans-serif;
+  font-stretch: 80%;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  text-shadow: none;
+  letter-spacing: 0;
+}
+.tile small {
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.85;
+}
+.tile.rojo {
+  --ed: var(--sem-r-ed);
+  background: var(--sem-r);
+  color: #ffffff;
+  border-color: var(--ed);
+  box-shadow: none;
+}
+.tile.amarillo {
+  --ed: var(--sem-a-ed);
+  background: var(--sem-a);
+  color: var(--sem-a-tx);
+  border-color: var(--ed);
+}
+.tile.verde {
+  --ed: var(--sem-v-ed);
+  background: var(--sem-v);
+  color: #ffffff;
+  border-color: var(--ed);
+}
+.tile.gris {
+  --ed: var(--sem-g-ed);
+  border-style: solid;
+  border-width: 0 0 5px;
+  border-color: var(--ed);
+  background: var(--sem-g);
+}
+.tile.gris .num {
+  color: var(--sem-g-ink);
+}
+.tile:hover {
+  transform: none;
+  box-shadow: none;
+  filter: brightness(1.08);
+  border-color: var(--ed);
+}
+/* La tecla se hunde al presionarla y se queda abajo mientras está seleccionada */
+.tile:active,
+.tile.on {
+  transform: translateY(4px);
+  border-bottom-width: 1px;
+  margin-bottom: 4px;
+}
+.tile.on {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.tile:focus-visible {
+  outline: 2px solid var(--sem-a-ink);
+  outline-offset: 2px;
+}
+.tm.filtering .tile:not(.match) {
+  opacity: 0.22;
+  filter: saturate(0.3);
+}
+
+/* Detalle de la tecla presionada */
+.tm-det {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  border-left: 6px solid #3a4e7a;
+  color: var(--ink);
+  min-height: 64px;
+}
+.tm-det.vacio {
+  display: flex;
+  align-items: center;
+  color: var(--soft);
+  font-size: 0.9rem;
+  border-left-color: var(--line2);
+}
+.tm-det.rojo {
+  border-left-color: var(--sem-r);
+}
+.tm-det.amarillo {
+  border-left-color: var(--sem-a);
+}
+.tm-det.verde {
+  border-left-color: var(--sem-v);
+}
+.tmd-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.tmd-h b {
+  display: block;
+  font:
+    650 1.1rem/1.2 Archivo,
+    Inter,
+    sans-serif;
+}
+.tmd-e {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.86rem;
+  color: var(--soft);
+}
+.tm-det.rojo .tmd-e {
+  color: var(--sem-r-ink);
+}
+.tm-det.amarillo .tmd-e {
+  color: var(--sem-a-ink);
+}
+.tm-det.verde .tmd-e {
+  color: var(--sem-v-ink);
+}
+.tmd-n {
+  margin: 10px 0 0;
+  font-size: 0.86rem;
+  color: var(--soft);
+}
+/* Barra con las tres zonas del semáforo pintadas de fondo */
+.tmd-trk {
+  position: relative;
+  height: 10px;
+  margin-top: 12px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #16384f 0 20%, #3a3622 20% 40%, #3b2236 40% 100%);
+}
+.tmd-trk i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 5px;
+  background: #5e6e8c;
+}
+.tm-det.rojo .tmd-trk i {
+  background: var(--sem-r);
+}
+.tm-det.amarillo .tmd-trk i {
+  background: var(--sem-a);
+}
+.tm-det.verde .tmd-trk i {
+  background: var(--sem-v);
+}
+.tmd-esc {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 0.72rem;
+  color: var(--faint);
+}
+
+/* Leyenda */
+.cmd-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+  font-size: 0.76rem;
+  color: var(--soft);
+}
+.cmd-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.cmd-legend-w {
+  color: var(--faint);
+}
+
+/* Cifras rápidas y lectura del corte, también sólidas */
+.trio button {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+.trio .t-r {
+  color: var(--sem-r-ink);
+}
+.trio .t-y {
+  color: var(--sem-a-ink);
+}
+.pill.verde {
+  background: var(--gdim);
+  color: var(--sem-v-ink);
+}
+.bar .verde {
+  background: var(--sem-v);
+}
+.kpi.g::before {
+  background: var(--sem-v);
+}
+.kpi.g b {
+  color: var(--sem-v-ink);
+}
+
+/* ---------- Celular ---------- */
+@media (max-width: 520px) {
+  .tm {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    padding: 9px;
+  }
+  .tile {
+    min-height: 78px;
+    padding: 8px 8px 7px;
+  }
+  .tile b {
+    font-size: 0.72rem;
+  }
+  .tile .num {
+    font-size: 1.1rem;
+  }
+  .tmd-h .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    transition: none;
+  }
+}
+
+/* Barra inferior del celular: opaca para que el contenido no se vea por detrás */
+@media (max-width: 960px) {
+  .topbar {
+    background: #071631 !important;
+  }
+  .tabbar {
+    background: #0b1d40 !important;
+    border-color: var(--line2) !important;
+  }
+}
+@media (max-width: 520px) {
+  .tile .tl-f {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
+
+/* Barra superior: el reloj y el indicador "En línea" nunca se encogen ni se cortan.
+   Si falta espacio, se acorta el subtítulo de la pantalla con puntos suspensivos. */
+.topbar .hud,
+.topbar .mode,
+.topbar select {
+  flex: none;
+}
+.topbar .title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.topbar .title h2,
+.topbar .title small {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar .mode {
+  padding: 5px 12px;
+}

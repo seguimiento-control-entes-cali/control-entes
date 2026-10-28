@@ -1,0 +1,104 @@
+/**
+ * src/css/05-cumplimiento-e-historico.css
+ * Ranking de cumplimiento e histórico de radicados.
+ * Los archivos se unen en orden numérico; un archivo posterior puede sobrescribir reglas de uno anterior.
+ */
+/* ---------- Cumplimiento / histórico ---------- */
+.stack {
+  display: flex;
+  height: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg2);
+  min-width: 120px;
+}
+.stack span {
+  display: block;
+  height: 100%;
+}
+.stack .ok {
+  background: #4fb57c;
+}
+.stack .tar {
+  background: #f2b230;
+}
+.stack .sin {
+  background: #e0566b;
+}
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  color: var(--soft);
+  margin: 2px 0 12px;
+}
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.top3 {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: 14px;
+}
+.top-card {
+  border: 1px solid #f3c2ca;
+  background: linear-gradient(180deg, #fff, #fff5f6);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.top-card .n {
+  font-family: Archivo, Inter, sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--redink);
+  line-height: 1;
+}
+.top-card b {
+  display: block;
+  font-size: 0.88rem;
+  margin: 8px 0 2px;
+}
+.seg {
+  display: inline-flex;
+  background: var(--bg2);
+  border-radius: 11px;
+  padding: 3px;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--soft);
+  border-radius: 9px;
+}
+.seg button.on {
+  background: var(--panel);
+  color: var(--azul9);
+  box-shadow: 0 1px 3px rgba(19, 32, 58, 0.15);
+}
+.pager {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+tr.click td .org {
+  font-weight: 600;
+}
+.tbl input {
+  padding: 7px 9px;
+  font-size: 0.82rem;
+  min-width: 120px;
+}
