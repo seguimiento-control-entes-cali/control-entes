@@ -476,6 +476,9 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 - [ ] `frontend/` con Vite + React + TypeScript strict, ESLint/Prettier actuales, Vitest.
 - [ ] Reglas de fronteras (§7.1) activas en ESLint.
 - [ ] CI `frontend.yml` (tipos, lint, pruebas, build) en verde; la CI de la 2.x sigue igual.
+- [ ] La plantilla `frontend/ci/frontend.yml` corre las pruebas en **dos zonas horarias**, `TZ=UTC` y
+      `TZ=America/Bogota`: las del frontend y las de la 2.x (`node tests/ejecutar-pruebas.cjs`). Decidido en la tarea
+      2.6.2 (28-oct-2026), donde una prueba fallaba solo con la hora de Colombia.
 - [ ] ADR 0001 (D-03), 0002 (D-23), 0003 (D-24).
 
 **Salida:** `npm run dev` levanta una página vacía con la CI en verde.
