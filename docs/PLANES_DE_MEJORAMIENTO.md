@@ -88,8 +88,8 @@ fuente de verificación, plazo de cero días, fechas anteriores a la suscripció
 Ejecutar una vez `supabase/13_planes_mejoramiento.sql` en el SQL Editor (es idempotente). Al final muestra el
 conteo de las cuatro tablas (en cero la primera vez). Si no se ha ejecutado, la pantalla lo indica.
 
-La lectura y escritura de Excel usa SheetJS 0.18.5 (cdnjs), que se descarga solo al importar o exportar y queda
-guardado por el service worker.
+La lectura y escritura de Excel usa SheetJS 0.20.3, servida desde `vendor/web/` (se publica como `vendor/` junto a
+`index.html`, sin internet). Se carga solo al importar o exportar y el service worker la guarda para uso sin conexión.
 
 
 ## Reglas de la Contraloría General de Santiago de Cali (versión 2.6)

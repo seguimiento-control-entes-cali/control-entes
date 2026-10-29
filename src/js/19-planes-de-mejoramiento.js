@@ -61,7 +61,7 @@ const PM_TIPOS = [
 ];
 const PM_EST = { formulacion: 'En formulación', en_ejecucion: 'En ejecución', cerrado: 'Cerrado' };
 const PM_AV_EST = { reportado: 'Por validar', validado: 'Validado', devuelto: 'Devuelto' };
-const PM_XLSX_URL = 'vendor/xlsx.full.min.js'; /* SheetJS 0.18.5, publicado en vendor/ */
+const PM_XLSX_URL = 'vendor/xlsx.full.min.js'; /* SheetJS 0.20.3, publicado en vendor/ */
 
 const pmCanEdit = () => canRole(['admin', 'control_interno']);
 const pmScoped = () => ['secretario', 'enlace'].includes(rol());

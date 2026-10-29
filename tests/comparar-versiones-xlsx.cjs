@@ -42,7 +42,9 @@ if (!process.argv.includes('--hijo')) {
     if (r.status !== 0) fallas++;
   }
   console.log(
-    fallas ? `\nResultado: HAY diferencias entre las dos versiones (en ${fallas} zona(s)).` : '\nResultado: sin diferencias entre las dos versiones en ninguna zona horaria.'
+    fallas
+      ? `\nResultado: HAY diferencias entre las dos versiones (en ${fallas} zona(s)).`
+      : '\nResultado: sin diferencias en los datos entre las dos versiones en ninguna zona horaria (las diferencias conocidas sin efecto en datos se listan arriba).'
   );
   process.exit(fallas ? 1 : 0);
 }
@@ -230,6 +232,18 @@ const planesLeidos = [];
     return { buf: X.write(wb, { type: 'buffer', bookType: 'xlsx', compression: true }), nan };
   };
   const describe = c => (!c ? 'vacía' : c.t === 'e' ? 'error ' + (c.w || '?') : c.t === 'n' ? (Number.isNaN(c.v) ? 'número NaN' : 'número') : 'tipo ' + c.t);
+  /* Diferencia conocida: desde la 0.20.0, aoa_to_sheet empieza el rango de una hoja nueva en A1 aunque la fila 1
+     esté vacía (la 0.18.5 lo empezaba en la primera fila con celdas). Si todas las celdas de las dos hojas caen dentro
+     de los dos rangos, el cambio es solo del metadato <dimension> y no afecta lo que se ve, imprime ni calcula. */
+  const rangoSinEfecto = (A, B) => {
+    const ra = Xn.utils.decode_range(A['!ref'] || 'A1'),
+      rb = Xn.utils.decode_range(B['!ref'] || 'A1');
+    const dentro = (r, x) => x.r >= r.s.r && x.r <= r.e.r && x.c >= r.s.c && x.c <= r.e.c;
+    return [...Object.keys(A), ...Object.keys(B)]
+      .filter(k => k[0] !== '!')
+      .every(k => dentro(ra, Xn.utils.decode_cell(k)) && dentro(rb, Xn.utils.decode_cell(k)));
+  };
+  let conocidas = 0;
   for (const caso of casos)
     for (const [fmt, fn] of FORMATOS) {
       let gv, gn;
@@ -244,13 +258,16 @@ const planesLeidos = [];
       const lv = Xn.read(gv.buf, { type: 'buffer', cellNF: true }),
         ln = Xn.read(gn.buf, { type: 'buffer', cellNF: true });
       const cuenta = {};
-      let n = 0;
+      let n = 0,
+        rangos = 0;
       lv.SheetNames.forEach(h => {
         const A = lv.Sheets[h] || {},
           B = ln.Sheets[h] || {};
         for (const ref of new Set([...Object.keys(A), ...Object.keys(B)])) {
           if (ref[0] === '!') {
-            if (!igual(A[ref], B[ref])) cuenta[h + ' ' + ref] = (cuenta[h + ' ' + ref] || 0) + 1;
+            if (igual(A[ref], B[ref])) continue;
+            if (ref === '!ref' && rangoSinEfecto(A, B)) rangos++;
+            else cuenta[h + ' ' + ref] = (cuenta[h + ' ' + ref] || 0) + 1;
             continue;
           }
           const a = A[ref] || {},
@@ -265,7 +282,9 @@ const planesLeidos = [];
         }
       });
       const nanTxt = gv.nan.length || gn.nan.length ? ` · celdas con NaN: ${gv.nan.length} (vieja), ${gn.nan.length} (nueva)` : '';
-      console.log(`   ${caso.et} · ${fmt}: diferencias de celda: ${n}${nanTxt}`);
+      const rangoTxt = rangos ? ` · diferencia conocida sin efecto en datos: rango de la hoja en ${rangos} hoja(s)` : '';
+      conocidas += rangos;
+      console.log(`   ${caso.et} · ${fmt}: diferencias de celda: ${n}${nanTxt}${rangoTxt}`);
       imprimir('  ', cuenta);
       if (n || Object.keys(cuenta).length) hayDif = true;
       const refs = [...new Set([...gv.nan, ...gn.nan])];
@@ -275,5 +294,6 @@ const planesLeidos = [];
         console.log(`      NaN en ${hoja}!${ref}: vieja → ${describe(lv.Sheets[hoja][ref])} · nueva → ${describe(ln.Sheets[hoja][ref])}`);
       });
     }
+  if (conocidas) console.log(`   Diferencias conocidas sin efecto en datos (rango de la hoja): ${conocidas}`);
 }
 process.exit(hayDif ? 1 : 0);

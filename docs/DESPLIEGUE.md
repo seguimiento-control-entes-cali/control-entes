@@ -54,7 +54,7 @@ casos abiertos nuevos. Los cierres registrados en la app se conservan.
 1. Ejecutar `supabase/18_planes_pdf_y_traslados.sql` y luego `supabase/19_planes_calificacion_cgsc.sql` (idempotentes; requieren el 13).
 2. Publicar la versión. Sin el script 18 la app sigue funcionando: los traslados muestran el aviso de que falta el script
    y los hallazgos importados desde PDF no guardan su dependencia.
-3. El lector de PDF (pdf.js 3.11.174) se descarga de cdnjs la primera vez que se usa y queda guardado para uso sin conexión.
+3. El lector de PDF (pdf.js 3.11.174) se sirve desde `vendor/web/` (publicado como `vendor/`), sin internet, y el service worker lo guarda para uso sin conexión.
 
 ## Carga del Excel de control (versión 2.5)
 
