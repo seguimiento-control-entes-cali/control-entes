@@ -6,7 +6,8 @@ const assert = require('assert');
 const X = require('xlsx');
 const cargarApp = require('./cargar-app.cjs');
 const R = cargarApp(['S', 'PM', 'pmRes', 'pmPresentacion', 'pmCortes', 'pmInformes', 'pmProrRequisitos', 'pmNombreSIA', 'crc32', 'zipCrear', 'pmAccionesBajo100', 'pmReqSugerido', 'pmCalCgsc', 'pmCalAcc', 'pmAccIssues', 'pmConnPM01', 'pmCausaDe', 'pmParseInformePdf', 'pmSugerencias', 'pmEfectoDe', 'pmFecha', 'pmNum', 'pmConnOf', 'pmDepMatch', 'pmSemanas', 'pmPct', 'pmIndic',
-  'pmParseWorkbook', 'pmImpCheck', 'pmSheetPM01', 'pmSheetsF14', 'pmMapHeader', 'pmEstado']);
+  'pmParseWorkbook', 'pmImpCheck', 'pmSheetPM01', 'pmSheetsF14', 'pmMapHeader', 'pmEstado',
+  'pmSheetPM02', 'pmFaltantesExport', 'pmAvisoFaltantes', 'pmCantXls', 'pmXDate']);
 let n = 0; const ok = () => { n++; };
 const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
 const isoD = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -468,6 +469,100 @@ assert.strictEqual(R.pmConnPM01({ connotaciones: ['administrativa'] }), 'Adminis
   const textos = bq.hall.flatMap(h => h.acciones.map(a => a.accion));
   assert.deepStrictEqual(textos, ['Primera acción de prueba', 'Segunda acción de prueba']); ok();
   R.PM.hall = []; R.PM.acc = [];
+}
+
+/* ---------- exportaciones 2.6.4: fórmulas con valor, sin NaN y aviso de datos faltantes (planes inventados) ---------- */
+{
+  const corte = '2026-10-28';
+  const leerHojas = wb => {
+    const out = X.read(X.write(wb, { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer', bookFiles: true });
+    const xml = Object.keys(out.files)
+      .filter(k => /worksheets\/sheet\d+\.xml$/.test(k))
+      .map(k => new TextDecoder().decode(out.files[k].content))
+      .join('\n');
+    return { out, xml };
+  };
+  const libro = hojas => {
+    const wb = X.utils.book_new();
+    hojas.forEach((ws, i) => X.utils.book_append_sheet(wb, ws, 'H' + (i + 1)));
+    return wb;
+  };
+  // ayudantes sueltos
+  assert.strictEqual(R.pmXDate('2026-07-08'), 46211); ok();
+  assert.strictEqual(R.pmXDate(null), ''); ok();
+  assert.strictEqual(R.pmXDate('2026-02-30'), ''); ok();                  // fecha imposible: vacía, no NaN
+  assert.strictEqual(R.pmCantXls(0), 0); ok();                            // un 0 real se conserva
+  assert.strictEqual(R.pmCantXls('3'), 3); ok();
+  assert.strictEqual(R.pmCantXls(undefined), ''); ok();
+  assert.strictEqual(R.pmCantXls('n/a'), ''); ok();
+
+  // PM_01 y PM_02: cada fórmula lleva su valor calculado (el mismo que daría Excel)
+  R.PM.v19 = true;
+  const completo = { id: 'V', formato: 'PM_01_CGSC', entidad: 'Entidad inventada', ejercicio: 'Auditoría inventada', fecha_suscripcion: '2026-01-15', vigencia_pvcft: '2025' };
+  const acc = (id, c, e, o) => ({ id, plan_id: 'V', hallazgo_id: 'VH', accion: 'Acción inventada ' + o, unidad_medida: 'Informe', cantidad: 1, fecha_inicio: '2026-02-01', fecha_fin: '2026-06-30', cal_cumplimiento: c, cal_efectividad: e, orden: o });
+  R.PM.planes = [completo];
+  R.PM.hall = [{ id: 'VH', plan_id: 'V', numero: '1', descripcion: 'Hallazgo inventado', connotaciones: ['administrativa'], orden: 1 }];
+  R.PM.acc = [acc('V1', 2, 2, 1), acc('V2', 1, 2, 2), acc('V3', 0, null, 3)];
+  R.PM.av = [];
+  // cumplimiento 2, 1, 0 → promedio 1 → 1 × 100 / 2 = 50; efectividad 2, 2 → 2 × 100 / 2 = 100
+  const p1 = R.pmSheetPM01(X, completo, corte);
+  const esperado1 = { S5: 50, S7: 100, L8: 50 * 0.2 + 100 * 0.8, L9: 50, M9: 100 };
+  for (const [ref, v] of Object.entries(esperado1)) {
+    assert.ok(p1[ref].f, 'PM_01 ' + ref + ' debe ser fórmula'); ok();
+    assert.strictEqual(p1[ref].v, v, 'PM_01 ' + ref); ok();
+  }
+  const r1 = leerHojas(libro([p1])).out.Sheets.H1;
+  assert.ok(Object.keys(esperado1).every(ref => r1[ref].t === 'n' && r1[ref].v === esperado1[ref])); ok(); // escrito y leído: número, no error
+  const p2 = R.pmSheetPM02(X, completo, corte);
+  const S6 = p2.S6.v;
+  const esperado2 = { U6: S6 * 0.2, S7: 100, U7: 100 * 0.8, T8: 1, U8: S6 * 0.2 + 100 * 0.8, L10: 100 };
+  for (const [ref, v] of Object.entries(esperado2)) {
+    assert.ok(p2[ref].f, 'PM_02 ' + ref + ' debe ser fórmula'); ok();
+    assert.strictEqual(p2[ref].v, v, 'PM_02 ' + ref); ok();
+  }
+  const r2 = leerHojas(libro([p2])).out.Sheets.H1;
+  assert.ok(Object.keys(esperado2).every(ref => r2[ref].t === 'n' && r2[ref].v === esperado2[ref])); ok();
+  assert.deepStrictEqual(R.pmFaltantesExport(completo), { plan: [], acciones: [] }); ok();   // nada que avisar
+  assert.strictEqual(R.pmAvisoFaltantes(completo), ''); ok();
+
+  // F14 con datos incompletos: sin NaN, celdas vacías, y el 0 se conserva
+  const incompleto = { id: 'W', formato: 'F14_CGR', entidad: 'Entidad inventada', ejercicio: 'Auditoría inventada' };  // sin fecha de suscripción
+  R.PM.planes = [incompleto];
+  R.PM.hall = [{ id: 'WH', plan_id: 'W', numero: '7', descripcion: 'Hallazgo inventado', connotaciones: ['administrativa'], orden: 1 }];
+  R.PM.acc = [
+    { id: 'W1', plan_id: 'W', hallazgo_id: 'WH', accion: 'Acción sin fechas ni cantidad', unidad_medida: 'Informe', orden: 1 },
+    { id: 'W2', plan_id: 'W', hallazgo_id: 'WH', accion: 'Acción con cantidad cero', unidad_medida: 'Informe', cantidad: 0, fecha_inicio: '2026-02-01', fecha_fin: '2026-06-30', orden: 2 }
+  ];
+  const [f1, f2] = R.pmSheetsF14(X, incompleto, corte);
+  const conNaN = [f1, f2].flatMap(ws => Object.keys(ws).filter(k => k[0] !== '!' && typeof ws[k].v === 'number' && Number.isNaN(ws[k].v)));
+  assert.deepStrictEqual(conNaN, []); ok();
+  const vacia = c => !c || c.v === '';
+  const filaDe = (ws, texto) => +Object.keys(ws).find(k => /^F\d+$/.test(k) && ws[k].v === texto).slice(1);
+  for (const ws of [f1, f2]) {
+    assert.ok(vacia(ws.B10)); ok();                                         // fecha de suscripción
+    const n1 = filaDe(ws, 'Acción sin fechas ni cantidad'),
+      n2 = filaDe(ws, 'Acción con cantidad cero');
+    assert.ok(['J', 'K', 'L'].every(c => vacia(ws[c + n1]))); ok();         // cantidad, inicio y terminación vacías
+    assert.ok(['K', 'L'].every(c => ws[c + n1] == null || ws[c + n1].z !== 'dd/mm/yyyy')); ok(); // sin formato de fecha en una celda vacía
+    assert.strictEqual(ws['J' + n2].v, 0); ok();                            // la cantidad 0 se exporta como 0
+    assert.strictEqual(ws['K' + n2].z, 'dd/mm/yyyy'); ok();
+  }
+  assert.ok(!/>NaN</.test(leerHojas(libro([f1, f2])).xml)); ok();          // el archivo escrito no contiene NaN
+
+  // aviso: lista lo que falta y la cantidad 0, sin impedir la exportación
+  assert.deepStrictEqual(R.pmFaltantesExport(incompleto), {
+    plan: ['fecha de suscripción'],
+    acciones: [
+      { id: 'W1', hallazgo: '7', accion: 'Acción sin fechas ni cantidad', faltan: ['fecha de inicio', 'fecha de terminación', 'cantidad'], cero: false },
+      { id: 'W2', hallazgo: '7', accion: 'Acción con cantidad cero', faltan: [], cero: true }
+    ]
+  }); ok();
+  const aviso = R.pmAvisoFaltantes(incompleto);
+  assert.ok(/Plan: sin fecha de suscripción/.test(aviso)); ok();
+  assert.ok(/falta fecha de inicio, fecha de terminación, cantidad/.test(aviso)); ok();
+  assert.ok(/cantidad 0: en el F14 el porcentaje de avance mostrará #DIV\/0!/.test(aviso)); ok();
+  assert.ok(/Puede exportar igual/.test(aviso) && !/disabled/.test(aviso)); ok();
+  R.PM.planes = []; R.PM.hall = []; R.PM.acc = []; R.PM.av = []; R.PM.v19 = false;
 }
 
 console.log(`OK: ${n} verificaciones del módulo de planes de mejoramiento`);

@@ -3740,6 +3740,51 @@ async function pmDoImport(btn) {
 }
 
 /* ---------- exportación ---------- */
+/* Datos que faltan para exportar: el F14 usa la fecha de suscripción, las fechas de inicio y terminación y la cantidad
+   de cada acción; PM_01 y PM_02, la fecha de terminación. Lo que falte se exporta como celda vacía. Una cantidad 0
+   se exporta, pero la fórmula de porcentaje de la plantilla de la CGR (IF(N/J>1,1,+N/J)) da #DIV/0! en Excel. */
+function pmFaltantesExport(p) {
+  const plan = pmFecha(p.fecha_suscripcion) ? [] : ['fecha de suscripción'];
+  const acciones = [];
+  pmPlanData(p).forEach(({ h, acc }) =>
+    acc.forEach(a => {
+      const faltan = [];
+      if (!pmFecha(a.fecha_inicio)) faltan.push('fecha de inicio');
+      if (!pmFecha(a.fecha_fin)) faltan.push('fecha de terminación');
+      const cant = pmCantXls(a.cantidad);
+      if (cant === '') faltan.push('cantidad');
+      if (faltan.length || cant === 0)
+        acciones.push({ id: a.id, hallazgo: h.numero, accion: a.accion || '', faltan, cero: cant === 0 });
+    })
+  );
+  return { plan, acciones };
+}
+/* Aviso de la ventana de exportación: informa, no impide exportar */
+function pmAvisoFaltantes(p) {
+  const f = pmFaltantesExport(p);
+  if (!f.plan.length && !f.acciones.length) return '';
+  const corto = t => (t.length > 70 ? t.slice(0, 70) + '…' : t);
+  const items = [
+    ...f.plan.map(t => `<li>Plan: sin ${esc(t)}</li>`),
+    ...f.acciones.map(a => {
+      const txt = [
+        a.faltan.length ? 'falta ' + a.faltan.join(', ') : '',
+        a.cero ? 'cantidad 0: en el F14 el porcentaje de avance mostrará #DIV/0!' : ''
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      const btn = pmCanEdit()
+        ? ` <button class="btn sm" data-act="pmEditAcc" data-id="${esc(a.id)}">Completar</button>`
+        : '';
+      return `<li>Hallazgo ${esc(a.hallazgo)} · «${esc(corto(a.accion))}»: ${esc(txt)}${btn}</li>`;
+    })
+  ];
+  return `<div class="card warn-card" id="pmEAviso" style="margin:8px 0;padding:10px 12px">
+      <b><i class="fa-solid fa-triangle-exclamation"></i> Hay datos incompletos.</b> Puede exportar igual: lo que falta queda como celda vacía.
+      <ul style="margin:6px 0 4px 18px">${items.join('')}</ul>
+      <div class="hint">El F14 usa la fecha de suscripción, las fechas de inicio y de terminación y la cantidad; PM_01 y PM_02 usan la fecha de terminación.</div>
+    </div>`;
+}
 function pmExportModal(p) {
   openModal({
     title: 'Exportar en el formato de la contraloría',
@@ -3747,16 +3792,21 @@ function pmExportModal(p) {
       ${pmF('pmEFmt', 'Formato', `<select id="pmEFmt"><option value="PM_01_CGSC"${p.formato !== 'F14_CGR' ? ' selected' : ''}>PM_01 CGSC · formulación y avance (Contraloría de Cali)</option>${p.formato === 'PM_01_CGSC' ? '<option value="PM_01_AVANCE">PM_01 CGSC · informe semestral de avance (art. 11: columnas 16, 17 y 18)</option>' : ''}<option value="F14_CGR"${p.formato === 'F14_CGR' ? ' selected' : ''}>Formularios 14 y 14.1 · suscripción y seguimiento (CGR)</option></select>`)}
       ${pmF('pmECorte', 'Fecha de corte / evaluación', pmIn('pmECorte', PM.eval || pmHoy(), 'type="date"'), 'Se toma el último avance VALIDADO hasta esta fecha. Los avances por validar no se incluyen.')}
       ${PM.v20 && pmCanEdit() ? `<label class="chk" style="margin:6px 0"><input type="checkbox" id="pmEArch" checked> Guardar una copia en el archivo documental del plan</label>` : ''}
+      ${pmAvisoFaltantes(p)}
       <div class="hint">Para la CGSC, el archivo se nombra como lo exige el SIA Contralorías (FORMATO_202001_PM_CGSC_…); para el informe semestral use como corte el 30 de junio o el 31 de diciembre. El archivo de la CGR trae los cálculos del Formulario 14.1 como fórmulas de Excel. Revíselo antes de firmarlo y cargarlo en el aplicativo de la contraloría.</div>`,
     footer: `<button class="btn" data-act="closeModal">Cancelar</button><button class="btn primary" data-act="pmDoExport" data-id="${esc(p.id)}"><i class="fa-solid fa-download"></i> Descargar Excel</button>`
   });
 }
+/* Fecha AAAA-MM-DD → número de serie de Excel; vacío si falta o no es válida (nunca NaN: Excel no lo acepta) */
 const pmXDate = s => {
+  if (!pmFecha(s)) return '';
   const d = parseD(s);
   return Math.round(
     (Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / 86400000
   );
 };
+/* Cantidad para Excel: el número (también 0), o vacío si falta o no es un número */
+const pmCantXls = v => (v === null || v === undefined || v === '' || !isFinite(Number(v)) ? '' : Number(v));
 function pmPlanData(p) {
   const hall = PM.hall.filter(h => h.plan_id === p.id).sort((a, b) => (a.orden || 0) - (b.orden || 0));
   return hall.map(h => ({
@@ -3808,6 +3858,8 @@ const pmFechaLarga = iso => {
   return `${d} de ${PM_MESES_LARGOS[m - 1]} de ${y}`;
 };
 /* Formato PM_01 CGSC versión 2020: misma estructura, títulos y fórmulas de la plantilla de la Contraloría */
+/* Valor de IF(COUNT(rango)>0,AVERAGE(rango)*100/2,0) de los formatos PM_01 y PM_02 */
+const pmPromCal = l => (l.length ? ((l.reduce((s, x) => s + x, 0) / l.length) * 100) / 2 : 0);
 function pmSheetPM01(X, p, corte) {
   const datos = pmPlanData(p);
   const ws = {};
@@ -3817,6 +3869,8 @@ function pmSheetPM01(X, p, corte) {
     ws[ref] = typeof v === 'object' && v.f ? { t: 'n', f: v.f } : { t: typeof v === 'number' ? 'n' : 's', v };
     if (extra) Object.assign(ws[ref], extra);
   };
+  const cumpl = [],
+    efect = []; /* columnas L y M de las acciones: alimentan las fórmulas de L9 y M9 */
   const M = r => merges.push(X.utils.decode_range(r));
   put('A1', 'CONTRALORÍA GENERAL DE SANTIAGO DE CALI');
   M('A1:J1');
@@ -3888,6 +3942,8 @@ function pmSheetPM01(X, p, corte) {
     (acc.length ? acc : [null]).forEach(a => {
       const av = a ? pmAvAl(a, corte) : null;
       const cal = a && PM.v19 ? pmCalAcc(a, corte) : null;
+      if (cal && typeof cal.c === 'number') cumpl.push(cal.c);
+      if (cal && typeof cal.e === 'number') efect.push(cal.e);
       const fila = [
         h.numero,
         [
@@ -3925,6 +3981,16 @@ function pmSheetPM01(X, p, corte) {
     });
     if (r - r0 > 1) for (let c = 0; c <= 3; c++) merges.push({ s: { r: r0, c }, e: { r: r - 1, c } });
   });
+  /* valor calculado de cada fórmula (el mismo que da Excel): el archivo queda correcto aunque no se recalcule */
+  const L9 = pmPromCal(cumpl),
+    M9 = pmPromCal(efect);
+  [
+    ['S5', L9],
+    ['S7', M9],
+    ['L8', L9 * 0.2 + M9 * 0.8],
+    ['L9', L9],
+    ['M9', M9]
+  ].forEach(([ref, v]) => (ws[ref].v = v));
   r += 3;
   put(X.utils.encode_cell({ r, c: 0 }), '______________________________');
   put(X.utils.encode_cell({ r, c: 6 }), '______________________________');
@@ -3973,7 +4039,8 @@ function pmSheetPM02(X, p, corte) {
   put('E6', (p.entidad || 'DISTRITO DE SANTIAGO DE CALI').toUpperCase());
   put('Q6', 'Cumplimiento del Plan de Mejoramiento ');
   M('Q6:R6');
-  put('S6', Math.round(k.C * 100) / 100);
+  const S6 = Math.round(k.C * 100) / 100;
+  put('S6', S6);
   put('T6', 0.2);
   put('U6', { f: 'S6*T6' });
   put('A7', 'Auditoría u otra actuación:');
@@ -4010,10 +4077,12 @@ function pmSheetPM02(X, p, corte) {
   put('N10', 'RESPONSABLE DEL AVANCE');
   put('O10', 'OBSERVACIONES DEL AVANCE DE LA ACCIÓN');
   let r = 10;
+  const efect = []; /* columna L de las acciones: alimenta la fórmula de L10 */
   datos.forEach(({ h, acc: l }) =>
     l.forEach(a => {
       const av = pmAvAl(a, corte);
       const cal = PM.v19 ? pmCalAcc(a, corte) : null;
+      if (cal && typeof cal.e === 'number') efect.push(cal.e);
       [
         h.numero,
         pmTxt(h.descripcion),
@@ -4040,6 +4109,18 @@ function pmSheetPM02(X, p, corte) {
       r++;
     })
   );
+  /* valor calculado de cada fórmula (el mismo que da Excel): el archivo queda correcto aunque no se recalcule */
+  const L10 = pmPromCal(efect),
+    U6 = S6 * 0.2,
+    U7 = L10 * 0.8;
+  [
+    ['U6', U6],
+    ['S7', L10],
+    ['U7', U7],
+    ['T8', 0.2 + 0.8],
+    ['U8', U6 + U7],
+    ['L10', L10]
+  ].forEach(([ref, v]) => (ws[ref].v = v));
   ws['!ref'] = X.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(r, 11), c: 20 } });
   ws['!merges'] = merges;
   ws['!cols'] = [10, 60, 22, 18, 45, 28, 28, 22, 14, 32, 10, 12, 12, 28, 50, 4, 24, 12, 12, 12, 12].map(
@@ -4088,13 +4169,14 @@ function pmSheetsF14(X, p, corte) {
     x.a.proposito || '',
     x.a.actividad || x.a.meta || '',
     x.a.unidad_medida,
-    Number(x.a.cantidad),
+    pmCantXls(x.a.cantidad),
     pmXDate(x.a.fecha_inicio),
     pmXDate(x.a.fecha_fin)
   ];
+  /* formato de fecha solo donde hay un número de serie (una fecha faltante queda como celda vacía) */
   const fecha = (ws, r, c) => {
     const a = X.utils.encode_cell({ r, c });
-    if (ws[a]) Object.assign(ws[a], { t: 'n', z: 'dd/mm/yyyy' });
+    if (ws[a] && typeof ws[a].v === 'number') Object.assign(ws[a], { t: 'n', z: 'dd/mm/yyyy' });
   };
   /* Formulario 14 · suscripción */
   const a1 = enc('SUSCRIPCIÓN PLANES DE MEJORAMIENTO', 'FORMULARIO No 14');
