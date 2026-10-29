@@ -3,7 +3,7 @@
 //  - Librerías, fuentes e íconos (carpeta vendor/ del mismo sitio): se guardan al instalar.
 //  - config.js: primero la red, para que un cambio de servidor se aplique de inmediato.
 //  - Supabase y cualquier otra API: NUNCA se guardan (los datos siempre salen frescos y seguros).
-const CACHE = 'control-entes-v18-datic';
+const CACHE = 'control-entes-v19-datic';
 const SHELL = [
   './',
   './index.html',

@@ -61,4 +61,36 @@ ok('María Pérez - Secretaría de Salud Pública', 'Secretaría de Salud Públi
 ok('Subsecretario de Infraestructura Deportiva y Recreativa', 'Secretaría del Deporte y la Recreación', 'Secretaría del Deporte y la Recreación');
 ok('Jefe Unidad de Apoyo a la Gestión', 'Secretaría de Educación', 'Secretaría de Educación');
 ok('Juan Gómez, contratista', null, 'Carpeta compartida');
+/* 7. Orden de prioridad de pmDepImport (2.6.1), con personas y textos inventados */
+// el nombre completo en el lugar de verificación gana a una sigla en el responsable
+ok('Profesional Universitario - DATIC', 'Secretaría de Educación', 'Actas en la Secretaría de Educación');
+// el nombre completo gana a la sigla dentro del mismo texto
+ok('Enlace DATIC - Secretaría de Movilidad', 'Secretaría de Movilidad');
+// mayúsculas sin tildes, con comas y guiones
+ok('LUISA FERNANDA RIOS, PROFESIONAL - SECRETARIA DE VIVIENDA SOCIAL Y HABITAT', 'Secretaría de Vivienda Social y Hábitat');
+// responsable vacío: decide el lugar de verificación
+ok('', 'Secretaría de Turismo', 'Archivo de gestión de la Secretaría de Turismo');
+// sigla en minúsculas y sin paréntesis
+ok('apoyo a la gestión - dagma', 'Departamento Administrativo de Gestión del Medio Ambiente (DAGMA)');
+// la sigla debe ser una palabra completa: «DATICO» no es DATIC
+ok('Profesional DATICO', null);
+// «tipo + primera palabra» única
+ok('Coordinador - Secretaría de Paz', 'Secretaría de Paz y Cultura Ciudadana');
+// «tipo + primera palabra» repetida en dos dependencias: no se adivina
+ok('Asesor - Secretaría de Desarrollo', null);
+ok('Profesional - Departamento Administrativo de Control', null);
+// entidad externa en el lugar de verificación
+ok('Carlos Ruiz, contratista', null, 'Contraloría General de Santiago de Cali');
+// sigla repetida en dos dependencias (catálogo inventado): no se adivina; con una sola, sí
+{
+  const original = R.S.deps;
+  R.S.deps = [
+    { id: 101, nombre: 'Secretaría de Prueba Alfa Beta' },
+    { id: 102, nombre: 'Subdirección de Proyectos Ambientales Básicos' }
+  ];
+  ok('Contratista de apoyo - SPAB', null);
+  R.S.deps = [R.S.deps[0]];
+  ok('Contratista de apoyo - SPAB', 'Secretaría de Prueba Alfa Beta');
+  R.S.deps = original;
+}
 console.log('OK: ' + n + ' verificaciones del reconocimiento de dependencias');

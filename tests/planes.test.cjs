@@ -397,4 +397,77 @@ assert.strictEqual(R.pmConnPM01({ connotaciones: ['administrativa'] }), 'Adminis
   assert.strictEqual(R.crc32(new TextEncoder().encode('123456789')), 0xcbf43926); ok();
 }
 
+/* ---------- correcciones del lector 2.6.1 (informe y plan inventados) ---------- */
+{
+  const pag = lineas => {
+    let y = 760;
+    return lineas.map(t => ({ s: t, x: 72, y: (y -= 20), w: t.length * 5, h: 10 }));
+  };
+  const paginas = [
+    pag(['AUDITORÍA DE CUMPLIMIENTO DE PRUEBA', '1700.19.02.26.099', 'INFORME FINAL', 'Santiago de Cali, marzo 3, de 2026']),
+    pag([
+      'TABLA DE CONTENIDO',
+      // índice con línea de puntos en la línea siguiente (título en minúsculas)
+      '3.1. Hallazgo administrativo N° 1 – Pago sin soporte',
+      '........................................ 7',
+      // índice con línea de puntos en la misma línea
+      '3.2. Hallazgo administrativo N° 2 – Archivo incompleto ............ 8'
+    ]),
+    pag([
+      'SECRETARÍA DE TURISMO',
+      // número con punto final: «3.1. HALLAZGO»
+      '3.1. HALLAZGO ADMINISTRATIVO N° 1 – CON PRESUNTA INCIDENCIA FISCAL - PAGO SIN SOPORTE',
+      // la cifra aparece antes de la palabra «detrimento»
+      'Se giraron recursos por valor de $7.854.441, conllevando a un detrimento patrimonial en la vigencia.',
+      'Lo anterior, causado por debilidades en la supervisión, lo cual genera un riesgo para los recursos.',
+      '4. RESUMEN DE HALLAZGOS'
+    ])
+  ];
+  const r = R.pmParseInformePdf(paginas, 'informe-prueba.pdf');
+  assert.strictEqual(r.plan.fecha_informe, '2026-03-03'); ok();               // «marzo 3, de 2026»
+  assert.strictEqual(r.hall.length, 1); ok();                                 // los dos renglones del índice no cuentan
+  assert.strictEqual(r.hall[0].numero, '1'); ok();
+  assert.ok(/^PAGO SIN SOPORTE\. Se giraron recursos/.test(r.hall[0].descripcion)); ok();
+  assert.deepStrictEqual(r.hall[0].connotaciones, ['administrativa', 'fiscal']); ok();
+  assert.strictEqual(r.hall[0].cuantia, 7854441); ok();
+  assert.strictEqual(r.hall[0].dependencia, 'SECRETARÍA DE TURISMO'); ok();
+  // fecha «mes día de año» sin coma
+  const r2 = R.pmParseInformePdf(
+    [
+      pag(['AUDITORÍA DE PRUEBA', 'octubre 15 de 2026']),
+      pag(['3.1 HALLAZGO ADMINISTRATIVO N° 1 – INVENTARIO DESACTUALIZADO', 'El inventario de prueba no estaba al día.'])
+    ],
+    'otro.pdf'
+  );
+  assert.strictEqual(r2.plan.fecha_informe, '2026-10-15'); ok();
+}
+{
+  /* fin de tabla: una fila «TOTALES» con texto en la columna de la acción pero sin fecha de terminación cierra
+     la tabla, y lo que venga después no se lee como acción */
+  const ini = new Date(hoy); ini.setDate(ini.getDate() - 100);
+  const fin = new Date(hoy); fin.setDate(fin.getDate() + 60);
+  const plan = { id: 'Q', formato: 'PM_01_CGSC', entidad: 'Entidad de prueba', ejercicio: 'Auditoría de prueba', fecha_suscripcion: isoD(ini), vigencia_pvcft: '2025', tipo_ejercicio: 'Auditoría de cumplimiento' };
+  R.PM.hall = [{ id: 'HQ', plan_id: 'Q', numero: '1', descripcion: 'Hallazgo de prueba', causa: 'Causa de prueba', efecto: 'Efecto de prueba', connotaciones: ['administrativa'], orden: 1 }];
+  R.PM.acc = [
+    { id: 'Q1', plan_id: 'Q', hallazgo_id: 'HQ', dependencia_id: 1, accion: 'Primera acción de prueba', proposito: '', actividad: 'Actividad uno', unidad_medida: 'Informe', cantidad: 1, fecha_inicio: isoD(ini), fecha_fin: isoD(fin), avance: 0, fecha_corte: null, orden: 1 },
+    { id: 'Q2', plan_id: 'Q', hallazgo_id: 'HQ', dependencia_id: 1, accion: 'Segunda acción de prueba', proposito: '', actividad: 'Actividad dos', unidad_medida: 'Informe', cantidad: 1, fecha_inicio: isoD(ini), fecha_fin: isoD(fin), avance: 0, fecha_corte: null, orden: 2 }
+  ];
+  R.PM.av = [];
+  const aoa = X.utils.sheet_to_json(R.pmSheetPM01(X, plan, isoD(hoy)), { header: 1, defval: '', raw: true });
+  const hr = aoa.findIndex(row => Object.keys(R.pmMapHeader(row)).length >= 4);
+  const m = R.pmMapHeader(aoa[hr]);
+  const ult = aoa.reduce((u, row, i) => (i > hr && String(row[m.accion] || '').includes('acción de prueba') ? i : u), -1);
+  const totales = new Array(aoa[hr].length).fill('');
+  totales[0] = 'TOTALES';
+  totales[m.accion] = 'Resumen de las acciones del plan';
+  const despues = aoa[ult].slice();
+  despues[m.accion] = 'Acción escrita después de los totales';
+  aoa.splice(ult + 1, 0, totales, despues);
+  const wbq = X.utils.book_new(); X.utils.book_append_sheet(wbq, X.utils.aoa_to_sheet(aoa), 'PM_01 CGSC');
+  const bq = R.pmParseWorkbook(X, X.read(X.write(wbq, { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' }), 'plan-prueba.xlsx');
+  const textos = bq.hall.flatMap(h => h.acciones.map(a => a.accion));
+  assert.deepStrictEqual(textos, ['Primera acción de prueba', 'Segunda acción de prueba']); ok();
+  R.PM.hall = []; R.PM.acc = [];
+}
+
 console.log(`OK: ${n} verificaciones del módulo de planes de mejoramiento`);

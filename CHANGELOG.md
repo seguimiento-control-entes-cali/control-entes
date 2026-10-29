@@ -1,5 +1,22 @@
 # Historial de versiones
 
+## 2.6.1 · octubre 2026
+**Corrección del lector de planes de mejoramiento**
+- Dependencia de cada acción importada: primero el nombre completo (en el responsable o en el lugar de
+  verificación), luego la sigla (DAGMA, DATIC, DAPM, UAESPM…), luego «tipo + primera palabra» si es única
+  («Secretaría del Deporte») y solo al final el nombre corto. «Subsecretario de Infraestructura Deportiva -
+  Secretaría del Deporte» ya no se asigna a Infraestructura. Si la sigla o el nombre corto coinciden con más de
+  una dependencia, no se adivina.
+- Informe final en PDF: fecha de portada «marzo 3, de 2026»; hallazgos numerados «3.1. Hallazgo» (con punto);
+  la tabla de contenido con líneas de puntos ya no se lee como hallazgo; cuantía escrita antes de la palabra
+  «detrimento».
+- Excel del plan: una fila de totales o firmas sin fecha de terminación cierra la tabla, aunque tenga texto en la
+  columna de la acción.
+- Pruebas: `tests/dependencias.test.cjs` (ahora en `npm test`) y casos nuevos en `tests/planes.test.cjs`, todos
+  con textos inventados.
+- Pendiente antes de instalar: con la zona horaria America/Bogota, `tests/excel-control.test.cjs` da 16 días
+  hábiles en vez de 15 (también en 2.6.0). Las pruebas se ejecutan con `TZ=UTC`, igual que la CI.
+
 ## 2.6.0 · octubre 2026
 **Planes de mejoramiento según las Resoluciones Reglamentarias de la CGSC 24.043 y 24.003**
 - Resolución aplicable por plan (según la fecha de suscripción, o fijada a mano).

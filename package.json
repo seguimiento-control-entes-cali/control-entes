@@ -1,6 +1,6 @@
 {
   "name": "control-entes",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "Control de requerimientos de entes de control · Alcaldía Distrital de Santiago de Cali",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "build:demo": "node scripts/build.mjs --variante demo && node scripts/build.mjs --variante demo --offline",
     "build:privada": "node scripts/build.mjs --variante privada",
     "dev": "node scripts/servidor.mjs",
-    "test": "node scripts/build.mjs --variante institucional && node tests/reglas.test.cjs && node tests/planes.test.cjs && node tests/excel-control.test.cjs",
+    "test": "node scripts/build.mjs --variante institucional && node tests/reglas.test.cjs && node tests/planes.test.cjs && node tests/excel-control.test.cjs && node tests/dependencias.test.cjs",
     "formato": "prettier --write \"src/**/*.{js,css}\"",
     "formato:revisar": "prettier --check \"src/**/*.{js,css}\"",
     "lint": "node scripts/build.mjs --variante demo --salida build/lint/index.html && node scripts/extraer-js.mjs build/lint/index.html build/lint/app.js && eslint build/lint/app.js"
