@@ -36,16 +36,24 @@ assert.strictEqual(R.ceHabiles('2026-07-03', '2026-07-14'), 6); ok();   // 6,7,8
 assert.strictEqual(R.ceHabiles('2026-07-14', '2026-07-03'), -6); ok();
 
 // libro sintético en formato 2026: lectura, oportunidad y calidad
+/* Fechas como las guarda Excel: número de serie entero (días desde el 30-dic-1899) con formato de fecha en la
+   celda. No se usa new Date(): SheetJS 0.18.5 lo convierte con la hora local y en America/Bogota queda 16 segundos
+   antes de la medianoche (el día anterior), porque en 1899 Bogotá estaba en UTC-4:56:16. */
+const serie = (y, m, d) => (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000;
 const aoa = [[], ['Control de Requerimientos'], [], [], ['INFORMACIÓN OFICIO'],
   ['No. Orden', 'Número de Radicado Ente', 'Ente Externo de Control', 'Número radicación en ORFEO', 'Fecha radicación', 'Clase de Requerimiento', 'Organismo a quien va dirigido', 'Asunto del Requerimiento', 'Dias hábiles con que cuenta', 'Fecha máxima de respuesta', 'No. ORFEO de la respuesta', 'Fecha de respuesta', 'Estado de la solicitud', 'Observaciones'],
-  [1, 'OF-1', 'Contraloría', '202641730100000001', new Date(2026, 6, 1), 'Solicitud', 'Secretaría de Salud', 'Asunto uno', 5, new Date(2026, 6, 8), '202641430100000001', new Date(2026, 6, 7), 'Cerrado', ''],
-  [2, 'OF-2', 'Procuraduría', '202641730100000002', new Date(2026, 6, 1), 'Solicitud', 'Educación', 'Asunto dos', 5, new Date(2026, 6, 8), '202641430100000002', new Date(2026, 6, 10), 'Cerrado', ''],
-  [3, 'OF-3', 'Personería', '202641730100000003', new Date(2026, 6, 1), 'Solicitud', 'Movilidad', 'Asunto tres', 5, new Date(2026, 6, 8), '', '', 'Abierto', ''],
-  [4, 'OF-4', 'Personería', '202641730100000004', new Date(2026, 6, 1), 'Informativo', 'Movilidad', 'Asunto cuatro', '', '', '', '', 'Cerrado', ''],
-  [5, 'OF-5', 'Contraloría', '202641730100000005', new Date(2026, 6, 1), 'Solicitud', 'Cultura', 'Asunto cinco', 5, '32/13/2026', '', '', 'Cerrado', '']];
-const ws = X.utils.aoa_to_sheet(aoa, { cellDates: true, dateNF: 'dd/mm/yyyy' });
+  [1, 'OF-1', 'Contraloría', '202641730100000001', serie(2026, 7, 1), 'Solicitud', 'Secretaría de Salud', 'Asunto uno', 5, serie(2026, 7, 8), '202641430100000001', serie(2026, 7, 7), 'Cerrado', ''],
+  [2, 'OF-2', 'Procuraduría', '202641730100000002', serie(2026, 7, 1), 'Solicitud', 'Educación', 'Asunto dos', 5, serie(2026, 7, 8), '202641430100000002', serie(2026, 7, 10), 'Cerrado', ''],
+  [3, 'OF-3', 'Personería', '202641730100000003', serie(2026, 7, 1), 'Solicitud', 'Movilidad', 'Asunto tres', 5, serie(2026, 7, 8), '', '', 'Abierto', ''],
+  [4, 'OF-4', 'Personería', '202641730100000004', serie(2026, 7, 1), 'Informativo', 'Movilidad', 'Asunto cuatro', '', '', '', '', 'Cerrado', ''],
+  [5, 'OF-5', 'Contraloría', '202641730100000005', serie(2026, 7, 1), 'Solicitud', 'Cultura', 'Asunto cinco', 5, '32/13/2026', '', '', 'Cerrado', '']];
+const ws = X.utils.aoa_to_sheet(aoa);
+// formato de fecha en las columnas Fecha radicación (E), Fecha máxima (J) y Fecha de respuesta (L)
+for (let r = 6; r < aoa.length; r++)
+  for (const c of [4, 9, 11]) { const cel = ws[X.utils.encode_cell({ r, c })]; if (cel && cel.t === 'n') cel.z = 'dd/mm/yyyy'; }
+assert.strictEqual(serie(2026, 7, 8), 46211); ok();                     // 8 de julio de 2026 en Excel
 const wb0 = X.utils.book_new(); X.utils.book_append_sheet(wb0, ws, 'CONTROL');
-const wb = X.read(X.write(wb0, { type: 'buffer', bookType: 'xlsx', cellDates: false }), { type: 'buffer', cellNF: true, bookFiles: true });
+const wb = X.read(X.write(wb0, { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer', cellNF: true, bookFiles: true });
 const L = R.ceLeerLibro(X, wb, 'Control de Requerimientos Vigencia 2026.xlsx');
 assert.strictEqual(L.vigencia, 2026); ok();
 assert.strictEqual(L.control.length, 5); ok();
