@@ -10,16 +10,48 @@ No incluye: los archivos PDF de soporte (siguen en el bucket `soportes`) ni las 
 (las administra Supabase Auth).
 
 ## Cuándo se hace
-- **Automática:** cada domingo a las 11:00 p. m. (hora de Colombia), programada por `supabase/17_respaldos_y_monitoreo.sql`.
+- **Automática:** cada domingo a las 11:00 p. m. (hora de Colombia), programada por `supabase/21_programar_tareas_boveda.sql`.
 - **Manual:** Configuración → Copias de seguridad → *Crear copia ahora* (solo el Super administrador, con su código de dos pasos).
 - **Fuera de Supabase:** descargue una copia a un equipo o carpeta institucional al menos una vez al mes
   (*Descargar* en la misma tarjeta). Una copia que solo vive en el mismo proveedor no protege si se pierde el proyecto.
 
 ## Instalación
-1. Ejecutar `supabase/17_respaldos_y_monitoreo.sql` (reemplazando `CLAVE_DEL_RESUMEN` por el valor del secreto `RESUMEN_CLAVE`).
+1. Ejecutar `supabase/17_respaldos_y_monitoreo.sql` (bucket `respaldos` y tabla de eventos; ya no programa la copia).
 2. Desplegar la función `respaldo` y desactivar *Verify JWT with legacy secret* en su configuración.
    Usa los secretos ya existentes (`RESUMEN_CLAVE`; `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` los pone Supabase).
-3. En la app: *Crear copia ahora* y comprobar que aparece en la lista.
+3. Revisar los secretos de la bóveda (ver la sección siguiente) y ejecutar `supabase/21_programar_tareas_boveda.sql`.
+   Programa la copia semanal (activa) y el resumen semanal (desactivado). Si falta un secreto, se detiene sin
+   cambiar nada.
+4. En la app: *Crear copia ahora* y comprobar que aparece en la lista.
+
+## Secretos de la bóveda (Vault) para las tareas programadas
+Las tareas programadas no tienen escrita la dirección del proyecto ni la clave: las leen de la bóveda cada vez
+que corren. Se necesitan dos secretos:
+
+| Nombre | Contenido |
+|---|---|
+| `ce_proyecto_url` | La dirección del proyecto, `https://<proyecto>.supabase.co`, sin barra final y sin `/functions/v1`. |
+| `ce_resumen_clave` | El mismo texto del secreto `RESUMEN_CLAVE` de las funciones `respaldo` y `resumen-semanal`. |
+
+**1. Verificar que existen (proyecto en uso).** En producción ya existen (creados el 25-oct-2026). Esta consulta
+muestra solo los nombres y las fechas, nunca el valor:
+
+```sql
+select name, created_at, updated_at from vault.secrets
+where name in ('ce_proyecto_url', 'ce_resumen_clave') order by name;
+```
+
+Debe devolver las dos filas. Para revisar el formato de la dirección sin mostrarla:
+
+```sql
+select decrypted_secret ~ '^https://[^/[:space:]]+$' as formato_ok
+from vault.decrypted_secrets where name = 'ce_proyecto_url';
+```
+
+**2. Crearlos (solo en una instalación nueva).** Desde la sección **Vault** del panel de Supabase: agregar un
+secreto nuevo con el nombre exacto de la tabla y su valor. No crearlos con `vault.create_secret(...)` en el SQL
+Editor: el valor quedaría escrito en el historial de consultas. Nunca copiar los valores en archivos, commits ni
+mensajes.
 
 ## Restaurar
 1. Descargar la copia (`respaldo_….json.gz`).

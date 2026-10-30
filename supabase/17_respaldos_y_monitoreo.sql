@@ -4,9 +4,9 @@
 --    Solo el Super administrador puede verlas y descargarlas. Se conservan las 12 más recientes.
 --  * Tabla eventos_sistema: errores y avisos de las funciones del servidor y de la app, para que
 --    el Super administrador vea en Configuración si algo falló (sin revisar registros técnicos).
---  * Programación semanal de la copia (domingos 11:00 p. m. hora de Colombia).
--- Antes de ejecutar, reemplace CLAVE_DEL_RESUMEN por el mismo texto del secreto RESUMEN_CLAVE.
--- Requiere: scripts 01 a 16, extensiones pg_cron y pg_net (Database → Extensions) y la función "respaldo".
+--  * La copia semanal (domingos 11:00 p. m. hora de Colombia) YA NO se programa aquí: se programa con
+--    supabase/21_programar_tareas_boveda.sql, que lee la dirección y la clave de la bóveda (Vault).
+-- Requiere: scripts 01 a 16.
 -- Se puede ejecutar más de una vez.
 -- =====================================================================
 
@@ -62,19 +62,7 @@ end $$;
 revoke all on function public.registrar_error_app(text, jsonb) from public, anon;
 grant execute on function public.registrar_error_app(text, jsonb) to authenticated;
 
--- 4. Copia semanal: domingos 04:00 UTC del lunes = 11:00 p. m. del domingo en Colombia
-create extension if not exists pg_cron;
-create extension if not exists pg_net;
-select cron.unschedule(jobid) from cron.job where jobname = 'respaldo-semanal';
-select cron.schedule(
-  'respaldo-semanal',
-  '0 4 * * 1',
-  $$ select net.http_post(
-       url     := 'https://qwpburivxydbetceumyd.supabase.co/functions/v1/respaldo',
-       headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-clave', 'CLAVE_DEL_RESUMEN'),
-       body    := '{}'::jsonb,
-       timeout_milliseconds := 120000
-     ) $$
-);
-
-select jobname, schedule, active from cron.job where jobname in ('resumen-semanal', 'respaldo-semanal') order by 1;
+-- 4. Copia semanal: se programa con supabase/21_programar_tareas_boveda.sql. Esta parte tenía escrita la
+--    dirección fija del proyecto anterior y una clave para reemplazar a mano; ejecutarla habría reprogramado la
+--    tarea hacia ese proyecto.
+select 'La copia semanal se programa con supabase/21_programar_tareas_boveda.sql' as aviso;

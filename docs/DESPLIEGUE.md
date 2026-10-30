@@ -78,7 +78,12 @@ casos abiertos nuevos. Los cierres registrados en la app se conservan.
      **sin** verificación JWT (la función valida por su cuenta quién la llama).
    - Secretos: `SMTP_USER` (correo @cali.gov.co que envía), `SMTP_PASS` (contraseña de aplicación de ese correo, la
      misma que se usó para el SMTP de Supabase), `RESUMEN_CLAVE` (texto largo aleatorio). `SITIO_URL` ya existe.
-   - En `supabase/15_programar_resumen.sql` reemplazar `CLAVE_DEL_RESUMEN` por el valor de `RESUMEN_CLAVE` y ejecutarlo.
+   - Programación: verificar que existen en la bóveda los secretos `ce_proyecto_url` y `ce_resumen_clave` y, solo en
+     una instalación nueva, crearlos desde la sección Vault del panel (ver `docs/RESPALDOS.md`, "Secretos de la
+     bóveda"). Luego ejecutar `supabase/21_programar_tareas_boveda.sql`, que deja el resumen **desactivado**. El
+     script 15 ya no programa nada.
+   - Activar la tarea solo cuando DATIC autorice el piloto:
+     `select cron.alter_job(jobid, active := true) from cron.job where jobname = 'resumen-semanal';`
    - En la app: Configuración → Resumen semanal por correo → Enviar prueba a mi correo; luego activarlo y Guardar.
 
 ## Planes de mejoramiento (versión 2.3)
