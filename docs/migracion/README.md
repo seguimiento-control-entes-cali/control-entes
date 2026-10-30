@@ -1,6 +1,6 @@
 # Plan de migración · Control de Entes 3.0
 
-> **Estado del plan:** Etapa 1 · Fase F0 — no iniciada · **Última actualización:** 2026-10-27 (revisión 3)
+> **Estado del plan:** Trabajo previo a la F0 (bloqueos de la 2.6.1) · Fase F0 — no iniciada · **Última actualización:** 2026-10-30 (revisión 4: calendario ajustado)
 > Este documento es la fuente de verdad de la migración. Cada fase termina actualizando la sección
 > [13. Estado y bitácora](#13-estado-y-bitácora) y, si hubo una decisión nueva, la tabla de
 > [4. Decisiones](#4-decisiones-de-arquitectura).
@@ -30,7 +30,7 @@
 La migración se hace en **dos etapas**. La urgencia es que el frontend tenga forma de proyecto real, listo
 para desplegarse; el backend se queda como está hasta la Etapa 2.
 
-| | **Etapa 1 · Frontend** (ahora → 2026-11-13) | **Etapa 2 · Backend** (desde 2026-11-17) |
+| | **Etapa 1 · Frontend** (ahora → 2026-12-11; antes 2026-11-13) | **Etapa 2 · Backend** (desde 2026-12-14; antes 2026-11-17) |
 |---|---|---|
 | Frontend | **React + TypeScript + Vite**, por funcionalidades, desplegable | se completa y cambia su capa de datos al backend, módulo por módulo |
 | Acceso a datos | **directo a Supabase** (`supabase-js`) pero **solo** a través de la capa `src/datos/` | **solo a través de FastAPI** |
@@ -95,7 +95,7 @@ Roles: `admin`, `alcalde`, `control_interno` (supervisión), `secretario`, `enla
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Etapa 2 (desde mediados de noviembre)
+### Etapa 2 (desde el 2026-12-14; antes, mediados de noviembre)
 
 ```
  NAVEGADOR  features/* ─► dominio/ ─► datos/contratos ─► datos/api/ (cliente OpenAPI)
@@ -136,7 +136,7 @@ La columna **Etapa** indica cuándo aplica. Cada decisión importante tiene su A
 | D-20 | **El backend es el único intermediario** entre la interfaz y Supabase | 2 | ✅ | Pedido del proyecto; aplazado a la Etapa 2. |
 | D-21 | Sesión con cookie httpOnly cifrada | 2 | 🟡 | Protege los tokens contra XSS. |
 | D-22 | Desactivar la Data API pública y el registro abierto al terminar | 2 | 🟡 | Cierra el acceso directo. |
-| D-23 | **Etapa 1 = solo frontend; el backend se queda como está hoy hasta mediados de noviembre** | 1 | ✅ | Pedido del proyecto (revisión 3). |
+| D-23 | **Etapa 1 = solo frontend; el backend se queda como está hoy hasta el 2026-12-14 (antes, mediados de noviembre; ajustado en la revisión 4)** | 1 | ✅ | Pedido del proyecto (revisión 3). |
 | D-24 | **Capa de datos delgada** `src/datos/`: único lugar que importa `supabase-js`; pantallas solo usan contratos | 1 | ✅ | Pedido del proyecto ("una capa pequeña"); permite cambiar a la API sin tocar pantallas. |
 | D-25 | Tipos de la base **generados** (`supabase gen types typescript`) y regenerados en la CI | 1 | 🟡 | Un cambio de esquema rompe la compilación, no producción. |
 | D-26 | Despliegue de la 3.0 como sitio estático en el mismo hosting actual (GitHub Pages) bajo `/v3/` | 1 | 🟡 | Sin infraestructura nueva; se publica junto a la 2.x. |
@@ -205,7 +205,7 @@ control-entes/
 │   │   └── styles/                        # tokens (docs/tokens.json) y temas
 │   └── e2e/                               # Playwright
 │
-├── backend/                               # ◄ ETAPA 2 (no se crea antes de 2026-11-17)
+├── backend/                               # ◄ ETAPA 2 (no se crea antes de 2026-12-14)
 │
 └── docs/migracion/
     ├── README.md                          # este documento
@@ -385,7 +385,7 @@ Objetivo: que la 3.0 se pueda publicar con un solo comando o un *merge* a `main`
 
 ## 9. Etapa 2 · Backend FastAPI como intermediario
 
-> Comienza **a partir del 2026-11-17**. Nada de esta sección se construye en la Etapa 1. Se mantiene aquí
+> Comienza **a partir del 2026-12-14** (antes 2026-11-17; ver §10). Nada de esta sección se construye en la Etapa 1. Se mantiene aquí
 > para que la Etapa 1 no tome decisiones que la contradigan.
 
 ### 9.1 Principio
@@ -456,22 +456,45 @@ Las Edge Functions se retiran cuando su módulo esté en producción.
 Cada fase tiene **entregables** y un **criterio de salida**. Las fechas son estimaciones para una o dos
 personas y se ajustan al cerrar cada fase.
 
-> **Calendario:** el 2 y el 16 de noviembre de 2026 son festivos en Colombia (Todos los Santos e
-> Independencia de Cartagena); por eso F1 empieza el martes 3 y la Etapa 2 el martes 17.
+> **Calendario (revisión 4, 2026-10-30).** Festivos en Colombia considerados: 2-nov, 16-nov y 8-dic de 2026, y
+> 11-ene-2027 (Reyes Magos, trasladado).
 >
-> **Expectativa realista:** de hoy al 2026-11-13 hay **12 días hábiles** (unas 2,5 semanas). Alcanzan para dejar el
-> frontend 3.0 **montado, desplegable y con las primeras pantallas reales** (F0-F2). Migrar las 20 pantallas
-> toma más: continúa en F3, en paralelo con el backend.
+> **Por qué se ajustó.** La revisión 3 ponía la Etapa 1 del 2026-10-28 al 2026-11-13 y la Etapa 2 desde el
+> 2026-11-17. No se cumplió porque antes de la F0 hay que cerrar los bloqueos de instalación de la 2.6.1 y el aviso
+> diario de planes, se trabaja una tarea a la vez con plan y aprobación, y la F0 no estaba aprobada al 2026-10-30.
+> Fechas nuevas: **Etapa 1 hasta el 2026-12-11** (antes 2026-11-13) y **Etapa 2 desde el 2026-12-14** (antes
+> 2026-11-17).
+>
+> **Condiciones fijas:**
+> - **Sin cambios en producción del 2026-12-19 al 2027-01-06**; se retoman normalmente desde el 2027-01-07. Del 14 al
+>   18-dic, la Etapa 2 solo hace pasos de lectura en producción (por ejemplo, el `pg_dump --schema-only` de la F4) y
+>   trabajo local.
+> - **Pausa por vacaciones** de la responsable del 2026-12-23 al 2027-01-07: la Etapa 2 se detiene y sigue el
+>   2027-01-07. Los pasos que cambian producción, como el `alembic stamp` de la F4, se retoman a partir del 2027-01-07.
+> - **El resumen semanal y el aviso diario de planes no se encienden** hasta que DATIC autorice el piloto.
+> - **El proyecto de Supabase de prueba** (para verificar los bloqueos 4 y 5) se decide antes de empezar el bloqueo 4.
+
+#### Trabajo previo a la F0 (bloqueos de instalación de la 2.6.1)
+
+| Orden | Tarea | Fechas planeadas | Depende de Erika | Estado |
+|---|---|---|---|---|
+| 1 | Bloqueo 1 · `configuracion.json` al proyecto de EE. UU. | — | — | Resuelto 2026-10-29 (commit 53cbca1) |
+| 2 | Bloqueo 2 · Tareas programadas desde la bóveda (script 21) | 2026-10-29 → 10-30 | Consulta de producción y aprobación | Resuelto 2026-10-29 (commit 1a1ceee). Producción ya leía de la bóveda; el 21 no se ejecutó en producción. |
+| 3 | Bloqueo 3 · `current_date` en SQL | 2026-11-03 → 11-04 | `show timezone;`, aprobar y ejecutar el script | Pendiente |
+| 4 | Bloqueo 6 · Caché del service worker con la versión publicable | 2026-11-05 | Autorizar la construcción de la demo y probar en Chrome | Pendiente |
+| 5 | Bloqueo 4 · Escala decimal en el respaldo | 2026-11-06 → 11-10 | **Decidir antes el proyecto de prueba**; desplegar la función | Pendiente |
+| 6 | Bloqueo 5 · `00_instalar_todo.sql` completo | 2026-11-11 → 11-12 | Aprobar; instalar en el proyecto de prueba si existe | Pendiente |
+| 7 | Aviso diario de planes (`avisos-planes`, script 22) | 2026-11-13, 11-17 → 11-18 | Aprobar, desplegar y ejecutar el 22; queda **apagado** | Pendiente |
 
 ```
-ETAPA 1 (frontend)                         ETAPA 2 (backend, desde 2026-11-17)
+ETAPA 1 (frontend)                         ETAPA 2 (backend, desde 2026-12-14)
 F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes (sobre Supabase) ─────────┐
                            F4 BD bajo control ─► F5 esqueleto ─► F6 módulos ─┴► F7 cierre ─► F8 retiro
 ```
 
 ### Etapa 1 · Frontend
 
-#### F0 · Preparación (2026-10-28 → 2026-10-30)
+#### F0 · Preparación (2026-11-19 → 2026-11-23; antes 2026-10-28 → 2026-10-30)
 - [ ] Repositorio git con `main` protegida y PR obligatorio.
 - [ ] `frontend/` con Vite + React + TypeScript strict, ESLint/Prettier actuales, Vitest.
 - [ ] Reglas de fronteras (§7.1) activas en ESLint.
@@ -483,7 +506,7 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 
 **Salida:** `npm run dev` levanta una página vacía con la CI en verde.
 
-#### F1 · Cimientos (2026-11-03 → 2026-11-06)
+#### F1 · Cimientos (2026-11-24 → 2026-12-02; antes 2026-11-03 → 2026-11-06)
 - [ ] `config/entorno.ts` con validación; `.env.example`.
 - [ ] Tipos generados de Supabase (`datos/supabase/tipos.generados.ts`) y script `npm run tipos:bd`.
 - [ ] `datos/`: `crearDatos`, contratos `auth`, `identidad`, `catalogos`; implementaciones Supabase y demo.
@@ -496,7 +519,7 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 
 **Salida:** un usuario real inicia sesión en `/v3/`, ve el menú de su rol y la versión demo funciona sin red.
 
-#### F2 · Primeras pantallas (2026-11-09 → 2026-11-13)
+#### F2 · Primeras pantallas (2026-12-03 → 2026-12-11, sin el 8-dic; antes 2026-11-09 → 2026-11-13)
 - [ ] Contratos `historico`, `directorio`, `auditoria` (Supabase + demo).
 - [ ] `dominio/estadisticas.ts` (`statsOf`, `scopeOrg`, `maskPII`) con pruebas de paridad.
 - [ ] Pantallas: **Directorio**, **Histórico** (con detalle), **Cumplimiento**, **Auditoría** (con verificación de la cadena), **Actividad**.
@@ -506,7 +529,7 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 
 **Salida:** la 3.0 publicada en `/v3/` con 5 pantallas reales, probadas y aprobadas por el piloto.
 
-### Etapa 2 · Backend (desde 2026-11-17) y resto del frontend
+### Etapa 2 · Backend (desde 2026-12-14, pausa del 2026-12-23 al 2027-01-07) y resto del frontend
 
 #### F3 · Pantallas restantes sobre Supabase (en paralelo con F4-F6)
 - [ ] Ola A: Mando, Dependencia, Cruces (`dominio/temas.ts`), Informe ejecutivo (`dominio/informe.ts`), Entes/Dependencias.
@@ -588,7 +611,10 @@ Fecha: AAAA-MM-DD
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Plazo corto de la Etapa 1 (2,5 semanas) | Alto | Alcance acotado a F0-F2 (cimientos + 5 pantallas); el resto sigue en F3 sin bloquear el backend |
+| Plazo de la Etapa 1 (16 días hábiles para F0-F2, desde el 2026-11-19) | Alto | Alcance acotado a F0-F2 (cimientos + 5 pantallas); el resto sigue en F3 sin bloquear el backend |
+| Sin proyecto de Supabase de prueba | Medio | Se decide antes del bloqueo 4; sin él, los bloqueos 4 y 5 se verifican con datos ficticios y el calendario puede correrse 2 a 3 días |
+| Sin repositorio en GitHub para la F0 ("main protegida") | Medio | La F0 puede avanzar sin ese punto y completarlo cuando exista el repositorio de la Alcaldía |
+| Piloto no autorizado por DATIC al cerrar la F2 | Medio | La revisión con usuarios piloto de la F2 queda pendiente; no bloquea el inicio de la Etapa 2 |
 | Diferencias de cálculo al portar reglas a TS | Alto | Pruebas de paridad con los mismos datos de las pruebas actuales; la 2.x sigue disponible para comparar |
 | Una pantalla importa Supabase directamente y rompe la Etapa 2 | Alto | Regla ESLint que lo prohíbe fuera de `datos/supabase/`, verificada en la CI |
 | Cambio de esquema que rompe la 3.0 | Medio | Tipos generados; `npm run tipos:bd` en la CI falla si el esquema cambió sin regenerar |
@@ -604,19 +630,21 @@ Fecha: AAAA-MM-DD
 
 ### Fase actual
 
-| Etapa | Fase | Estado | Inicio | Fin |
-|---|---|---|---|---|
-| 1 | F0 Preparación | ⬜ no iniciada | (2026-10-28) | (2026-10-30) |
-| 1 | F1 Cimientos del frontend | ⬜ | (2026-11-03) | (2026-11-06) |
-| 1 | F2 Primeras pantallas | ⬜ | (2026-11-09) | (2026-11-13) |
-| 2 | F3 Pantallas restantes | ⬜ | (2026-11-17) | |
-| 2 | F4 Base de datos bajo control | ⬜ | (2026-11-17) | |
-| 2 | F5 Esqueleto del backend | ⬜ | | |
-| 2 | F6 Módulos del backend | ⬜ | | |
-| 2 | F7 Cierre del acceso directo | ⬜ | | |
-| 2 | F8 Retiro del legado | ⬜ | | |
+| Etapa | Fase | Estado | Inicio | Fin | Fechas anteriores (rev. 3) |
+|---|---|---|---|---|---|
+| 1 | Trabajo previo: bloqueos 2.6.1 y aviso diario | 🔵 en curso | 2026-10-29 | (2026-11-18) | — |
+| 1 | F0 Preparación | ⬜ no iniciada | (2026-11-19) | (2026-11-23) | 2026-10-28 → 10-30 |
+| 1 | F1 Cimientos del frontend | ⬜ | (2026-11-24) | (2026-12-02) | 2026-11-03 → 11-06 |
+| 1 | F2 Primeras pantallas | ⬜ | (2026-12-03) | (2026-12-11) | 2026-11-09 → 11-13 |
+| 2 | F3 Pantallas restantes | ⬜ | (2026-12-14) | | 2026-11-17 |
+| 2 | F4 Base de datos bajo control | ⬜ | (2026-12-14) | | 2026-11-17 |
+| 2 | F5 Esqueleto del backend | ⬜ | | | |
+| 2 | F6 Módulos del backend | ⬜ | | | |
+| 2 | F7 Cierre del acceso directo | ⬜ | | | |
+| 2 | F8 Retiro del legado | ⬜ | | | |
 
 Leyenda: ⬜ no iniciada · 🔵 en curso · ✅ terminada · ⛔ bloqueada. Fechas entre paréntesis = planeadas.
+Pausa: 2026-12-23 → 2027-01-07. Sin cambios en producción del 2026-12-19 al 2027-01-06.
 
 ### Bitácora
 
@@ -625,3 +653,4 @@ Leyenda: ⬜ no iniciada · 🔵 en curso · ✅ terminada · ⛔ bloqueada. Fec
 | 2026-10-27 | — | Plan creado. Decisiones tomadas: D-01 FastAPI, D-02 monolito modular por capas, D-03 React + TypeScript + Vite, D-04 prioridad a la base de datos y el backend. |
 | 2026-10-27 | — | Revisión 2: la base se queda en Supabase (D-05), los archivos en Supabase Storage sin S3/MinIO (D-12), Supabase Auth se mantiene (D-10), el backend será el único intermediario (D-20). Se descarta el proveedor de identidad externo (D-11). |
 | 2026-10-27 | — | Revisión 3: **cambio de prioridad**. Etapa 1 = solo frontend, conectado directo a Supabase mediante una capa de datos delgada (D-23, D-24); el backend se queda como está. La Etapa 2 (FastAPI) empieza el 2026-11-17. D-04 queda reemplazada. |
+| 2026-10-30 | — | **Revisión 4: calendario ajustado** (aprobado por Erika el 2026-10-29). Etapa 1 hasta el 2026-12-11 (antes 2026-11-13); Etapa 2 desde el 2026-12-14 (antes 2026-11-17). Motivo: antes de la F0 se cierran los bloqueos de instalación de la 2.6.1 y el aviso diario de planes; se trabaja una tarea a la vez con aprobación; la F0 no estaba aprobada. Orden: bloqueos 2 a 6, aviso diario de planes, F0. Bloqueo 1 resuelto el 2026-10-29 (53cbca1) y bloqueo 2 el 2026-10-29 (1a1ceee). Condiciones: sin cambios en producción del 2026-12-19 al 2027-01-06 (se retoman desde el 2027-01-07); vacaciones del 2026-12-23 al 2027-01-07, con la Etapa 2 en pausa; festivo 2027-01-11; el resumen semanal y el aviso diario no se encienden hasta que DATIC autorice el piloto; el proyecto de Supabase de prueba se decide antes del bloqueo 4. |
