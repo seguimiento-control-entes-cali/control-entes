@@ -484,7 +484,7 @@ personas y se ajustan al cerrar cada fase.
 | 4 | Bloqueo 6 · Caché del service worker con la versión publicable | 2026-11-05 | Autorizar la construcción de la demo y probar en Chrome | Pendiente |
 | 5 | Bloqueo 4 · Escala decimal en el respaldo | 2026-11-06 → 11-10 | **Decidir antes el proyecto de prueba**; desplegar la función | Pendiente |
 | 6 | Bloqueo 5 · `00_instalar_todo.sql` completo | 2026-11-11 → 11-12 | Aprobar; instalar en el proyecto de prueba si existe | Pendiente |
-| 7 | Aviso diario de planes (`avisos-planes`, script 22) | 2026-11-13, 11-17 → 11-18 | Aprobar, desplegar y ejecutar el 22; queda **apagado** | Pendiente |
+| 7 | Aviso diario de planes (`avisos-planes`, script 23) | 2026-11-13, 11-17 → 11-18 | Aprobar, desplegar y ejecutar el 23; queda **apagado** | Pendiente |
 
 ```
 ETAPA 1 (frontend)                         ETAPA 2 (backend, desde 2026-12-14)

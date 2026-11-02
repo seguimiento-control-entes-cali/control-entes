@@ -17,6 +17,18 @@ Cargar datos (desde `datos_privados/`, nunca desde el repositorio):
 Las correcciones manuales de tema (`tema_manual`) y las revisiones de cruces (`cruce_revision`) no se pierden al
 recargar el histórico: se identifican por vigencia, ORFEO, número del ente y organismo.
 
+## Versión 2.6.1: fecha de Colombia en la base de datos
+
+**Base de datos.** Después del 20 (y del 21, si se programan las tareas), ejecutar
+`22_fecha_colombia.sql`. El servidor está en UTC: entre las 7:00 p. m. y la medianoche de Colombia, `current_date`
+da el día siguiente. El 22 lo reemplaza por `public.hoy_colombia()` en la vista `v_requerimientos`, en el valor por
+defecto de la fecha de radicación y en cuatro funciones (requiere los scripts 01, 12, 13 y 20). No cambia la zona
+horaria de la base ni ningún dato. Es idempotente y va en una sola transacción: si una función o la vista no es la
+versión esperada, se detiene sin cambiar nada. Conserva los permisos de la vista y de las funciones.
+
+El SQL Editor muestra solo el resultado de la última consulta (los permisos): después, ejecutar aparte el `select`
+de verificación del final del script; todas sus columnas deben salir en `true`.
+
 ## Versión 2.6: norma CGSC, memoria y paquete para DATIC
 
 **Base de datos.** Ejecutar en orden, si no se han ejecutado: `18_planes_pdf_y_traslados.sql`,
