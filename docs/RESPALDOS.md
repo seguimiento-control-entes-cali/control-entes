@@ -2,9 +2,19 @@
 
 ## Qué se respalda
 La función `respaldo` (supabase/functions/respaldo) guarda en el bucket privado `respaldos` un archivo
-`respaldo_AAAA-MM-DD_HHMM.json.gz` con **todas las tablas de la app** (21 tablas: requerimientos, histórico,
+`respaldo_AAAA-MM-DD_HHMM.json.gz` con **todas las tablas de la app** (26 tablas: requerimientos, histórico,
 planes de mejoramiento, directorio, notificaciones, cuentas, configuración, auditoría, etc.) y la lista de
 carpetas de soportes PDF. Se conservan las **12 copias más recientes**.
+
+**Formato 3 (desde la versión 2.6.1, requiere `supabase/23_respaldo_texto.sql`).** Cada tabla se guarda como el
+texto JSON que genera PostgreSQL (función `respaldo_lote`), sin pasar por números de JavaScript. Así los decimales
+quedan exactos (`100.00` no se vuelve `100`) y, con ellos, la copia de cada fila que guarda la auditoría: después
+de restaurar, la cadena de huellas SHA-256 verifica igual que antes. Si el 23 no se ha ejecutado, la función hace
+la copia en el formato 2 y deja un aviso en *Salud del sistema*.
+
+En el **formato 2** (copias anteriores) los decimales terminados en cero pierden sus ceros. Los datos se restauran
+bien (las columnas tienen 2 decimales fijos), pero la verificación de la cadena de auditoría falla desde el primer
+registro de planes de mejoramiento con un decimal así.
 
 No incluye: los archivos PDF de soporte (siguen en el bucket `soportes`) ni las contraseñas de los usuarios
 (las administra Supabase Auth).
@@ -16,7 +26,8 @@ No incluye: los archivos PDF de soporte (siguen en el bucket `soportes`) ni las 
   (*Descargar* en la misma tarjeta). Una copia que solo vive en el mismo proveedor no protege si se pierde el proyecto.
 
 ## Instalación
-1. Ejecutar `supabase/17_respaldos_y_monitoreo.sql` (bucket `respaldos` y tabla de eventos; ya no programa la copia).
+1. Ejecutar `supabase/17_respaldos_y_monitoreo.sql` (bucket `respaldos` y tabla de eventos; ya no programa la copia)
+   y `supabase/23_respaldo_texto.sql` (formato 3). En una instalación nueva ya vienen en `00_instalar_todo.sql`.
 2. Desplegar la función `respaldo` y desactivar *Verify JWT with legacy secret* en su configuración.
    Usa los secretos ya existentes (`RESUMEN_CLAVE`; `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` los pone Supabase).
 3. Revisar los secretos de la bóveda (ver la sección siguiente) y ejecutar `supabase/21_programar_tareas_boveda.sql`.
@@ -66,6 +77,14 @@ mensajes.
    ```
    Todo ocurre en una sola transacción: si algo falla, la base queda exactamente como estaba.
    Al final muestra, por tabla, los registros restaurados frente a los de la copia.
+   Con pocos datos (por ejemplo, en un proyecto de prueba) también se puede pegar `restaurar.sql` en el SQL Editor.
+4. Comprobar la restauración con `tests/sql/verificar_respaldo.sql` (solo lectura: muestra conteos y huellas, no
+   datos). Ejecutarla antes de crear la copia y después de restaurar: las dos filas deben ser idénticas, con
+   `huellas_distintas` y `eslabones_rotos` en 0. El script avisa si la copia es del formato 2.
+
+**Prueba de punta a punta (proyecto de PRUEBA, nunca producción):** instalar `00_instalar_todo.sql` en un proyecto
+vacío, cargar `tests/sql/datos_ficticios_respaldo.sql` (se detiene si la base no está vacía), ejecutar la
+comprobación, crear una copia, restaurarla y volver a ejecutar la comprobación.
 
 La restauración está pensada para el **mismo proyecto** (recuperar datos borrados o dañados). Para trasladar
 la app a otro servidor se usa el paquete de instalación institucional.

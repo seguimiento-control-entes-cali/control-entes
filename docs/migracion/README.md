@@ -55,7 +55,7 @@ Inventario del sistema actual (versión 2.6.0) que hay que cubrir:
 
 | Elemento | Cantidad | Dónde |
 |---|---|---|
-| Tablas | 26 | `supabase/01` a `20` (y `cuentas_eventos`, que solo está en `00_instalar_todo.sql`) |
+| Tablas | 26 | `supabase/01` a `20` (`cuentas_eventos` está en `10_cuentas.sql`) |
 | Vistas | `v_requerimientos`, `v_cumplimiento_organismo`, `v_directorio_verificacion` | idem |
 | Funciones RPC / guardas / triggers | ~45 | idem |
 | Políticas RLS | todas las tablas de `public` y 3 buckets | idem |
@@ -439,8 +439,8 @@ backend/
 - Al final: Data API pública desactivada, registro abierto cerrado y claves rotadas (D-22).
 
 ### 9.5 Base de datos
-- **No se traslada.** Línea base con `pg_dump --schema-only` de producción (hay desfases conocidos:
-  `cuentas_eventos` está en `00_instalar_todo.sql` pero no en `10_cuentas.sql`), `alembic stamp` sin cambios.
+- **No se traslada.** Línea base con `pg_dump --schema-only` de producción (desfase conocido: 3 funciones del script 22 tenían en
+  producción espacios en líneas en blanco; el 22 las dejó iguales al repositorio), `alembic stamp` sin cambios.
 - Desde ahí, todo cambio de esquema es una migración Alembic revisada en PR. Alembic solo administra `public`.
 - Ambientes: Supabase CLI local y en la CI; segundo proyecto para preproducción.
 - Pruebas: matriz RLS rol × tabla × operación a través del backend; cadena de auditoría recalculada en Python.
@@ -480,11 +480,11 @@ personas y se ajustan al cerrar cada fase.
 |---|---|---|---|---|
 | 1 | Bloqueo 1 · `configuracion.json` al proyecto de EE. UU. | — | — | Resuelto 2026-10-29 (commit 53cbca1) |
 | 2 | Bloqueo 2 · Tareas programadas desde la bóveda (script 21) | 2026-10-29 → 10-30 | Consulta de producción y aprobación | Resuelto 2026-10-29 (commit 1a1ceee). Producción ya leía de la bóveda; el 21 no se ejecutó en producción. |
-| 3 | Bloqueo 3 · `current_date` en SQL | 2026-11-03 → 11-04 | `show timezone;`, aprobar y ejecutar el script | Pendiente |
-| 4 | Bloqueo 6 · Caché del service worker con la versión publicable | 2026-11-05 | Autorizar la construcción de la demo y probar en Chrome | Pendiente |
-| 5 | Bloqueo 4 · Escala decimal en el respaldo | 2026-11-06 → 11-10 | **Decidir antes el proyecto de prueba**; desplegar la función | Pendiente |
-| 6 | Bloqueo 5 · `00_instalar_todo.sql` completo | 2026-11-11 → 11-12 | Aprobar; instalar en el proyecto de prueba si existe | Pendiente |
-| 7 | Aviso diario de planes (`avisos-planes`, script 23) | 2026-11-13, 11-17 → 11-18 | Aprobar, desplegar y ejecutar el 23; queda **apagado** | Pendiente |
+| 3 | Bloqueo 3 · `current_date` en SQL (script 22) | 2026-11-03 → 11-04 | `show timezone;`, aprobar y ejecutar el script | Resuelto 2026-11-02 (commit 0fa8da8; ejecutado y verificado en producción) |
+| 4 | Bloqueo 6 · Caché del service worker con la versión publicable | 2026-11-05 | Autorizar la construcción de la demo y probar en Chrome | Resuelto 2026-11-02 (demo en localhost; sin cambios en el repositorio) |
+| 5 | Bloqueo 4 · Escala decimal en el respaldo (script 23, formato 3) | 2026-11-06 → 11-10 | Crear el proyecto de prueba; desplegar la función | En curso (junto con el 5, en el proyecto de prueba) |
+| 6 | Bloqueo 5 · `00_instalar_todo.sql` completo (generado) | 2026-11-11 → 11-12 | Instalarlo en el proyecto de prueba | En curso (junto con el 4) |
+| 7 | Aviso diario de planes (`avisos-planes`, script 24) | 2026-11-13, 11-17 → 11-18 | Aprobar, desplegar y ejecutar el 24; queda **apagado** | Pendiente |
 
 ```
 ETAPA 1 (frontend)                         ETAPA 2 (backend, desde 2026-12-14)

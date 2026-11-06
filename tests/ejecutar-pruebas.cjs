@@ -5,7 +5,8 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const ZONAS = ['UTC', 'America/Bogota'];
-const PRUEBAS = ['reglas.test.cjs', 'planes.test.cjs', 'excel-control.test.cjs', 'dependencias.test.cjs', 'fecha-colombia.test.cjs'];
+const PRUEBAS = ['reglas.test.cjs', 'planes.test.cjs', 'excel-control.test.cjs', 'dependencias.test.cjs', 'fecha-colombia.test.cjs',
+  'respaldo.test.cjs', 'instalador.test.cjs'];
 
 let fallas = 0;
 for (const TZ of ZONAS) {

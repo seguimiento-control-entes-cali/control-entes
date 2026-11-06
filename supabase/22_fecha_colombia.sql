@@ -7,7 +7,8 @@
 --   * las funciones cerrar_requerimiento, sembrar_desde_historico, pm_reportar_avance y pm_resolver_prorroga.
 -- No cambia la zona horaria de la base, ni las tareas programadas, ni ningún dato guardado.
 -- Protección: antes de cambiar algo revisa que cada función sea la versión esperada (huella md5 del código sin CR:
--- la de producción al 2-nov-2026 o la que deja este script), que siga siendo security definer con
+-- la de producción al 2-nov-2026, la de los scripts 01, 12, 13 y 20 en una instalación nueva con
+-- 00_instalar_todo.sql, o la que deja este script), que siga siendo security definer con
 -- search_path=public, y que la vista tenga las 21 columnas esperadas. Si algo no coincide, se detiene sin cambiar
 -- nada (todo va en una sola transacción). Se puede ejecutar más de una vez.
 -- La vista y las funciones se reemplazan con "create or replace": conservan su dueño y sus permisos actuales.
@@ -19,10 +20,11 @@ begin;
 do $$
 declare
   v_esperadas constant jsonb := jsonb_build_object(
-    'cerrar_requerimiento',    jsonb_build_array('bdddb0081e6f671a41444cfce78e0613', '33f3daf9abb9a3d37db5be767bfaaec7'),
-    'sembrar_desde_historico', jsonb_build_array('d9c8b62a695b77afc7c56caaf094a29e', '446824683ec4fdda1678e334baca06cd'),
-    'pm_reportar_avance',      jsonb_build_array('1f2fe7b806ef75231e90283777947492', '9353a8d39696fa63eaeaeb1ac3b2ed35'),
-    'pm_resolver_prorroga',    jsonb_build_array('c2e4461c895bdb6cb1bb5ec217309fb7', 'f913cd5e8167cf0ef77350f0ab0f4a5f'));
+    -- (producción al 2-nov-2026, versión nueva de este script, scripts del repositorio en una instalación nueva)
+    'cerrar_requerimiento',    jsonb_build_array('bdddb0081e6f671a41444cfce78e0613', '33f3daf9abb9a3d37db5be767bfaaec7', '404386d20d402fa91336060e8661fbc8'),
+    'sembrar_desde_historico', jsonb_build_array('d9c8b62a695b77afc7c56caaf094a29e', '446824683ec4fdda1678e334baca06cd', 'ba665dd95bcb8cea98af763eaab7d8b1'),
+    'pm_reportar_avance',      jsonb_build_array('1f2fe7b806ef75231e90283777947492', '9353a8d39696fa63eaeaeb1ac3b2ed35', 'b2cdc79c5971a82c068ac768723dbe02'),
+    'pm_resolver_prorroga',    jsonb_build_array('c2e4461c895bdb6cb1bb5ec217309fb7', 'f913cd5e8167cf0ef77350f0ab0f4a5f', 'c2e4461c895bdb6cb1bb5ec217309fb7'));
   v_columnas constant text := 'id,radicado,vigencia,ente_id,dependencia_id,asunto,fecha_radicacion,fecha_limite,'
     || 'estado,orfeo_salida,fecha_cierre,soporte_path,soporte_hash,escalado_at,created_by,created_at,'
     || 'ente,ente_sigla,dependencia,dias_restantes,semaforo';

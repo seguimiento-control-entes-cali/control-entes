@@ -1,6 +1,19 @@
 # Historial de versiones
 
 ## 2.6.1 · octubre 2026
+**Base de datos e instalación**
+- `21_programar_tareas_boveda.sql`: programa la copia semanal y el resumen semanal leyendo la dirección y la clave
+  de la bóveda (Vault); el resumen queda desactivado. Los scripts 15 y 17 ya no programan tareas.
+- `22_fecha_colombia.sql`: la fecha de Colombia (`public.hoy_colombia()`) en lugar de `current_date`, que en el
+  servidor es UTC, en la vista de requerimientos, la fecha de radicación por defecto y cuatro funciones.
+- `23_respaldo_texto.sql` y función `respaldo`: copias en formato 3, con los decimales exactos (100.00 ya no se
+  vuelve 100), para que la cadena de huellas de la auditoría verifique después de restaurar.
+  `scripts/restaurar-respaldo.mjs` lee el formato 3 y sigue aceptando el 2 con un aviso.
+- `00_instalar_todo.sql` completo (01 a 23, sin el 11, el 15 ni el 21), generado por
+  `scripts/generar-instalador.mjs` en una sola transacción.
+- Pruebas: `tests/fecha-colombia.test.cjs`, `tests/respaldo.test.cjs` y `tests/instalador.test.cjs`; datos
+  ficticios y comprobación de la restauración en `tests/sql/`.
+
 **Corrección del lector de planes de mejoramiento**
 - Dependencia de cada acción importada: primero el nombre completo (en el responsable o en el lugar de
   verificación), luego la sigla (DAGMA, DATIC, DAPM, UAESPM…), luego «tipo + primera palabra» si es única

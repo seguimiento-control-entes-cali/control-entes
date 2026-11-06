@@ -46,7 +46,8 @@ for (const [fn, archivo] of Object.entries(ORIGEN)) {
   assert.ok(/security definer set search_path = public as\s*$/.test(F22[fn][0].cabecera), `${fn} sigue siendo security definer`); ok();
 }
 
-// --- 2. La protección acepta la huella de producción (2-nov-2026) y la de la versión nueva, sin CR
+// --- 2. La protección acepta la huella de producción (2-nov-2026), la de la versión nueva y la del repositorio
+//        (instalación nueva con 00_instalar_todo.sql), siempre sin CR
 const PRODUCCION = {
   cerrar_requerimiento: 'bdddb0081e6f671a41444cfce78e0613',
   sembrar_desde_historico: 'd9c8b62a695b77afc7c56caaf094a29e',
@@ -54,10 +55,11 @@ const PRODUCCION = {
   pm_resolver_prorroga: 'c2e4461c895bdb6cb1bb5ec217309fb7'
 };
 for (const [fn, prod] of Object.entries(PRODUCCION)) {
-  const fila = S22.match(new RegExp(`'${fn}',\\s*jsonb_build_array\\('([0-9a-f]{32})', '([0-9a-f]{32})'\\)`));
+  const fila = S22.match(new RegExp(`'${fn}',\\s*jsonb_build_array\\('([0-9a-f]{32})', '([0-9a-f]{32})', '([0-9a-f]{32})'\\)`));
   assert.ok(fila, `la protección incluye ${fn}`); ok();
   assert.strictEqual(fila[1], prod, `huella de producción de ${fn}`); ok();
   assert.strictEqual(fila[2], md5(F22[fn][0].cuerpo), `huella nueva de ${fn}`); ok();
+  assert.strictEqual(fila[3], md5(funciones(leer(ORIGEN[fn]))[fn][0].cuerpo), `huella del repositorio de ${fn}`); ok();
 }
 assert.ok(S22.includes("md5(replace(p.prosrc, E'\\r', ''))")); ok(); // compara siempre sin CR
 

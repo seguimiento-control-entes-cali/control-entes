@@ -10,6 +10,10 @@
 //     verificación en dos pasos.
 // Cada ejecución queda en public.eventos_sistema y en config.respaldo_ultimo.
 // Restaurar: scripts/restaurar-respaldo.mjs (ver docs/RESPALDOS.md).
+//
+// Formato 3 (supabase/23): cada tabla se guarda como el texto JSON que genera PostgreSQL (respaldo_lote), sin
+// pasar por números de JavaScript, para conservar exactos los decimales (100.00 no se vuelve 100) y, con ellos,
+// las huellas de la auditoría. Si el script 23 no se ha ejecutado, la copia se hace en el formato 2 y queda un aviso.
 // =====================================================================
 import { createClient } from 'jsr:@supabase/supabase-js@2.45.4';
 
@@ -83,22 +87,40 @@ Deno.serve(async req => {
   }
 
   try {
-    // 2. Leer todas las tablas por lotes
-    const tablas: Record<string, unknown[]> = {};
+    // 2. Leer todas las tablas por lotes. Formato 3 si existe respaldo_lote (supabase/23); si no, formato 2.
+    const prueba = await db.rpc('respaldo_lote', { p_tabla: 'config', p_orden: 'id', p_desde: 0, p_cantidad: 1 });
+    const version = prueba.error ? 2 : 3;
+    if (prueba.error && !/Could not find the function|does not exist|schema cache/i.test(prueba.error.message))
+      throw new Error('respaldo_lote: ' + prueba.error.message);
+    const tablas: Record<string, unknown[]> = {}; // formato 2 y, en el 3, solo para el inventario de archivos
+    const tablasTexto: Record<string, string> = {}; // formato 3: texto JSON de PostgreSQL, sin tocar
     const conteo: Record<string, number> = {};
     for (const [t, orden] of TABLAS) {
       const filas: unknown[] = [];
+      const partes: string[] = [];
+      let existe = true;
       for (let desde = 0; ; desde += LOTE) {
-        const { data, error } = await db.from(t).select('*').order(orden, { ascending: true }).range(desde, desde + LOTE - 1);
-        if (error) {
-          // Una tabla que aún no existe (script pendiente) no impide el resto de la copia
-          if (/does not exist|schema cache|Could not find/i.test(error.message)) break;
-          throw new Error(`Tabla ${t}: ${error.message}`);
+        if (version === 3) {
+          const { data, error } = await db.rpc('respaldo_lote', { p_tabla: t, p_orden: orden, p_desde: desde, p_cantidad: LOTE });
+          if (error) throw new Error(`Tabla ${t}: ${error.message}`);
+          if (data === null) { existe = false; break; } // la tabla aún no existe (script pendiente)
+          const lote = JSON.parse(data as string) as unknown[]; // solo para contar y para el inventario
+          if (lote.length) partes.push((data as string).trim().slice(1, -1));
+          filas.push(...lote);
+          if (lote.length < LOTE) break;
+        } else {
+          const { data, error } = await db.from(t).select('*').order(orden, { ascending: true }).range(desde, desde + LOTE - 1);
+          if (error) {
+            // Una tabla que aún no existe (script pendiente) no impide el resto de la copia
+            if (/does not exist|schema cache|Could not find/i.test(error.message)) { existe = false; break; }
+            throw new Error(`Tabla ${t}: ${error.message}`);
+          }
+          filas.push(...(data ?? []));
+          if (!data || data.length < LOTE) break;
         }
-        filas.push(...(data ?? []));
-        if (!data || data.length < LOTE) break;
       }
-      tablas[t] = filas;
+      if (version === 2 || existe) tablas[t] = filas;
+      if (version === 3 && existe) tablasTexto[t] = '[' + partes.join(',') + ']';
       conteo[t] = filas.length;
     }
     // Inventario de archivos con su huella SHA-256 registrada: permite comprobar un respaldo de archivos (ZIP
@@ -111,11 +133,14 @@ Deno.serve(async req => {
     for (const d of (tablas['archivo_documentos'] ?? []) as Record<string, string>[])
       inventario.push({ deposito: 'archivo', path: d.path, sha256: d.sha256 });
 
-    // 3. Archivo comprimido
+    // 3. Archivo comprimido. En el formato 3 cada tabla va como texto (tablas_texto) para que nada la reinterprete.
     const copia = {
-      formato: 'control-entes-respaldo', version: 2, creado: new Date().toISOString(), creado_por: usuario,
-      orden_restauracion: TABLAS.map(([t]) => t), conteo, tablas, archivos: inventario
+      formato: 'control-entes-respaldo', version, creado: new Date().toISOString(), creado_por: usuario,
+      orden_restauracion: TABLAS.map(([t]) => t), conteo,
+      ...(version === 3 ? { tablas_texto: tablasTexto } : { tablas }), archivos: inventario
     };
+    if (version === 2)
+      await evento('aviso', 'Copia en formato 2: falta ejecutar supabase/23_respaldo_texto.sql', { motivo: prueba.error?.message ?? '' }, usuario);
     const bytes = await gzip(JSON.stringify(copia));
     const nombre = `respaldo_${sello()}.json.gz`;
     const { error: eSubir } = await db.storage.from('respaldos').upload(nombre, bytes, { contentType: 'application/gzip', upsert: true });
@@ -129,8 +154,8 @@ Deno.serve(async req => {
     const total = Object.values(conteo).reduce((a, b) => a + b, 0);
     const detalle = `${nombre}: ${total} registros en ${Object.keys(conteo).length} tablas, ${(bytes.length / 1024).toFixed(0)} KB`;
     await db.from('config').update({ respaldo_ultimo: new Date().toISOString(), respaldo_ultimo_detalle: detalle }).eq('id', 1);
-    await evento('info', 'Copia de seguridad creada', { archivo: nombre, conteo, kb: Math.round(bytes.length / 1024) }, usuario);
-    return responder({ ok: true, archivo: nombre, registros: total, conteo, kb: Math.round(bytes.length / 1024), borrados: viejos.length });
+    await evento('info', 'Copia de seguridad creada', { archivo: nombre, formato: version, conteo, kb: Math.round(bytes.length / 1024) }, usuario);
+    return responder({ ok: true, archivo: nombre, formato: version, registros: total, conteo, kb: Math.round(bytes.length / 1024), borrados: viejos.length });
   } catch (e) {
     const msg = (e as Error).message;
     console.error('Error en la copia de seguridad:', msg);

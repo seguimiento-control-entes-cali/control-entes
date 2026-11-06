@@ -2,7 +2,10 @@
 
 ## 1. Base de datos (Supabase)
 
-**Instalación nueva:** en SQL Editor ejecutar `supabase/00_instalar_todo.sql` (contiene 01 a 09).
+**Instalación nueva:** en SQL Editor ejecutar `supabase/00_instalar_todo.sql` en un proyecto vacío. Contiene los
+scripts 01 a 23 en una sola transacción, salvo el 11 (datos reales, en `datos_privados/`), el 15 (ya no hace nada)
+y el 21 (programa las tareas: ejecutarlo aparte después, ver "Seguridad y resumen semanal"). Lo genera
+`node scripts/generar-instalador.mjs` a partir de los scripts; no se edita a mano.
 **Instalación existente:** ejecutar solo los scripts que falten, en orden (por ejemplo `08_cruces_temas.sql` y `09_hoja_excel.sql`).
 
 Cargar datos (desde `datos_privados/`, nunca desde el repositorio):
@@ -28,6 +31,9 @@ versión esperada, se detiene sin cambiar nada. Conserva los permisos de la vist
 
 El SQL Editor muestra solo el resultado de la última consulta (los permisos): después, ejecutar aparte el `select`
 de verificación del final del script; todas sus columnas deben salir en `true`.
+
+**Copias de seguridad en formato 3.** Ejecutar `23_respaldo_texto.sql` y después volver a desplegar la función
+`respaldo` (en ese orden; si se despliega antes, la copia sigue en el formato 2 con un aviso). Ver `docs/RESPALDOS.md`.
 
 ## Versión 2.6: norma CGSC, memoria y paquete para DATIC
 
