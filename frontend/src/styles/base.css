@@ -57,3 +57,171 @@ body {
   color: var(--tinta-suave);
   font-size: 13px;
 }
+
+/* ---------- F1: ingreso, marco y componentes base ---------- */
+.ingreso {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.ingreso .tarjeta {
+  max-width: 420px;
+  width: 100%;
+}
+.sub {
+  color: var(--tinta-suave);
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+.tarjeta {
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-top: 4px solid var(--azul-cali);
+  border-radius: 10px;
+  padding: 20px;
+}
+.tarjeta-titulo {
+  margin: 0 0 8px;
+  color: var(--azul-cali);
+  font-size: 20px;
+}
+.campo {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.campo label {
+  font-weight: bold;
+  font-size: 14px;
+}
+.campo input {
+  padding: 10px;
+  border: 1px solid var(--linea);
+  border-radius: 6px;
+  font: inherit;
+}
+.boton {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 6px;
+}
+.boton-primario {
+  background: var(--azul-cali);
+  color: #fff;
+  border: 0;
+}
+.boton-secundario {
+  background: transparent;
+  color: var(--azul-cali);
+  border: 1px solid var(--linea);
+}
+.boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.aviso {
+  color: #b0172f;
+  background: #fce8eb;
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin: 0 0 8px;
+}
+.nota {
+  color: var(--tinta-suave);
+  font-size: 14px;
+}
+.pildora {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: bold;
+}
+.pildora i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.pildora-rojo {
+  color: #b0172f;
+  background: #fce8eb;
+}
+.pildora-amarillo {
+  color: #9a5b00;
+  background: #fdf3dc;
+}
+.pildora-verde {
+  color: #0e6e36;
+  background: #e3f4ea;
+}
+.marco {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+.menu {
+  background: var(--azul-cali);
+  color: #fff;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.menu-app {
+  font-weight: bold;
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+.menu-grupo {
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+  margin: 14px 0 4px;
+}
+.menu-opcion {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  padding: 7px 10px;
+  border-radius: 6px;
+}
+.menu-opcion.active,
+.menu-opcion:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.menu-usuario {
+  margin-top: auto;
+  padding-top: 16px;
+  font-size: 14px;
+}
+.menu-usuario p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.menu-usuario .sub {
+  color: #dbe4f5;
+}
+.menu-usuario .boton-secundario {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.contenido {
+  padding: 24px 16px;
+}
+.cargando {
+  padding: 24px;
+}
+@media (max-width: 720px) {
+  .marco {
+    grid-template-columns: 1fr;
+  }
+}
