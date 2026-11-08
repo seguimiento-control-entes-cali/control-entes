@@ -141,10 +141,11 @@ Deno.serve(async req => {
     prueba = true;
     correoPrueba = String(perfil.email || quien.user.email || '').toLowerCase();
   }
-  if (!SMTP_USER || !SMTP_PASS) return responder({ error: 'Faltan los secretos SMTP_USER y SMTP_PASS de la función.' }, 500);
-
+  // La casilla de activación se revisa ANTES que los secretos del correo: apagado no responde error cada lunes
   const { data: cfg } = await db.from('config').select('resumen_activo').eq('id', 1).maybeSingle();
   if (!prueba && !cfg?.resumen_activo) return responder({ ok: true, enviados: 0, nota: 'El resumen semanal está desactivado en Configuración.' });
+
+  if (!SMTP_USER || !SMTP_PASS) return responder({ error: 'Faltan los secretos SMTP_USER y SMTP_PASS de la función.' }, 500);
 
   // 2. Datos
   const hoy = hoyBogota(),

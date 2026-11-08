@@ -29,3 +29,16 @@ const REMITENTE = CE_CONF.remitente || CE_BUILD.remitente || '';
 /* Variante construida: 'institucional' (Supabase), 'demo' (datos ficticios) o 'privada' (datos reales sin conexión) */
 const ES_DEMO_PUBLICA = CE_BUILD.variante === 'demo';
 const ES_PRIVADA = CE_BUILD.variante === 'privada';
+/* Versión instalada, para mostrarla en Configuración: la toma scripts/build.mjs de package.json, con la fecha de
+   construcción y la variante. Así se sabe qué versión tiene cada equipo. */
+function versionApp() {
+  const variante =
+    { institucional: 'institucional', demo: 'demostración', privada: 'privada' }[CE_BUILD.variante] || '';
+  const [y, m, d] = String(CE_BUILD.construido || '').split('-');
+  return (
+    'Control de Entes ' +
+    (CE_BUILD.version ? 'versión ' + CE_BUILD.version : '(versión sin dato)') +
+    (variante ? ' · ' + variante : '') +
+    (y && m && d ? ' · construida el ' + d + '/' + m + '/' + y : '')
+  );
+}

@@ -6,7 +6,8 @@ const path = require('path');
 
 const ZONAS = ['UTC', 'America/Bogota'];
 const PRUEBAS = ['reglas.test.cjs', 'planes.test.cjs', 'excel-control.test.cjs', 'dependencias.test.cjs', 'fecha-colombia.test.cjs',
-  'respaldo.test.cjs', 'instalador.test.cjs', 'avisos-planes.test.cjs'];
+  'respaldo.test.cjs', 'instalador.test.cjs', 'avisos-planes.test.cjs', 'funciones.test.cjs',
+  'rls.test.mjs']; // permisos en PostgreSQL (PGlite): se omite si no se indica CE_PGLITE
 
 let fallas = 0;
 for (const TZ of ZONAS) {

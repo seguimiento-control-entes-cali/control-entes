@@ -18,6 +18,11 @@
   `scripts/generar-instalador.mjs` en una sola transacción.
 - Pruebas: `tests/fecha-colombia.test.cjs`, `tests/respaldo.test.cjs` y `tests/instalador.test.cjs`; datos
   ficticios y comprobación de la restauración en `tests/sql/`.
+- Configuración muestra la versión de la app, su variante y la fecha de construcción.
+- `resumen-semanal` revisa la casilla de activación antes que los secretos del correo: apagado ya no responde error
+  cada lunes (`tests/funciones.test.cjs`).
+- Pruebas de permisos (RLS) rol por rol en PostgreSQL real con PGlite (`tests/rls.test.mjs`, 89 verificaciones; se
+  omite si no se indica `CE_PGLITE`, porque PGlite no está en las dependencias del proyecto).
 
 **Corrección del lector de planes de mejoramiento**
 - Dependencia de cada acción importada: primero el nombre completo (en el responsable o en el lugar de

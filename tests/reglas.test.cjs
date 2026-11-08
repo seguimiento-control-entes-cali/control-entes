@@ -93,4 +93,14 @@ assert.strictEqual(R.famOf('Contraloría General de la República'), 'Contralor�
   assert.ok(!F.esHabil(new Date(2026, 9, 12))); ok();
 }
 
+// --- versión de la app en Configuración (la ponen package.json y scripts/build.mjs)
+{
+  const V = require('./cargar-app.cjs')(['versionApp'], { version: '2.6.1', construido: '2026-11-05', variante: 'institucional' });
+  assert.strictEqual(V.versionApp(), 'Control de Entes versión 2.6.1 · institucional · construida el 05/11/2026'); ok();
+  const D = require('./cargar-app.cjs')(['versionApp'], { version: '2.6.1', construido: '2026-11-05', variante: 'demo' });
+  assert.ok(D.versionApp().includes('· demostración ·')); ok();
+  const S = require('./cargar-app.cjs')(['versionApp'], {});
+  assert.strictEqual(S.versionApp(), 'Control de Entes (versión sin dato) · institucional'); ok();
+}
+
 console.log(`OK: ${n} verificaciones de reglas de negocio, directorio y cruce de información`);
