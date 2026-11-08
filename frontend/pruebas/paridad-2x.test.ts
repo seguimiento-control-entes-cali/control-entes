@@ -6,7 +6,8 @@ import cargarApp from '../../tests/cargar-app.cjs';
 import { sumarDias } from '../src/dominio/fechas';
 import { esHabil, festivosColombia, sumarHabiles } from '../src/dominio/dias-habiles';
 import { calcularSemaforo, ETIQUETA_SEMAFORO } from '../src/dominio/semaforo';
-import { NOMBRE_ROL } from '../src/dominio/roles';
+import { NOMBRE_ROL, ROLES } from '../src/dominio/roles';
+import { MENU, menuDe, pantallaInicial } from '../src/dominio/menu';
 
 interface Req2x {
   estado: string;
@@ -24,6 +25,7 @@ interface App2x {
   decorate: (r: Req2x) => Req2x;
   S: { cfg: { dias_rojo: number }; entes: unknown[]; deps: unknown[] };
   ROLES: Record<string, string>;
+  NAV: { g: string; items: { id: string; label: string; labelScoped?: string; roles: string[] }[] }[];
   SEM: Record<string, string>;
 }
 
@@ -36,7 +38,8 @@ const app = cargarApp([
   'decorate',
   'S',
   'ROLES',
-  'SEM'
+  'SEM',
+  'NAV'
 ]) as App2x;
 
 const local = (f: string) => {
@@ -80,6 +83,31 @@ describe('paridad con la 2.x', () => {
         }
     }
     app.S.cfg.dias_rojo = 5;
+  });
+
+  it('menú: mismos grupos, pantallas, textos y roles que NAV', () => {
+    const nuevo = MENU.map(g => ({
+      g: g.grupo,
+      items: g.opciones.map(o => ({
+        id: o.id,
+        label: o.texto,
+        labelScoped: o.textoPropio,
+        roles: [...o.roles].sort()
+      }))
+    }));
+    const viejo = app.NAV.map(g => ({
+      g: g.g,
+      items: g.items.map(i => ({
+        id: i.id,
+        label: i.label,
+        labelScoped: i.labelScoped,
+        roles: [...i.roles].sort()
+      }))
+    }));
+    expect(nuevo).toEqual(viejo);
+    for (const rol of ROLES)
+      expect(pantallaInicial(rol)).toBe(['secretario', 'enlace'].includes(rol) ? 'dependencia' : 'mando');
+    expect(menuDe('enlace').flatMap(g => g.opciones.map(o => o.texto))).toContain('Mi dependencia');
   });
 
   it('textos de roles y del semáforo', () => {

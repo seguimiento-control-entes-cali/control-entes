@@ -1,2 +1,2 @@
-// F1: componentes genéricos sin negocio (Botón, Tarjeta, Tabla, Modal, Semáforo…).
-export {};
+// Componentes genéricos de la interfaz (plan §7.1).
+export { Aviso, Boton, Campo, Pildora, Tarjeta } from './componentes';
