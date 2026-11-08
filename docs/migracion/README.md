@@ -1,6 +1,6 @@
 # Plan de migración · Control de Entes 3.0
 
-> **Estado del plan:** Trabajo previo a la F0 (bloqueos de la 2.6.1) · Fase F0 — no iniciada · **Última actualización:** 2026-10-30 (revisión 4: calendario ajustado)
+> **Estado del plan:** Fase F0 en curso (adelantada al 2026-11-08) · **Última actualización:** 2026-11-08
 > Este documento es la fuente de verdad de la migración. Cada fase termina actualizando la sección
 > [13. Estado y bitácora](#13-estado-y-bitácora) y, si hubo una decisión nueva, la tabla de
 > [4. Decisiones](#4-decisiones-de-arquitectura).
@@ -494,15 +494,16 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 
 ### Etapa 1 · Frontend
 
-#### F0 · Preparación (2026-11-19 → 2026-11-23; antes 2026-10-28 → 2026-10-30)
-- [ ] Repositorio git con `main` protegida y PR obligatorio.
-- [ ] `frontend/` con Vite + React + TypeScript strict, ESLint/Prettier actuales, Vitest.
-- [ ] Reglas de fronteras (§7.1) activas en ESLint.
-- [ ] CI `frontend.yml` (tipos, lint, pruebas, build) en verde; la CI de la 2.x sigue igual.
-- [ ] La plantilla `frontend/ci/frontend.yml` corre las pruebas en **dos zonas horarias**, `TZ=UTC` y
+#### F0 · Preparación (adelantada: 2026-11-08 → 2026-11-10; rev. 4: 2026-11-19 → 2026-11-23)
+- [ ] Repositorio git con `main` protegida y PR obligatorio (pendiente: al crear el repositorio en GitHub).
+- [x] `frontend/` con Vite + React + TypeScript strict, ESLint/Prettier actuales, Vitest.
+- [x] Reglas de fronteras (§7.1) activas en ESLint (y comprobadas por `frontend/pruebas/fronteras.test.ts`).
+- [ ] CI `frontend.yml` (tipos, lint, pruebas, build) en verde; la CI de la 2.x sigue igual (escrita en
+      `.github/workflows/frontend.yml` y probada en el equipo; falta verla en verde en GitHub).
+- [x] La tarea `.github/workflows/frontend.yml` (en lugar de una plantilla en `frontend/ci/`) corre las pruebas en **dos zonas horarias**, `TZ=UTC` y
       `TZ=America/Bogota`: las del frontend y las de la 2.x (`node tests/ejecutar-pruebas.cjs`). Decidido en la tarea
       2.6.2 (28-oct-2026), donde una prueba fallaba solo con la hora de Colombia.
-- [ ] ADR 0001 (D-03), 0002 (D-23), 0003 (D-24).
+- [x] ADR 0001 (D-03), 0002 (D-23), 0003 (D-24) en `docs/migracion/adr/`.
 
 **Salida:** `npm run dev` levanta una página vacía con la CI en verde.
 
@@ -633,7 +634,7 @@ Fecha: AAAA-MM-DD
 | Etapa | Fase | Estado | Inicio | Fin | Fechas anteriores (rev. 3) |
 |---|---|---|---|---|---|
 | 1 | Trabajo previo: bloqueos 2.6.1 y aviso diario | 🔵 en curso | 2026-10-29 | (2026-11-18) | — |
-| 1 | F0 Preparación | ⬜ no iniciada | (2026-11-19) | (2026-11-23) | 2026-10-28 → 10-30 |
+| 1 | F0 Preparación | 🔵 en curso (adelantada) | 2026-11-08 | (2026-11-10) | 2026-10-28 → 10-30; rev. 4: 2026-11-19 → 11-23 |
 | 1 | F1 Cimientos del frontend | ⬜ | (2026-11-24) | (2026-12-02) | 2026-11-03 → 11-06 |
 | 1 | F2 Primeras pantallas | ⬜ | (2026-12-03) | (2026-12-11) | 2026-11-09 → 11-13 |
 | 2 | F3 Pantallas restantes | ⬜ | (2026-12-14) | | 2026-11-17 |
@@ -654,3 +655,4 @@ Pausa: 2026-12-23 → 2027-01-07. Sin cambios en producción del 2026-12-19 al 2
 | 2026-10-27 | — | Revisión 2: la base se queda en Supabase (D-05), los archivos en Supabase Storage sin S3/MinIO (D-12), Supabase Auth se mantiene (D-10), el backend será el único intermediario (D-20). Se descarta el proveedor de identidad externo (D-11). |
 | 2026-10-27 | — | Revisión 3: **cambio de prioridad**. Etapa 1 = solo frontend, conectado directo a Supabase mediante una capa de datos delgada (D-23, D-24); el backend se queda como está. La Etapa 2 (FastAPI) empieza el 2026-11-17. D-04 queda reemplazada. |
 | 2026-10-30 | — | **Revisión 4: calendario ajustado** (aprobado por Erika el 2026-10-29). Etapa 1 hasta el 2026-12-11 (antes 2026-11-13); Etapa 2 desde el 2026-12-14 (antes 2026-11-17). Motivo: antes de la F0 se cierran los bloqueos de instalación de la 2.6.1 y el aviso diario de planes; se trabaja una tarea a la vez con aprobación; la F0 no estaba aprobada. Orden: bloqueos 2 a 6, aviso diario de planes, F0. Bloqueo 1 resuelto el 2026-10-29 (53cbca1) y bloqueo 2 el 2026-10-29 (1a1ceee). Condiciones: sin cambios en producción del 2026-12-19 al 2027-01-06 (se retoman desde el 2027-01-07); vacaciones del 2026-12-23 al 2027-01-07, con la Etapa 2 en pausa; festivo 2027-01-11; el resumen semanal y el aviso diario no se encienden hasta que DATIC autorice el piloto; el proyecto de Supabase de prueba se decide antes del bloqueo 4. |
+| 2026-11-08 | F0 | **F0 adelantada** (aprobada por Erika el 2026-11-08): se presenta el 2026-11-10. Se hace en paralelo con el traslado a GitHub; el aviso diario se instala después (queda apagado hasta que DATIC autorice el piloto). Bloqueos 4 y 5 probados en `control-entes-prueba` y 23 + funciones `respaldo` y `resumen-semanal` en producción el 2026-11-07. Hecho en la rama `feat/f0-preparacion`: `frontend/` con React 18.3.1, TypeScript 5.8.3 estricto, Vite 6.3.5, Vitest 3.2.4, ESLint 9.29.0 con `eslint-plugin-boundaries` 5.0.1 (reglas de §7.1 comprobadas por `frontend/pruebas/fronteras.test.ts`), CI `.github/workflows/frontend.yml` en UTC y America/Bogota (frontend y 2.x) y ADR 0001-0003. Falta: `main` protegida, al existir el repositorio en GitHub. |
