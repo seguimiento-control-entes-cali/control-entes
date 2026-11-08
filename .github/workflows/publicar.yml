@@ -1,9 +1,9 @@
-# Publica la versión institucional en GitHub Pages cada vez que cambia la rama main.
+# Publica la versión institucional en GitHub Pages. SOLO A MANO (pestaña Actions → "Publicar en GitHub Pages" →
+# Run workflow): subir cambios a main ya no publica solo, para que nunca salga una versión sin terminar.
+# Para volver a publicar en cada envío a main, agregar debajo de "on:":   push:  y  branches: [main]
 # Requisito (una sola vez): Settings > Pages > Build and deployment > Source: "GitHub Actions".
 name: Publicar en GitHub Pages
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,9 +22,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Pruebas antes de publicar
-        run: node tests/reglas.test.cjs
+          node-version: 22
+      - name: Herramientas de las pruebas (SheetJS desde vendor/, sin internet)
+        run: npm ci
+      - name: Todas las pruebas, en UTC y en America/Bogota, antes de publicar
+        run: node tests/ejecutar-pruebas.cjs
       - name: Construir versión institucional
         run: node scripts/build.mjs --variante institucional
       - uses: actions/configure-pages@v5

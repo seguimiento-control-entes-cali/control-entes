@@ -23,6 +23,9 @@
   cada lunes (`tests/funciones.test.cjs`).
 - Pruebas de permisos (RLS) rol por rol en PostgreSQL real con PGlite (`tests/rls.test.mjs`, 89 verificaciones; se
   omite si no se indica `CE_PGLITE`, porque PGlite no está en las dependencias del proyecto).
+- GitHub: `publicar.yml` solo publica a mano y corre todas las pruebas en las dos zonas horarias antes de publicar;
+  Node 22 en las dos tareas. Documentada la dirección nueva de la app (organización `seguimiento-control-entes-cali`).
+- Configuración: el aviso sobre las copias de seguridad menciona los scripts 17, 23 y 21; `package-lock.json` en 2.6.1.
 
 **Corrección del lector de planes de mejoramiento**
 - Dependencia de cada acción importada: primero el nombre completo (en el responsable o en el lugar de

@@ -807,7 +807,7 @@ async function respaldoCargar() {
   }
   if (sinScript17()) {
     caja.innerHTML =
-      '<div class="pm-note y">Para activarlas, ejecute en Supabase el script <span class="mono">17_respaldos_y_monitoreo.sql</span> y despliegue la función <span class="mono">respaldo</span> (ver docs/RESPALDOS.md).</div>';
+      '<div class="pm-note y">Para activarlas, ejecute en Supabase los scripts <span class="mono">17_respaldos_y_monitoreo.sql</span> y <span class="mono">23_respaldo_texto.sql</span>, despliegue la función <span class="mono">respaldo</span> y, para la copia semanal, ejecute <span class="mono">21_programar_tareas_boveda.sql</span> (ver docs/RESPALDOS.md).</div>';
     return;
   }
   const { data, error } = await sb.storage

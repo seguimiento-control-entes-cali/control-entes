@@ -152,10 +152,18 @@ Editar `configuracion.json` con la Project URL y la clave pública (anon o publi
 
 ## 3. Publicación en GitHub Pages
 
+Repositorio institucional (decidido el 3-nov-2026): organización de GitHub `seguimiento-control-entes-cali`,
+repositorio `control-entes`. Dirección pública de la app: https://seguimiento-control-entes-cali.github.io/control-entes/
+(antes https://sentisalud.github.io/control-entes/). El plan del traslado y su orden están en el CLAUDE.md.
+
 1. Subir el repositorio a GitHub (sin `datos_privados/`, ya está en `.gitignore`).
 2. Settings > Pages > Build and deployment > Source: **GitHub Actions**.
-3. Cada cambio en la rama `main` ejecuta `.github/workflows/publicar.yml`: corre las pruebas, construye la
-   versión institucional y la publica. El avance se ve en la pestaña **Actions**.
+3. Publicar **a mano**: pestaña **Actions** → *Publicar en GitHub Pages* → **Run workflow**. Ejecuta
+   `.github/workflows/publicar.yml`: corre todas las pruebas en UTC y America/Bogota, construye la versión
+   institucional y la publica. Subir cambios a `main` ya no publica solo, para que no salga una versión sin terminar.
+   Cada envío sí ejecuta `.github/workflows/pruebas.yml` (formato, ESLint y pruebas).
+4. Al cambiar de dirección: en Supabase (Authentication → URL Configuration) agregar la nueva a **Redirect URLs** sin
+   quitar la vieja, probar, y solo entonces cambiar la **Site URL** y el secreto `SITIO_URL` de las funciones.
 
 Alternativa sin GitHub Actions: `npm run build` y subir el contenido de `dist/institucional/` a cualquier hosting estático con HTTPS.
 
