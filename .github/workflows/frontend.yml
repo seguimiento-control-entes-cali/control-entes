@@ -1,0 +1,31 @@
+# Frontend 3.0 (docs/migracion/README.md, F0): formato, tipos, reglas de capas, pruebas y construcción.
+# Corre en dos zonas horarias (UTC y America/Bogota), las pruebas del frontend y las de la 2.x, como se decidió en la
+# tarea 2.6.2 (28-oct-2026). La 2.x sigue con su propia tarea (pruebas.yml) sin cambios.
+name: Frontend 3.0
+on:
+  push:
+  pull_request:
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tz: [UTC, America/Bogota]
+    env:
+      TZ: ${{ matrix.tz }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Dependencias del frontend
+        working-directory: frontend
+        run: npm ci
+      - name: Formato, tipos, reglas de capas, pruebas y construcción
+        working-directory: frontend
+        run: npm run verificar
+      - name: Dependencias de la 2.x
+        run: npm ci
+      - name: Pruebas de la 2.x
+        run: npm run build && node tests/ejecutar-pruebas.cjs

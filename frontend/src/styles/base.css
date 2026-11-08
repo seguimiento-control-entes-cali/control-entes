@@ -1,0 +1,59 @@
+/* Colores de docs/tokens.json (los mismos de la 2.x). En F1 se convierten en el sistema de temas completo. */
+:root {
+  --azul-cali: #0b3d91;
+  --oro-escudo: #d4a72c;
+  --fondo: #f3f5fa;
+  --panel: #ffffff;
+  --linea: #e1e6ef;
+  --tinta: #13203a;
+  --tinta-suave: #55627a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+.f0 {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.f0-tarjeta {
+  max-width: 560px;
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-top: 6px solid var(--azul-cali);
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.f0-tarjeta h1 {
+  margin: 4px 0 12px;
+  color: var(--azul-cali);
+}
+
+.f0-etiqueta {
+  margin: 0;
+  color: var(--oro-escudo);
+  font-weight: bold;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.f0-version {
+  margin-bottom: 0;
+  color: var(--tinta-suave);
+  font-size: 13px;
+}

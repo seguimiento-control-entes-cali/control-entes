@@ -1,0 +1,40 @@
+{
+  "name": "control-entes-frontend",
+  "version": "3.0.0-f0",
+  "description": "Control de Entes 3.0 · Frontend (Etapa 1 del plan de migración, docs/migracion/README.md)",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "tipos": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "formato": "prettier --write \"src/**/*.{ts,tsx,css}\" \"pruebas/**/*.ts\" \"*.{ts,js,json}\"",
+    "formato:revisar": "prettier --check \"src/**/*.{ts,tsx,css}\" \"pruebas/**/*.ts\" \"*.{ts,js,json}\"",
+    "test": "vitest run",
+    "verificar": "npm run formato:revisar && npm run tipos && npm run lint && npm run test && npm run build"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.29.0",
+    "@types/react": "18.3.23",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "4.5.2",
+    "eslint": "9.29.0",
+    "eslint-plugin-boundaries": "5.0.1",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "globals": "16.2.0",
+    "prettier": "3.3.3",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.34.1",
+    "vite": "6.3.5",
+    "vitest": "3.2.4"
+  }
+}
