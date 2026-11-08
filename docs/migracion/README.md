@@ -508,9 +508,12 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 **Salida:** `npm run dev` levanta una página vacía con la CI en verde.
 
 #### F1 · Cimientos (2026-11-24 → 2026-12-02; antes 2026-11-03 → 2026-11-06)
-- [ ] `config/entorno.ts` con validación; `.env.example`.
+- [x] `config/entorno.ts` con validación; `.env.example` (2026-11-08; validación a mano, sin Zod, hasta aprobar dependencias;
+      rechaza claves secretas).
 - [ ] Tipos generados de Supabase (`datos/supabase/tipos.generados.ts`) y script `npm run tipos:bd`.
-- [ ] `datos/`: `crearDatos`, contratos `auth`, `identidad`, `catalogos`; implementaciones Supabase y demo.
+- [ ] `datos/`: `crearDatos`, contratos `auth`, `identidad`, `catalogos`; implementaciones Supabase y demo (2026-11-08: contratos,
+      `crearDatos` y demo hechos con pruebas en `frontend/pruebas/datos-demo.test.ts`; falta Supabase, que requiere instalar
+      `@supabase/supabase-js`).
 - [ ] Ingreso con verificación en dos pasos, cierre de sesión y restablecimiento de contraseña.
 - [ ] `app/`: Layout, navegación y barra de pestañas por rol, `GuardaRol`, límite de errores.
 - [ ] `shared/ui/` base: Botón, Tarjeta, Kpi, Tabla, Modal, Toast, Semáforo, Vacío; tokens y temas.
