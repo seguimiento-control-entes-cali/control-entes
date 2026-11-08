@@ -514,7 +514,9 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 - [ ] Ingreso con verificación en dos pasos, cierre de sesión y restablecimiento de contraseña.
 - [ ] `app/`: Layout, navegación y barra de pestañas por rol, `GuardaRol`, límite de errores.
 - [ ] `shared/ui/` base: Botón, Tarjeta, Kpi, Tabla, Modal, Toast, Semáforo, Vacío; tokens y temas.
-- [ ] `dominio/`: semáforo, días hábiles, roles con sus pruebas portadas.
+- [x] `dominio/`: semáforo, días hábiles, roles con sus pruebas portadas (adelantado el 2026-11-08: `fechas.ts`,
+      `dias-habiles.ts`, `semaforo.ts`, `roles.ts`; paridad con el código real de la 2.x en `frontend/pruebas/paridad-2x.test.ts`:
+      festivos 2020-2035, cada día de 2024-2031 y el semáforo con umbrales 1, 5 y 30, en UTC y America/Bogota).
 - [ ] PWA con `vite-plugin-pwa`; fuentes e íconos empaquetados.
 - [ ] Publicación automática en `/v3/` (demo y real).
 
