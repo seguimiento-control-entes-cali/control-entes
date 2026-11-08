@@ -674,6 +674,60 @@ async function probarResumen(btn) {
   }
 }
 
+/* ---------- Aviso diario de planes (Edge Function avisos-planes, supabase/24 y 25) ---------- */
+const CORREO_CALI = /^[a-z0-9._%+-]+@cali\.gov\.co$/;
+async function guardarAvisos() {
+  if (!('avisos_activo' in S.cfg) && !S.demo)
+    return toast('Primero ejecute el script supabase/24_avisos_planes.sql', 'err');
+  const copia = ($('#cfAvCopia').value || '').trim().toLowerCase();
+  if (copia && !CORREO_CALI.test(copia))
+    return toast('El correo de copia a Control Interno debe ser @cali.gov.co', 'err');
+  try {
+    await db.saveConfig({ avisos_activo: $('#cfAv').checked, avisos_copia_correo: copia });
+    await db.catalogs();
+    toast(
+      $('#cfAv').checked
+        ? 'Aviso diario activado: se enviará de lunes a viernes a las 7:00 a. m.'
+        : 'Aviso diario desactivado'
+    );
+    render();
+  } catch (e) {
+    toast(e.message, 'err');
+  }
+}
+async function previaAvisos(btn) {
+  if (S.demo || !sb) return toast('En modo demostración no hay vista previa del aviso', 'err');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando…';
+  }
+  try {
+    const { data, error } = await sb.functions.invoke('avisos-planes', { body: { vista_previa: true } });
+    if (error) throw new Error((data && data.error) || error.message);
+    if (data && data.error) throw new Error(data.error);
+    const filas = (data.dependencias || [])
+      .map(
+        d =>
+          `<tr><td>${esc(d.dependencia)}</td><td class="mono">${d.previo}</td><td class="mono">${d.atraso}</td><td>${d.correo ? esc(d.correo) : '<span class="muted">sin correo en el directorio</span>'}</td></tr>`
+      )
+      .join('');
+    openModal({
+      title: 'Vista previa del aviso diario',
+      wide: true,
+      body: `<div class="hint" style="margin-bottom:10px">Lo que se enviaría hoy (${fmtD(data.hoy)}). No se envió ningún correo.${data.dia_habil ? '' : ' Hoy no es día hábil: la tarea no enviaría nada.'}${data.activo ? '' : ' El aviso está desactivado.'}</div>
+        ${filas ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Dependencia</th><th>Vencen el próximo día hábil</th><th>Vencidas</th><th>Correo del titular</th></tr></thead><tbody>${filas}</tbody></table></div>` : '<div class="empty">Hoy no hay acciones para avisar.</div>'}
+        <div class="hint" style="margin-top:10px">Copia a Control Interno: ${data.copia ? esc(data.copia) : 'sin correo de copia'}.${data.sin_dependencia ? ` ${data.sin_dependencia} acción(es) sin dependencia asignada no se avisan.` : ''}</div>`
+    });
+  } catch (e) {
+    toast('No se pudo consultar la vista previa: ' + e.message, 'err');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-eye"></i> Ver qué se enviaría hoy';
+    }
+  }
+}
+
 function vConfig(c) {
   c.innerHTML = `<div class="grid g-2">
     <div class="card"><h3>Parámetros del semáforo</h3><div class="sub">Se guardan en la base de datos y aplican a toda la entidad.</div>
@@ -691,6 +745,15 @@ function vConfig(c) {
           : `<label class="pm-checks" style="margin:6px 0 12px"><input type="checkbox" id="cfRes" ${S.cfg.resumen_activo ? 'checked' : ''}> Enviar el resumen semanal automáticamente</label>
       ${S.cfg.resumen_ultimo ? `<div class="hint" style="margin-bottom:10px">Último envío: ${fmtTs(S.cfg.resumen_ultimo)}. ${esc(S.cfg.resumen_ultimo_detalle || '')}</div>` : ''}
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="saveResumen"><i class="fa-solid fa-floppy-disk"></i> Guardar</button><button class="btn" data-act="probarResumen"><i class="fa-solid fa-paper-plane"></i> Enviar prueba a mi correo</button></div>`
+      }</div>
+    <div class="card"><h3>Aviso diario de planes de mejoramiento</h3><div class="sub">De lunes a viernes a las 7:00 a. m. (los festivos no) se avisa a cada secretario o director, con copia a Control Interno, de las acciones que vencen el próximo día hábil y de las que se vencieron sin cumplirse (solo las de los últimos 7 días; las más antiguas siguen en el resumen de los lunes). Nunca se avisa dos veces lo mismo; con una prórroga se avisa de nuevo.</div>
+      ${
+        !S.demo && !('avisos_activo' in S.cfg)
+          ? '<div class="pm-note y">Para usarlo, ejecute en Supabase el script <span class="mono">24_avisos_planes.sql</span>, despliegue la función <span class="mono">avisos-planes</span> y programe la tarea con <span class="mono">25_programar_avisos.sql</span> (ver docs/DESPLIEGUE.md).</div>'
+          : `<label class="pm-checks" style="margin:6px 0 12px"><input type="checkbox" id="cfAv" ${S.cfg.avisos_activo ? 'checked' : ''}> Enviar el aviso diario automáticamente</label>
+      <div class="field"><label>Correo de copia a Control Interno</label><input id="cfAvCopia" type="email" value="${esc(S.cfg.avisos_copia_correo || '')}" placeholder="control.interno@cali.gov.co"><div class="hint">Solo correos @cali.gov.co. Vacío: el aviso sale sin copia.</div></div>
+      ${S.cfg.avisos_ultimo ? `<div class="hint" style="margin-bottom:10px">Último envío: ${fmtTs(S.cfg.avisos_ultimo)}. ${esc(S.cfg.avisos_ultimo_detalle || '')}</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="saveAvisos"><i class="fa-solid fa-floppy-disk"></i> Guardar</button><button class="btn" data-act="previaAvisos"><i class="fa-solid fa-eye"></i> Ver qué se enviaría hoy</button></div>`
       }</div>
     <div class="card"><h3>Datos desde el Excel de control</h3><div class="sub">Actualice el histórico cargando el Excel de control de la vigencia. Antes de guardar se muestra qué cambia y qué filas revisar.</div>
       <button class="btn primary" data-act="ceAbrir"><i class="fa-solid fa-file-arrow-up"></i> Cargar Excel de control</button>

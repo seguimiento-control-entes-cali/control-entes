@@ -9,7 +9,12 @@
 - `23_respaldo_texto.sql` y función `respaldo`: copias en formato 3, con los decimales exactos (100.00 ya no se
   vuelve 100), para que la cadena de huellas de la auditoría verifique después de restaurar.
   `scripts/restaurar-respaldo.mjs` lee el formato 3 y sigue aceptando el 2 con un aviso.
-- `00_instalar_todo.sql` completo (01 a 23, sin el 11, el 15 ni el 21), generado por
+- Aviso diario de planes de mejoramiento (función `avisos-planes`, scripts `24_avisos_planes.sql` y
+  `25_programar_avisos.sql`, reglas en `supabase/functions/avisos-planes/reglas.js`): de lunes a viernes, sin festivos,
+  un correo por dependencia con copia a Control Interno con las acciones que vencen el próximo día hábil y las vencidas
+  en los últimos 7 días; nunca repite un aviso (con prórroga avisa de nuevo). Apagado por defecto; en Configuración,
+  casilla, correo de copia y vista previa sin enviar. `scripts/funcion-para-pegar.mjs` une la función en un archivo.
+- `00_instalar_todo.sql` completo (01 a 24, sin el 11, el 15 ni el 21; el 25 va aparte), generado por
   `scripts/generar-instalador.mjs` en una sola transacción.
 - Pruebas: `tests/fecha-colombia.test.cjs`, `tests/respaldo.test.cjs` y `tests/instalador.test.cjs`; datos
   ficticios y comprobación de la restauración en `tests/sql/`.

@@ -2,7 +2,7 @@
 
 ## Qué se respalda
 La función `respaldo` (supabase/functions/respaldo) guarda en el bucket privado `respaldos` un archivo
-`respaldo_AAAA-MM-DD_HHMM.json.gz` con **todas las tablas de la app** (26 tablas: requerimientos, histórico,
+`respaldo_AAAA-MM-DD_HHMM.json.gz` con **todas las tablas de la app** (27 tablas: requerimientos, histórico,
 planes de mejoramiento, directorio, notificaciones, cuentas, configuración, auditoría, etc.) y la lista de
 carpetas de soportes PDF. Se conservan las **12 copias más recientes**.
 

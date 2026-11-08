@@ -17,14 +17,14 @@ const S00 = fs.readFileSync(path.join(DIR, '00_instalar_todo.sql'), 'utf8');
   assert.strictEqual(r.status, 0, r.stderr || r.stdout); ok();
 }
 
-// --- 2. Incluye todos los scripts numerados, en orden, salvo 11, 15 y 21; cada uno completo
+// --- 2. Incluye todos los scripts numerados, en orden, salvo 11, 15, 21 y 25; cada uno completo
 {
   const secciones = [...S00.matchAll(/^-- >{20} (\d{2}_[^ ]+\.sql) <{20}$/gm)].map(m => m[1]);
   const esperados = fs.readdirSync(DIR).filter(f => /^\d{2}_.+\.sql$/.test(f) && !f.startsWith('00_')).sort()
-    .filter(f => !['11', '15', '21'].includes(f.slice(0, 2)));
+    .filter(f => !['11', '15', '21', '25'].includes(f.slice(0, 2)));
   assert.deepStrictEqual(secciones, esperados); ok();
   assert.ok(esperados.includes('22_fecha_colombia.sql') && esperados.includes('23_respaldo_texto.sql')); ok();
-  for (const f of ['11', '15', '21']) assert.ok(!secciones.some(s => s.startsWith(f)), `no incluye el ${f}`), ok();
+  for (const f of ['11', '15', '21', '25']) assert.ok(!secciones.some(s => s.startsWith(f)), `no incluye el ${f}`), ok();
   for (const f of esperados) {
     const original = fs.readFileSync(path.join(DIR, f), 'utf8').replace(/\r\n/g, '\n').split('\n')
       .filter(l => !/^(begin|commit);\s*$/i.test(l)).join('\n').replace(/\n+$/, '');
@@ -42,11 +42,12 @@ const S00 = fs.readFileSync(path.join(DIR, '00_instalar_todo.sql'), 'utf8');
   assert.ok(!/@cali\.gov\.co'/.test(S00.replace(/like '%@cali\.gov\.co'/g, '')), 'sin correos reales'); ok();
 }
 
-// --- 4. Termina con la verificación de las 26 tablas y de las funciones clave
+// --- 4. Termina con la verificación de las 27 tablas y de las funciones clave
 {
   assert.ok(/tablas_faltantes/.test(S00) && /funciones_ok/.test(S00)); ok();
-  const tablas = (S00.slice(S00.lastIndexOf('unnest(array[')).match(/'\w+'/g) || []).length;
-  assert.ok(tablas >= 26); ok();
+  const inicio = S00.lastIndexOf('unnest(array[');
+  const tablas = (S00.slice(inicio, S00.indexOf(']', inicio)).match(/'\w+'/g) || []).length;
+  assert.strictEqual(tablas, 27); ok();
 }
 
 console.log(`OK: ${n} verificaciones del instalador completo (00_instalar_todo.sql)`);

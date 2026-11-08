@@ -3,8 +3,8 @@
 ## 1. Base de datos (Supabase)
 
 **Instalación nueva:** en SQL Editor ejecutar `supabase/00_instalar_todo.sql` en un proyecto vacío. Contiene los
-scripts 01 a 23 en una sola transacción, salvo el 11 (datos reales, en `datos_privados/`), el 15 (ya no hace nada)
-y el 21 (programa las tareas: ejecutarlo aparte después, ver "Seguridad y resumen semanal"). Lo genera
+scripts 01 a 24 en una sola transacción, salvo el 11 (datos reales, en `datos_privados/`), el 15 (ya no hace nada),
+el 21 y el 25 (programan las tareas: ejecutarlos aparte después, ver "Seguridad y resumen semanal" y "Aviso diario"). Lo genera
 `node scripts/generar-instalador.mjs` a partir de los scripts; no se edita a mano.
 **Instalación existente:** ejecutar solo los scripts que falten, en orden (por ejemplo `08_cruces_temas.sql` y `09_hoja_excel.sql`).
 
@@ -34,6 +34,19 @@ de verificación del final del script; todas sus columnas deben salir en `true`.
 
 **Copias de seguridad en formato 3.** Ejecutar `23_respaldo_texto.sql` y después volver a desplegar la función
 `respaldo` (en ese orden; si se despliega antes, la copia sigue en el formato 2 con un aviso). Ver `docs/RESPALDOS.md`.
+
+**Aviso diario de planes de mejoramiento** (solo cuando DATIC autorice el piloto; queda apagado hasta que se active):
+1. Ejecutar `24_avisos_planes.sql` (casilla de activación apagada, correo de copia y tabla `pm_avisos`).
+2. Desplegar la función `avisos-planes` **sin** verificación JWT (valida por su cuenta quién la llama). Tiene dos
+   archivos (`index.ts` y `reglas.js`): con la CLI, `supabase functions deploy avisos-planes`; para pegarla en el
+   editor del panel, generar un solo archivo con `node scripts/funcion-para-pegar.mjs avisos-planes` y pegar
+   `build/funciones/avisos-planes/index.ts`. Usa los mismos secretos del resumen semanal (`SMTP_USER`, `SMTP_PASS`,
+   `RESUMEN_CLAVE`, `SITIO_URL`).
+3. Ejecutar `25_programar_avisos.sql`: programa la tarea de lunes a viernes a las 7:00 a. m. y la deja **desactivada**.
+4. En la app: Configuración → Aviso diario de planes → escribir el correo de copia de Control Interno → Guardar →
+   *Ver qué se enviaría hoy* (vista previa, no envía nada).
+5. Para empezar a enviar: marcar la casilla y Guardar, y activar la tarea:
+   `select cron.alter_job(jobid, active := true) from cron.job where jobname = 'avisos-planes';`
 
 ## Versión 2.6: norma CGSC, memoria y paquete para DATIC
 

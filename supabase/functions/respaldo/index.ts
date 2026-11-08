@@ -33,6 +33,8 @@ const TABLAS: [string, string][] = [
   ['cuentas_eventos', 'id'], ['pm_planes', 'id'], ['pm_hallazgos', 'id'], ['pm_acciones', 'id'], ['pm_avances', 'id'],
   // scripts 18 y 20: traslados, prórrogas, archivo documental e informes semestrales
   ['pm_traslados', 'id'], ['pm_prorrogas', 'id'], ['archivo_documentos', 'id'], ['pm_informes_avance', 'id'],
+  // script 24: avisos diarios de planes ya enviados
+  ['pm_avisos', 'id'],
   ['eventos_sistema', 'id'], ['audit_log', 'id'], ['pm_restauraciones', 'audit_id']
 ];
 const CONSERVAR = 12;

@@ -90,7 +90,8 @@ const V3 = {
   const en23 = [...s23.slice(s23.indexOf('array['), s23.indexOf(']) then')).matchAll(/'(\w+)'/g)].map(m => m[1]);
   const gen = fs.readFileSync(path.join(RAIZ, 'scripts', 'generar-instalador.mjs'), 'utf8');
   const enGen = [...gen.slice(gen.indexOf('const TABLAS'), gen.indexOf('];', gen.indexOf('const TABLAS'))).matchAll(/'(\w+)'/g)].map(m => m[1]);
-  assert.strictEqual(enFuncion.length, 26); ok();
+  assert.strictEqual(enFuncion.length, 27); ok(); // 26 de la app + pm_avisos (script 24)
+  assert.ok(enFuncion.indexOf('pm_avisos') > enFuncion.indexOf('pm_acciones')); ok(); // se restaura después de su acción
   assert.deepStrictEqual(en23, enFuncion); ok();
   assert.deepStrictEqual(enGen, enFuncion); ok();
   // respaldo_lote: solo lectura, solo service_role, y la función cae al formato 2 si falta el 23

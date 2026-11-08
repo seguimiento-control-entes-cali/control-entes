@@ -1,8 +1,8 @@
 -- =====================================================================
 -- INSTALADOR COMPLETO · Control de Entes · Alcaldía de Santiago de Cali
 -- GENERADO por scripts/generar-instalador.mjs: no editar a mano; editar los scripts y volver a generarlo.
--- Contiene, en orden: 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 12, 13, 14, 16, 17, 18, 19, 20, 22, 23.
--- No contiene: 11 (datos reales), 15 (ya no hace nada), 21 (programa tareas).
+-- Contiene, en orden: 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 12, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24.
+-- No contiene: 11 (datos reales), 15 (ya no hace nada), 21 (programa tareas), 25 (programa tareas).
 -- Ejecutar UNA sola vez en el SQL Editor de un proyecto de Supabase VACÍO. Va en una sola transacción: si algo
 -- falla, no queda nada instalado. No trae datos reales: solo los catálogos de entes y dependencias (02).
 -- Al final, la verificación: tablas_faltantes debe ser 0 y funciones_ok true.
@@ -2661,7 +2661,8 @@ begin
   if p_tabla <> all (array['config', 'entes', 'dependencias', 'profiles', 'directorio', 'requerimientos', 'alertas_log',
       'notificaciones', 'informes', 'accesos', 'historico_requerimientos', 'historico_cargas', 'tema_manual',
       'cruce_revision', 'cuentas_eventos', 'pm_planes', 'pm_hallazgos', 'pm_acciones', 'pm_avances', 'pm_traslados',
-      'pm_prorrogas', 'archivo_documentos', 'pm_informes_avance', 'eventos_sistema', 'audit_log', 'pm_restauraciones']) then
+      'pm_prorrogas', 'archivo_documentos', 'pm_informes_avance', 'pm_avisos', 'eventos_sistema', 'audit_log',
+      'pm_restauraciones']) then
     raise exception 'La tabla % no hace parte de la copia de seguridad', p_tabla;
   end if;
   if to_regclass('public.' || quote_ident(p_tabla)) is null then
@@ -2688,11 +2689,65 @@ select
   has_function_privilege('service_role', 'public.respaldo_lote(text, text, integer, integer)', 'execute')   as service_role_puede,
   not has_function_privilege('authenticated', 'public.respaldo_lote(text, text, integer, integer)', 'execute') as usuarios_no_pueden;
 
+-- >>>>>>>>>>>>>>>>>>>> 24_avisos_planes.sql <<<<<<<<<<<<<<<<<<<<
+-- =====================================================================
+-- 24 · Aviso diario de planes de mejoramiento (función avisos-planes)
+--  * Configuración: casilla de activación (APAGADA por defecto), correo de copia a Control Interno (vacío o
+--    @cali.gov.co) y el resultado del último envío.
+--  * Tabla pm_avisos: un registro por aviso enviado (acción, tipo "previo" o "atraso" y fecha de terminación).
+--    La regla única impide avisar dos veces lo mismo; si la acción recibe una prórroga, su fecha cambia y se avisa
+--    de nuevo. Solo la escribe la función con la llave de servicio; la leen el Super administrador y Control Interno.
+-- La programación de la tarea diaria va aparte, en supabase/25_programar_avisos.sql (siempre apagada).
+-- Requiere: scripts 01 a 20. Se puede ejecutar más de una vez. No cambia ningún dato existente.
+-- =====================================================================
+
+-- 1. Configuración
+alter table public.config add column if not exists avisos_activo boolean not null default false;
+alter table public.config add column if not exists avisos_copia_correo text not null default '';
+alter table public.config drop constraint if exists config_avisos_copia_ok;
+alter table public.config add constraint config_avisos_copia_ok
+  check (avisos_copia_correo = '' or lower(avisos_copia_correo) ~ '^[a-z0-9._%+-]+@cali\.gov\.co$');
+alter table public.config add column if not exists avisos_ultimo timestamptz;
+alter table public.config add column if not exists avisos_ultimo_detalle text not null default '';
+
+-- 2. Avisos enviados
+create table if not exists public.pm_avisos (
+  id             bigint generated always as identity primary key,
+  accion_id      uuid not null references public.pm_acciones(id) on delete cascade,
+  tipo           text not null check (tipo in ('previo', 'atraso')),
+  fecha_fin      date not null,
+  dependencia_id bigint references public.dependencias(id),
+  correo         text not null default '',
+  copia          text not null default '',
+  created_at     timestamptz not null default now(),
+  constraint pm_avisos_unico unique (accion_id, tipo, fecha_fin)
+);
+create index if not exists idx_pm_avisos_fecha on public.pm_avisos (created_at desc);
+alter table public.pm_avisos enable row level security;
+drop policy if exists pm_avisos_leer on public.pm_avisos;
+create policy pm_avisos_leer on public.pm_avisos for select to authenticated
+  using (public.current_rol() in ('admin', 'control_interno'));
+revoke all on public.pm_avisos from anon, authenticated;
+grant select on public.pm_avisos to authenticated;
+
+-- 3. Auditoría: cada aviso registrado (y cada reserva liberada si el correo falla) queda en la cadena
+drop trigger if exists trg_audit_pm_avisos on public.pm_avisos;
+create trigger trg_audit_pm_avisos after insert or delete on public.pm_avisos
+  for each row execute function public.audit_trigger();
+
+-- Verificación: debe dar true en las cuatro columnas
+select
+  (select count(*) from information_schema.columns where table_schema = 'public' and table_name = 'config'
+     and column_name in ('avisos_activo', 'avisos_copia_correo', 'avisos_ultimo', 'avisos_ultimo_detalle')) = 4 as configuracion_ok,
+  (select not avisos_activo from public.config where id = 1)                                                    as aviso_apagado,
+  to_regclass('public.pm_avisos') is not null                                                                    as tabla_ok,
+  (select relrowsecurity from pg_class where oid = 'public.pm_avisos'::regclass)                                 as rls_activo;
+
 commit;
 
 -- >>>>>>>>>>>>>>>>>>>> Verificación de la instalación <<<<<<<<<<<<<<<<<<<<
 select
-  (select count(*) from unnest(array['config', 'entes', 'dependencias', 'profiles', 'directorio', 'requerimientos', 'alertas_log', 'notificaciones', 'informes', 'accesos', 'historico_requerimientos', 'historico_cargas', 'tema_manual', 'cruce_revision', 'cuentas_eventos', 'pm_planes', 'pm_hallazgos', 'pm_acciones', 'pm_avances', 'pm_traslados', 'pm_prorrogas', 'archivo_documentos', 'pm_informes_avance', 'eventos_sistema', 'audit_log', 'pm_restauraciones']) as t
+  (select count(*) from unnest(array['config', 'entes', 'dependencias', 'profiles', 'directorio', 'requerimientos', 'alertas_log', 'notificaciones', 'informes', 'accesos', 'historico_requerimientos', 'historico_cargas', 'tema_manual', 'cruce_revision', 'cuentas_eventos', 'pm_planes', 'pm_hallazgos', 'pm_acciones', 'pm_avances', 'pm_traslados', 'pm_prorrogas', 'archivo_documentos', 'pm_informes_avance', 'pm_avisos', 'eventos_sistema', 'audit_log', 'pm_restauraciones']) as t
     where to_regclass('public.' || t) is null) as tablas_faltantes,
   (select count(*) from pg_proc where pronamespace = 'public'::regnamespace
     and proname in ('verificar_cadena_auditoria', 'hoy_colombia', 'respaldo_lote')) = 3 as funciones_ok;

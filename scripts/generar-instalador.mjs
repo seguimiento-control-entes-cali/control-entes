@@ -11,6 +11,7 @@
      11  correos del directorio: tiene datos reales y vive en datos_privados/, nunca en el repositorio.
      15  ya no hace nada (la programación de tareas pasó al 21).
      21  programa las tareas (pg_cron) leyendo la bóveda: se ejecuta aparte, solo donde haya que programarlas.
+     25  programa el aviso diario de planes (pg_cron, apagado): igual que el 21, se ejecuta aparte.
    Los begin; y commit; propios de cada script se quitan: todo el instalador va en una sola transacción.
    ===================================================================== */
 import fs from 'node:fs';
@@ -20,12 +21,12 @@ import { fileURLToPath } from 'node:url';
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIR = path.join(RAIZ, 'supabase');
 const SALIDA = path.join(DIR, '00_instalar_todo.sql');
-export const EXCLUIDOS = { '11': 'datos reales', '15': 'ya no hace nada', '21': 'programa tareas' };
-/* Las 26 tablas de la app (las mismas de la copia de seguridad) para la verificación final */
+export const EXCLUIDOS = { '11': 'datos reales', '15': 'ya no hace nada', '21': 'programa tareas', '25': 'programa tareas' };
+/* Las 27 tablas de la app (las mismas de la copia de seguridad) para la verificación final */
 const TABLAS = ['config', 'entes', 'dependencias', 'profiles', 'directorio', 'requerimientos', 'alertas_log', 'notificaciones',
   'informes', 'accesos', 'historico_requerimientos', 'historico_cargas', 'tema_manual', 'cruce_revision', 'cuentas_eventos',
   'pm_planes', 'pm_hallazgos', 'pm_acciones', 'pm_avances', 'pm_traslados', 'pm_prorrogas', 'archivo_documentos',
-  'pm_informes_avance', 'eventos_sistema', 'audit_log', 'pm_restauraciones'];
+  'pm_informes_avance', 'pm_avisos', 'eventos_sistema', 'audit_log', 'pm_restauraciones'];
 
 export function generar() {
   const scripts = fs.readdirSync(DIR).filter(f => /^\d{2}_.+\.sql$/.test(f) && !f.startsWith('00_')).sort()

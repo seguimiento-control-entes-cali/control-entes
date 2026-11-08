@@ -176,6 +176,12 @@ document.addEventListener('click', async e => {
     case 'probarResumen':
       await probarResumen(t);
       break;
+    case 'saveAvisos':
+      await guardarAvisos();
+      break;
+    case 'previaAvisos':
+      await previaAvisos(t);
+      break;
     case 'miClaveGuardar':
       await guardarClave();
       break;

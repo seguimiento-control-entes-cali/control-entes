@@ -18,7 +18,8 @@ begin
   if p_tabla <> all (array['config', 'entes', 'dependencias', 'profiles', 'directorio', 'requerimientos', 'alertas_log',
       'notificaciones', 'informes', 'accesos', 'historico_requerimientos', 'historico_cargas', 'tema_manual',
       'cruce_revision', 'cuentas_eventos', 'pm_planes', 'pm_hallazgos', 'pm_acciones', 'pm_avances', 'pm_traslados',
-      'pm_prorrogas', 'archivo_documentos', 'pm_informes_avance', 'eventos_sistema', 'audit_log', 'pm_restauraciones']) then
+      'pm_prorrogas', 'archivo_documentos', 'pm_informes_avance', 'pm_avisos', 'eventos_sistema', 'audit_log',
+      'pm_restauraciones']) then
     raise exception 'La tabla % no hace parte de la copia de seguridad', p_tabla;
   end if;
   if to_regclass('public.' || quote_ident(p_tabla)) is null then

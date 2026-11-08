@@ -1,7 +1,7 @@
 # Modelo de datos (Supabase / PostgreSQL)
 
 Ejecutar en orden los scripts de `supabase/` (o `00_instalar_todo.sql` en un proyecto vacío, que contiene del 01
-al 23 salvo el 11, el 15 y el 21; ver `docs/DESPLIEGUE.md`).
+al 24 salvo el 11, el 15 y el 21, y no trae el 25; ver `docs/DESPLIEGUE.md`).
 
 | Tabla / vista | Para qué sirve | Quién lee | Quién escribe |
 |---|---|---|---|
