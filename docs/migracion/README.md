@@ -534,7 +534,10 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
       aplicación, nunca respuestas de Supabase; probado en Edge: abre e ingresa en demo sin internet).
 - [ ] Publicación automática en `/v3/` (demo y real) (2026-11-10: `publicar.yml` publica la demo en `/v3/` con la casilla
       "incluir_v3", tras sus verificaciones en las dos zonas; simulado en el equipo: 2.6.1 en la raíz y 3.0 en /v3/, cada una con
-      su service worker. Falta: publicarla y la variante real con ingreso de un usuario real, junto con Erika).
+      su service worker. 2026-11-10: opción "variante_v3" (demo o institucional); la institucional toma la dirección
+      y la clave publicable de `configuracion.json` y no se publica si la clave no es `sb_publishable_`; probada en el
+      equipo con las peticiones a Supabase bloqueadas: abre el ingreso sin errores. Falta: publicarla y el ingreso de
+      un usuario real, junto con Erika).
 
 **Salida:** un usuario real inicia sesión en `/v3/`, ve el menú de su rol y la versión demo funciona sin red.
 

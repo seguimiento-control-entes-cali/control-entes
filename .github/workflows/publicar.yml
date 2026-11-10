@@ -10,6 +10,11 @@ on:
         description: 'Publicar también la versión 3.0 de prueba (demostración, datos ficticios) en /v3/'
         type: boolean
         default: true
+      variante_v3:
+        description: 'Versión 3.0 en /v3/: demo (datos ficticios) o institucional (base real, el mismo proyecto que la 2.6.1)'
+        type: choice
+        options: [demo, institucional]
+        default: demo
 permissions:
   contents: read
   pages: write
@@ -34,8 +39,9 @@ jobs:
         run: node tests/ejecutar-pruebas.cjs
       - name: Construir versión institucional
         run: node scripts/build.mjs --variante institucional
-      # Versión 3.0 de prueba (plan §8, D-26): demostración con datos ficticios en /v3/, sin conexión a Supabase.
-      # Antes de publicarla corre todas sus verificaciones en las dos zonas horarias.
+      # Versión 3.0 de prueba (plan §8, D-26) en /v3/: demostración con datos ficticios, o institucional conectada al
+      # mismo proyecto que la 2.6.1 (dirección y clave publicable de configuracion.json; si no es una clave
+      # publicable sb_publishable_, no se publica). Antes de publicarla corre todas sus verificaciones en las dos zonas horarias.
       - name: Versión 3.0 · dependencias
         if: ${{ inputs.incluir_v3 }}
         working-directory: frontend
@@ -46,12 +52,20 @@ jobs:
         run: |
           TZ=UTC npm run verificar
           TZ=America/Bogota npm run verificar
-      - name: Versión 3.0 · construir (demostración) y copiar a /v3/
+      - name: Versión 3.0 · construir (${{ inputs.variante_v3 }}) y copiar a /v3/
         if: ${{ inputs.incluir_v3 }}
         working-directory: frontend
         env:
-          VITE_VARIANTE: demo
+          VITE_VARIANTE: ${{ inputs.variante_v3 }}
         run: |
+          if [ "$VITE_VARIANTE" = institucional ]; then
+            export VITE_SUPABASE_URL="$(node -p "require('../configuracion.json').supabaseUrl")"
+            export VITE_SUPABASE_ANON_KEY="$(node -p "require('../configuracion.json').supabaseAnonKey")"
+            case "$VITE_SUPABASE_ANON_KEY" in
+              sb_publishable_*) ;;
+              *) echo "configuracion.json no tiene una clave publicable (sb_publishable_): no se publica"; exit 1 ;;
+            esac
+          fi
           npm run build
           rm -rf ../dist/institucional/v3
           cp -r dist ../dist/institucional/v3
