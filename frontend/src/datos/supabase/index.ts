@@ -201,6 +201,53 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         if (error) throw red();
         return { diasRojo: data?.dias_rojo || 5, correoDisciplinario: data?.correo_disciplinario ?? '' };
       }
+    },
+    directorio: {
+      async organismos() {
+        // Igual que la 2.x: la lista sale del histórico, leído por páginas de 1000 filas (solo las 2 columnas que se usan)
+        const vistos = new Map<string, string>();
+        for (let desde = 0; ; desde += 1000) {
+          const { data, error } = await sb
+            .from('historico_requerimientos')
+            .select('organismo, tipo_organismo')
+            .order('id')
+            .range(desde, desde + 999);
+          if (error) throw red();
+          for (const f of data ?? [])
+            if (!vistos.has(f.organismo)) vistos.set(f.organismo, f.tipo_organismo ?? '');
+          if (!data || data.length < 1000) break;
+        }
+        return [...vistos].map(([nombre, nivel]) => ({ nombre, nivel }));
+      },
+      async responsables() {
+        const { data, error } = await sb
+          .from('directorio')
+          .select('organismo, cargo, nombre, telefono, correo')
+          .order('organismo');
+        if (error) throw red();
+        return (data ?? []).map(x => ({ ...x, correo: x.correo || '' }));
+      },
+      async guardar(r) {
+        const { error } = await sb
+          .from('directorio')
+          .upsert(
+            {
+              organismo: r.organismo,
+              cargo: r.cargo,
+              nombre: r.nombre,
+              telefono: r.telefono,
+              correo: r.correo
+            },
+            { onConflict: 'organismo,cargo' }
+          );
+        if (error)
+          throw new ErrorDatos(
+            /row-level security|permission/i.test(error.message) ? 'sin_permiso' : 'otro',
+            /row-level security|permission/i.test(error.message)
+              ? 'No tiene permiso para editar el directorio.'
+              : 'No se pudo guardar: ' + error.message
+          );
+      }
     }
   };
 }

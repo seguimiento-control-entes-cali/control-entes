@@ -3,6 +3,8 @@
 // para poder mostrar la verificación en dos pasos.
 import { ErrorDatos, type Datos, type Perfil, type Sesion } from '../contratos';
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
+import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
+import { claveOrganismo, type Responsable } from '../../dominio/directorio';
 
 export const CLAVE_DEMO = 'demo';
 export const CODIGO_DEMO = '123456';
@@ -64,6 +66,7 @@ export function datosDemo(): Datos {
   let pendiente: Perfil | null = null;
   const accesos: string[] = [];
   const verificados = new Set<string>();
+  const directorio: Responsable[] = RESPONSABLES_DEMO.map(r => ({ ...r }));
 
   return {
     auth: {
@@ -139,6 +142,26 @@ export function datosDemo(): Datos {
       },
       async configuracion() {
         return { diasRojo: 5, correoDisciplinario: '' };
+      }
+    },
+    directorio: {
+      async organismos() {
+        return ORGANISMOS_DEMO.map(o => ({ ...o }));
+      },
+      async responsables() {
+        return directorio.map(r => ({ ...r }));
+      },
+      async guardar(r) {
+        if (!actual || !['admin', 'alcalde'].includes(actual.perfil.rol))
+          throw new ErrorDatos(
+            'sin_permiso',
+            'Solo el Super administrador y el Despacho pueden editar el directorio.'
+          );
+        const i = directorio.findIndex(
+          x => claveOrganismo(x.organismo) === claveOrganismo(r.organismo) && x.cargo === r.cargo
+        );
+        if (i >= 0) directorio[i] = { ...r };
+        else directorio.push({ ...r });
       }
     }
   };
