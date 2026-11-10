@@ -511,9 +511,10 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 - [x] `config/entorno.ts` con validación; `.env.example` (2026-11-08; validación a mano, sin Zod, hasta aprobar dependencias;
       rechaza claves secretas).
 - [ ] Tipos generados de Supabase (`datos/supabase/tipos.generados.ts`) y script `npm run tipos:bd`.
-- [ ] `datos/`: `crearDatos`, contratos `auth`, `identidad`, `catalogos`; implementaciones Supabase y demo (2026-11-08: contratos,
-      `crearDatos` y demo hechos con pruebas en `frontend/pruebas/datos-demo.test.ts`; falta Supabase, que requiere instalar
-      `@supabase/supabase-js`).
+- [x] `datos/`: `crearDatos`, contratos `auth`, `identidad`, `catalogos`; implementaciones Supabase y demo (2026-11-08: contratos,
+      `crearDatos` y demo hechos con pruebas en `frontend/pruebas/datos-demo.test.ts`; 2026-11-09: implementación Supabase con
+      `@supabase/supabase-js` 2.118.0, probada con un cliente simulado en `frontend/pruebas/datos-supabase.test.ts`; falta
+      la prueba con la base real, junto con Erika).
 - [ ] Ingreso con verificación en dos pasos, cierre de sesión y restablecimiento de contraseña (2026-11-08: pantalla y
       recorridos hechos en demo, `src/app/App.test.tsx`; falta la implementación Supabase).
 - [x] `app/`: Layout, navegación y barra de pestañas por rol, `GuardaRol`, límite de errores (2026-11-08/09: marco y menú por

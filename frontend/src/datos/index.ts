@@ -2,12 +2,12 @@
 import type { Datos } from './contratos';
 import type { Entorno } from '../config/entorno';
 import { datosDemo } from './demo';
+import { crearClienteSupabase, datosSupabase } from './supabase';
 
 export function crearDatos(entorno: Entorno): Datos {
   if (entorno.variante === 'demo') return datosDemo();
-  // La implementación con Supabase (datos/supabase/) se agrega en la F1 cuando se apruebe instalar
-  // @supabase/supabase-js. Hasta entonces la 3.0 solo corre en demostración.
-  throw new Error('La versión 3.0 todavía no se conecta a Supabase: use VITE_VARIANTE=demo.');
+  // institucional y privada: la base real. leerEntorno ya validó la dirección y que la clave sea la publicable.
+  return datosSupabase(crearClienteSupabase(entorno.supabaseUrl, entorno.supabaseAnonKey));
 }
 
 export type { Datos } from './contratos';

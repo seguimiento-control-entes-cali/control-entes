@@ -58,13 +58,12 @@ describe('capa de datos · demostración', () => {
     expect(await d.catalogos.configuracion()).toEqual({ diasRojo: 5, correoDisciplinario: '' });
   });
 
-  it('las demás variantes aún no tienen implementación (no se conecta a Supabase por error)', () => {
-    expect(() =>
-      crearDatos({
-        variante: 'institucional',
-        supabaseUrl: 'https://abcdefghijklmnopqrst.supabase.co',
-        supabaseAnonKey: 'sb_publishable_x'
-      })
-    ).toThrow(/demo/);
+  it('la variante institucional usa la implementación real (sin conectarse al crearla)', () => {
+    const d = crearDatos({
+      variante: 'institucional',
+      supabaseUrl: 'https://abcdefghijklmnopqrst.supabase.co',
+      supabaseAnonKey: 'sb_publishable_EJEMPLO_de_prueba'
+    });
+    expect(typeof d.auth.ingresar).toBe('function');
   });
 });

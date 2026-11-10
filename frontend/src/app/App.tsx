@@ -1,5 +1,6 @@
 // Raíz de la 3.0: proveedores (datos, consultas, rutas) y la decisión ingreso / marco según la sesión.
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import type { Datos } from '../datos/contratos';
 import { ContextoDatos, useDatos } from '../features/sesion/contexto';
@@ -12,6 +13,11 @@ function Inicio() {
   const cliente = useQueryClient();
   const perfil = useQuery({ queryKey: ['perfil'], queryFn: () => datos.identidad.miPerfil() });
   const recargar = () => cliente.invalidateQueries({ queryKey: ['perfil'] });
+  const usuario = perfil.data?.id;
+  // Un registro en public.accesos por ingreso (igual que la 2.x); si falla no impide entrar
+  useEffect(() => {
+    if (usuario) void datos.identidad.registrarAcceso();
+  }, [usuario, datos]);
 
   if (perfil.isPending) return <p className="cargando">Cargando…</p>;
   if (!perfil.data) return <PantallaIngreso alIngresar={recargar} />;
