@@ -516,10 +516,11 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
       `@supabase/supabase-js`).
 - [ ] Ingreso con verificación en dos pasos, cierre de sesión y restablecimiento de contraseña (2026-11-08: pantalla y
       recorridos hechos en demo, `src/app/App.test.tsx`; falta la implementación Supabase).
-- [ ] `app/`: Layout, navegación y barra de pestañas por rol, `GuardaRol`, límite de errores (2026-11-08: marco y menú por rol
-      con paridad con NAV de la 2.x, `dominio/menu.ts`; faltan barra de pestañas del celular y límite de errores).
-- [ ] `shared/ui/` base: Botón, Tarjeta, Kpi, Tabla, Modal, Toast, Semáforo, Vacío; tokens y temas (2026-11-08: Botón,
-      Tarjeta, Píldora de semáforo, Campo y Aviso).
+- [x] `app/`: Layout, navegación y barra de pestañas por rol, `GuardaRol`, límite de errores (2026-11-08/09: marco y menú por
+      rol con paridad con NAV de la 2.x, barra del celular con 3 accesos y "Más", pantallas ajenas al rol llevan a la
+      inicial, `LimiteErrores`).
+- [ ] `shared/ui/` base: Botón, Tarjeta, Kpi, Tabla, Modal, Toast, Semáforo, Vacío; tokens y temas (2026-11-09: todos los
+      componentes hechos con pruebas en `shared/ui/ui.test.tsx`; faltan los temas claro/oscuro con `docs/tokens.json`).
 - [x] `dominio/`: semáforo, días hábiles, roles con sus pruebas portadas (adelantado el 2026-11-08: `fechas.ts`,
       `dias-habiles.ts`, `semaforo.ts`, `roles.ts`; paridad con el código real de la 2.x en `frontend/pruebas/paridad-2x.test.ts`:
       festivos 2020-2035, cada día de 2024-2031 y el semáforo con umbrales 1, 5 y 30, en UTC y America/Bogota).

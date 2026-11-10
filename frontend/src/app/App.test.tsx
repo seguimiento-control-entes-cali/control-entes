@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Recorridos de la 3.0 en modo demostración: ingreso, código de verificación, menú por rol, pantallas y salida.
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { QueryClient } from '@tanstack/react-query';
 import { App } from './App';
 import { arrancar } from './arranque';
@@ -14,6 +14,7 @@ const montar = () => {
 };
 const escribir = (etiqueta: RegExp, valor: string) =>
   fireEvent.change(screen.getByLabelText(etiqueta), { target: { value: valor } });
+const menu = () => within(screen.getByRole('navigation', { name: 'Menú principal' }));
 const ingresar = () => fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
 
 afterEach(cleanup);
@@ -34,9 +35,14 @@ describe('3.0 · ingreso y menú (demo)', () => {
     escribir(/correo institucional/i, 'enlace.demo@cali.gov.co');
     escribir(/contraseña/i, 'demo');
     ingresar();
-    expect(await screen.findByRole('link', { name: 'Mi dependencia' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Centro de mando' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Configuración' })).toBeNull();
+    await screen.findByRole('navigation', { name: 'Menú principal' });
+    expect(menu().getByRole('link', { name: 'Mi dependencia' })).toBeTruthy();
+    expect(menu().queryByRole('link', { name: 'Centro de mando' })).toBeNull();
+    expect(menu().queryByRole('link', { name: 'Configuración' })).toBeNull();
+    // barra del celular: las 3 primeras opciones del rol y "Más"
+    const pestanas = within(screen.getByRole('navigation', { name: 'Accesos rápidos' }));
+    expect(pestanas.getAllByRole('link')).toHaveLength(3);
+    expect(pestanas.getByRole('button', { name: 'Más' })).toBeTruthy();
     // abre en su pantalla inicial (igual que la 2.x)
     expect(await screen.findByRole('heading', { name: 'Mi dependencia' })).toBeTruthy();
     expect(window.location.hash).toBe('#/dependencia');
@@ -54,9 +60,10 @@ describe('3.0 · ingreso y menú (demo)', () => {
     expect((await screen.findByRole('alert')).textContent).toMatch(/6 dígitos/);
     fireEvent.change(campo, { target: { value: '123456' } });
     ingresar();
-    expect(await screen.findByRole('link', { name: 'Configuración' })).toBeTruthy();
+    await screen.findByRole('navigation', { name: 'Menú principal' });
+    expect(menu().getByRole('link', { name: 'Configuración' })).toBeTruthy();
     expect(await screen.findByRole('heading', { name: 'Centro de mando' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: 'Auditoría' }));
+    fireEvent.click(menu().getByRole('link', { name: 'Auditoría' }));
     expect(await screen.findByRole('heading', { name: 'Auditoría' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Salir' }));
     expect(await screen.findByLabelText(/correo institucional/i)).toBeTruthy();

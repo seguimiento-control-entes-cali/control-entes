@@ -5,6 +5,7 @@ import type { Datos } from '../datos/contratos';
 import { ContextoDatos, useDatos } from '../features/sesion/contexto';
 import { PantallaIngreso } from '../features/sesion/PantallaIngreso';
 import { Marco } from '../features/navegacion/Marco';
+import { LimiteErrores, ProveedorAvisos } from '../shared/ui';
 
 function Inicio() {
   const datos = useDatos();
@@ -29,9 +30,13 @@ export function App({ datos, cliente = new QueryClient() }: { datos: Datos; clie
   return (
     <ContextoDatos.Provider value={datos}>
       <QueryClientProvider client={cliente}>
-        <HashRouter>
-          <Inicio />
-        </HashRouter>
+        <ProveedorAvisos>
+          <LimiteErrores>
+            <HashRouter>
+              <Inicio />
+            </HashRouter>
+          </LimiteErrores>
+        </ProveedorAvisos>
       </QueryClientProvider>
     </ContextoDatos.Provider>
   );
