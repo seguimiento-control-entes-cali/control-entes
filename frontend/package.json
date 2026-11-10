@@ -12,11 +12,13 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "tipos": "tsc -b --noEmit",
+    "tipos:bd": "node scripts/tipos-bd.mjs",
+    "tipos:bd:revisar": "node scripts/tipos-bd.mjs --revisar",
     "lint": "eslint .",
     "formato": "prettier --write \"src/**/*.{ts,tsx,css}\" \"pruebas/**/*.ts\" \"*.{ts,js,json}\"",
     "formato:revisar": "prettier --check \"src/**/*.{ts,tsx,css}\" \"pruebas/**/*.ts\" \"*.{ts,js,json}\"",
     "test": "vitest run",
-    "verificar": "npm run formato:revisar && npm run tipos && npm run lint && npm run test && npm run build"
+    "verificar": "npm run tipos:bd:revisar && npm run formato:revisar && npm run tipos && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
@@ -26,6 +28,7 @@
     "react-router-dom": "7.18.5"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.15",
     "@eslint/js": "9.29.0",
     "@testing-library/dom": "10.4.0",
     "@testing-library/react": "16.3.0",
