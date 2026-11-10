@@ -1,6 +1,7 @@
 // Contratos de la capa de datos (plan §7.2, ADR 0003). Las pantallas solo conocen estas interfaces; las
 // implementaciones (datos/supabase y datos/demo) se intercambian sin tocar las pantallas.
 import type { Rol } from '../../dominio/roles';
+import type { Organismo, Responsable } from '../../dominio/directorio';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -86,9 +87,19 @@ export interface RepositorioCatalogos {
   configuracion(): Promise<Configuracion>;
 }
 
+// ---------- directorio (hoy: directorio, historico_requerimientos para la lista de dependencias) ----------
+export interface RepositorioDirectorio {
+  /** Dependencias del histórico con su tipo (Secretaría, Departamento, UAE, Despacho…). */
+  organismos(): Promise<Organismo[]>;
+  responsables(): Promise<Responsable[]>;
+  /** Crea o actualiza el responsable de una dependencia y cargo (solo Super administrador y Despacho, por RLS). */
+  guardar(r: Responsable): Promise<void>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
   identidad: RepositorioIdentidad;
   catalogos: RepositorioCatalogos;
+  directorio: RepositorioDirectorio;
 }

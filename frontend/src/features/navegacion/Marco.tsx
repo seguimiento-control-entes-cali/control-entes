@@ -1,5 +1,5 @@
 // Marco de la aplicación: menú lateral según el rol (dominio/menu.ts) y la pantalla elegida. Las pantallas reales
-// llegan en la F2 y la F3; mientras tanto cada opción muestra que está en construcción.
+// llegan en la F2 y la F3 (hechas: Directorio); mientras tanto cada opción muestra que está en construcción.
 import { useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import type { Perfil } from '../../datos/contratos';
@@ -7,6 +7,7 @@ import { menuDe, pantallaInicial } from '../../dominio/menu';
 import { NOMBRE_ROL } from '../../dominio/roles';
 import { Boton, LimiteErrores, Tarjeta } from '../../shared/ui';
 import { aplicarTema, guardarTema, leerTema, NOMBRE_TEMA, siguienteTema } from '../../shared/lib';
+import { PantallaDirectorio } from '../directorio/PantallaDirectorio';
 
 function PantallaPendiente({ textos, inicial }: { textos: Map<string, string>; inicial: string }) {
   const { id = '' } = useParams();
@@ -69,6 +70,9 @@ export function Marco({ perfil, alSalir }: { perfil: Perfil; alSalir: () => void
       <main className="contenido">
         <LimiteErrores>
           <Routes>
+            {textos.has('directorio') && (
+              <Route path="/directorio" element={<PantallaDirectorio perfil={perfil} />} />
+            )}
             <Route
               path="/:id"
               element={<PantallaPendiente textos={textos} inicial={pantallaInicial(perfil.rol)} />}
