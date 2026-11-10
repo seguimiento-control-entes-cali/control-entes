@@ -1,5 +1,16 @@
 # Historial de versiones
 
+## 2.6.2 · noviembre 2026
+**Modo sin conexión (service worker, `public/sw.js`; caché `control-entes-v21-datic`)**
+- Una respuesta con error del servidor (404, 500…) ya no reemplaza la copia buena: se abre la copia guardada.
+- Al instalar se guardan también las 6 fuentes de texto, `fa-v4compatibility.woff2` y `vendor/591.supabase.js`
+  (antes solo quedaban si se usaban una vez con conexión).
+- La página y `config.js` se piden al servidor sin la caché del navegador, para que una versión nueva aparezca de
+  inmediato (GitHub Pages pide guardarlos unos 10 minutos).
+- La copia se guarda con `e.waitUntil`, para que el navegador no cierre el service worker antes de terminar.
+- Probado en Edge sin pantalla con un servidor que simula errores: 22 archivos guardados al instalar (antes 14), con
+  el servidor en error 500 abre la app (antes mostraba "Error 500") y sin conexión abre.
+
 ## 2.6.1 · octubre 2026
 **Base de datos e instalación**
 - `21_programar_tareas_boveda.sql`: programa la copia semanal y el resumen semanal leyendo la dirección y la clave
