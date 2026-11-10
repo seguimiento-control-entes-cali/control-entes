@@ -7,9 +7,13 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { ErrorDatos, type Datos, type Perfil, type Sesion } from '../contratos';
 import { esRol } from '../../dominio/roles';
+import type { Database } from './tipos.generados';
 
-export function crearClienteSupabase(url: string, clave: string): SupabaseClient {
-  return createClient(url, clave, { auth: { persistSession: true, autoRefreshToken: true } });
+/** Cliente con los tipos de la base (tipos.generados.ts): un nombre de tabla o columna mal escrito no compila. */
+export type ClienteSupabase = SupabaseClient<Database>;
+
+export function crearClienteSupabase(url: string, clave: string): ClienteSupabase {
+  return createClient<Database>(url, clave, { auth: { persistSession: true, autoRefreshToken: true } });
 }
 
 interface FilaPerfil {
@@ -49,7 +53,7 @@ export function qrSeguro(qr: string): string {
 const red = () =>
   new ErrorDatos('red', 'No hay conexión con el servidor. Revise su internet e intente de nuevo.');
 
-export function datosSupabase(sb: SupabaseClient): Datos {
+export function datosSupabase(sb: ClienteSupabase): Datos {
   async function perfilDe(usuarioId: string): Promise<Perfil | null> {
     const { data, error } = await sb.from('profiles').select('*').eq('id', usuarioId).maybeSingle();
     if (error) throw red();

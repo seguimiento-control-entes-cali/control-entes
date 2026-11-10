@@ -510,17 +510,22 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 #### F1 · Cimientos (2026-11-24 → 2026-12-02; antes 2026-11-03 → 2026-11-06)
 - [x] `config/entorno.ts` con validación; `.env.example` (2026-11-08; validación a mano, sin Zod, hasta aprobar dependencias;
       rechaza claves secretas).
-- [ ] Tipos generados de Supabase (`datos/supabase/tipos.generados.ts`) y script `npm run tipos:bd`.
+- [x] Tipos generados de Supabase (`datos/supabase/tipos.generados.ts`) y script `npm run tipos:bd` (2026-11-10: sin
+      conectarse a Supabase, `frontend/scripts/tipos-bd.mjs` instala `supabase/00_instalar_todo.sql` en PGlite 0.5.15 y
+      genera el formato de `supabase gen types`: 27 tablas, 3 vistas, 25 funciones; el cliente usa
+      `SupabaseClient<Database>`. `npm run verificar` y la CI fallan si el archivo no coincide con los scripts
+      (`tipos:bd:revisar`); `pruebas/tipos-bd.test.ts` comprueba que un nombre mal escrito no compila. Las diferencias
+      entre los scripts y producción se resuelven en la F4).
 - [x] `datos/`: `crearDatos`, contratos `auth`, `identidad`, `catalogos`; implementaciones Supabase y demo (2026-11-08: contratos,
       `crearDatos` y demo hechos con pruebas en `frontend/pruebas/datos-demo.test.ts`; 2026-11-09: implementación Supabase con
-      `@supabase/supabase-js` 2.118.0, probada con un cliente simulado en `frontend/pruebas/datos-supabase.test.ts`; falta
-      la prueba con la base real, junto con Erika).
-- [ ] Ingreso con verificación en dos pasos, cierre de sesión y restablecimiento de contraseña (2026-11-08: pantalla y
+      `@supabase/supabase-js` 2.118.0, probada con un cliente simulado en `frontend/pruebas/datos-supabase.test.ts`;
+      2026-11-10: probada con la base real, ingreso de Erika en `/v3/`).
+- [x] Ingreso con verificación en dos pasos, cierre de sesión y restablecimiento de contraseña (2026-11-08: pantalla y
       recorridos hechos en demo, `src/app/App.test.tsx`; 2026-11-09: implementación Supabase; 2026-11-10: igual que la
       2.x, al llegar desde el correo de invitación o recuperación se pide la contraseña nueva, y el Super administrador
       sin celular verificado debe activar la verificación en dos pasos con el código QR (recomendada para Despacho y
-      Control Interno); reglas en `dominio/seguridad.ts` con paridad en `pruebas/paridad-2x.test.ts`. Falta la prueba
-      con la base real, junto con Erika).
+      Control Interno); reglas en `dominio/seguridad.ts` con paridad en `pruebas/paridad-2x.test.ts`. 2026-11-10: ingreso
+      real de Erika (Super administrador) en `/v3/` con la base de producción: ve el Centro de mando y su menú).
 - [x] `app/`: Layout, navegación y barra de pestañas por rol, `GuardaRol`, límite de errores (2026-11-08/09: marco y menú por
       rol con paridad con NAV de la 2.x, barra del celular con 3 accesos y "Más", pantallas ajenas al rol llevan a la
       inicial, `LimiteErrores`).
@@ -532,12 +537,12 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
       festivos 2020-2035, cada día de 2024-2031 y el semáforo con umbrales 1, 5 y 30, en UTC y America/Bogota).
 - [x] PWA con `vite-plugin-pwa`; fuentes e íconos empaquetados (2026-11-10: vite-plugin-pwa 2.0.0; guarda solo la
       aplicación, nunca respuestas de Supabase; probado en Edge: abre e ingresa en demo sin internet).
-- [ ] Publicación automática en `/v3/` (demo y real) (2026-11-10: `publicar.yml` publica la demo en `/v3/` con la casilla
+- [x] Publicación automática en `/v3/` (demo y real) (2026-11-10: `publicar.yml` publica la demo en `/v3/` con la casilla
       "incluir_v3", tras sus verificaciones en las dos zonas; simulado en el equipo: 2.6.1 en la raíz y 3.0 en /v3/, cada una con
       su service worker. 2026-11-10: opción "variante_v3" (demo o institucional); la institucional toma la dirección
       y la clave publicable de `configuracion.json` y no se publica si la clave no es `sb_publishable_`; probada en el
-      equipo con las peticiones a Supabase bloqueadas: abre el ingreso sin errores. Falta: publicarla y el ingreso de
-      un usuario real, junto con Erika).
+      equipo con las peticiones a Supabase bloqueadas: abre el ingreso sin errores. Publicada el 2026-11-10 (ejecución
+      #3, institucional) e ingreso real de Erika verificado).
 
 **Salida:** un usuario real inicia sesión en `/v3/`, ve el menú de su rol y la versión demo funciona sin red.
 
