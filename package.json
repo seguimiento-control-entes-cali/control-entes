@@ -1,6 +1,6 @@
 {
   "name": "control-entes",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "description": "Control de requerimientos de entes de control · Alcaldía Distrital de Santiago de Cali",
   "private": true,
   "type": "module",

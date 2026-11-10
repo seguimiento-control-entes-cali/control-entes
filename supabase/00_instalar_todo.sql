@@ -1,7 +1,7 @@
 -- =====================================================================
 -- INSTALADOR COMPLETO · Control de Entes · Alcaldía de Santiago de Cali
 -- GENERADO por scripts/generar-instalador.mjs: no editar a mano; editar los scripts y volver a generarlo.
--- Contiene, en orden: 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 12, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24.
+-- Contiene, en orden: 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 12, 13, 14, 16, 17, 18, 19, 20, 22, 23, 24, 26.
 -- No contiene: 11 (datos reales), 15 (ya no hace nada), 21 (programa tareas), 25 (programa tareas).
 -- Ejecutar UNA sola vez en el SQL Editor de un proyecto de Supabase VACÍO. Va en una sola transacción: si algo
 -- falla, no queda nada instalado. No trae datos reales: solo los catálogos de entes y dependencias (02).
@@ -2742,6 +2742,42 @@ select
   (select not avisos_activo from public.config where id = 1)                                                    as aviso_apagado,
   to_regclass('public.pm_avisos') is not null                                                                    as tabla_ok,
   (select relrowsecurity from pg_class where oid = 'public.pm_avisos'::regclass)                                 as rls_activo;
+
+-- >>>>>>>>>>>>>>>>>>>> 26_permisos_sobrantes.sql <<<<<<<<<<<<<<<<<<<<
+-- =====================================================================
+-- 26 · Quita permisos sobrantes (pendientes de seguridad detectados en producción el 2-nov-2026)
+-- 1. La vista v_requerimientos daba a anon (sin sesión) los 7 permisos y a authenticated también los de escritura.
+--    El repositorio solo le da SELECT a authenticated (01_schema.sql). Supabase agrega los demás por defecto.
+--    Hoy no se podía abusar (la vista usa security_invoker y las tablas tienen RLS sin políticas para anon),
+--    pero un permiso que no se usa no debe existir.
+-- 2. cerrar_requerimiento tenía permiso de ejecución para PUBLIC (cualquier rol). La función revisa el rol por
+--    dentro y rechaza a quien no tiene sesión, pero el permiso debe ser solo de authenticated (01_schema.sql).
+-- service_role (la llave del servidor, nunca en el navegador) no se toca.
+-- Requiere: scripts 01 a 22. Se puede ejecutar más de una vez. No cambia ningún dato.
+-- =====================================================================
+
+revoke all on public.v_requerimientos from anon;
+revoke insert, update, delete, truncate, references, trigger on public.v_requerimientos from authenticated;
+grant select on public.v_requerimientos to authenticated;
+
+revoke execute on function public.cerrar_requerimiento(uuid, text, date, text, text) from public, anon;
+grant execute on function public.cerrar_requerimiento(uuid, text, date, text, text) to authenticated;
+
+-- Verificación: todo debe salir en true.
+select
+  not exists (select 1 from information_schema.role_table_grants
+              where table_schema = 'public' and table_name = 'v_requerimientos' and grantee = 'anon')
+                                                                          as vista_sin_anon,
+  (select string_agg(privilege_type, ',' order by privilege_type) from information_schema.role_table_grants
+    where table_schema = 'public' and table_name = 'v_requerimientos' and grantee = 'authenticated')
+    = 'SELECT'                                                            as vista_authenticated_solo_lectura,
+  not exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+              where p.oid = 'public.cerrar_requerimiento(uuid, text, date, text, text)'::regprocedure
+                and a.grantee = 0 and a.privilege_type = 'EXECUTE')       as cerrar_sin_public,
+  not has_function_privilege('anon', 'public.cerrar_requerimiento(uuid, text, date, text, text)', 'execute')
+                                                                          as cerrar_sin_anon,
+  has_function_privilege('authenticated', 'public.cerrar_requerimiento(uuid, text, date, text, text)', 'execute')
+                                                                          as cerrar_con_authenticated;
 
 commit;
 
