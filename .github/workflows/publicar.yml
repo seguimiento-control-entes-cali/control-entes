@@ -5,6 +5,11 @@
 name: Publicar en GitHub Pages
 on:
   workflow_dispatch:
+    inputs:
+      incluir_v3:
+        description: 'Publicar también la versión 3.0 de prueba (demostración, datos ficticios) en /v3/'
+        type: boolean
+        default: true
 permissions:
   contents: read
   pages: write
@@ -29,6 +34,27 @@ jobs:
         run: node tests/ejecutar-pruebas.cjs
       - name: Construir versión institucional
         run: node scripts/build.mjs --variante institucional
+      # Versión 3.0 de prueba (plan §8, D-26): demostración con datos ficticios en /v3/, sin conexión a Supabase.
+      # Antes de publicarla corre todas sus verificaciones en las dos zonas horarias.
+      - name: Versión 3.0 · dependencias
+        if: ${{ inputs.incluir_v3 }}
+        working-directory: frontend
+        run: npm ci
+      - name: Versión 3.0 · verificaciones en UTC y America/Bogota
+        if: ${{ inputs.incluir_v3 }}
+        working-directory: frontend
+        run: |
+          TZ=UTC npm run verificar
+          TZ=America/Bogota npm run verificar
+      - name: Versión 3.0 · construir (demostración) y copiar a /v3/
+        if: ${{ inputs.incluir_v3 }}
+        working-directory: frontend
+        env:
+          VITE_VARIANTE: demo
+        run: |
+          npm run build
+          rm -rf ../dist/institucional/v3
+          cp -r dist ../dist/institucional/v3
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

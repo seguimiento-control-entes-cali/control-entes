@@ -528,7 +528,9 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
       festivos 2020-2035, cada día de 2024-2031 y el semáforo con umbrales 1, 5 y 30, en UTC y America/Bogota).
 - [x] PWA con `vite-plugin-pwa`; fuentes e íconos empaquetados (2026-11-10: vite-plugin-pwa 2.0.0; guarda solo la
       aplicación, nunca respuestas de Supabase; probado en Edge: abre e ingresa en demo sin internet).
-- [ ] Publicación automática en `/v3/` (demo y real).
+- [ ] Publicación automática en `/v3/` (demo y real) (2026-11-10: `publicar.yml` publica la demo en `/v3/` con la casilla
+      "incluir_v3", tras sus verificaciones en las dos zonas; simulado en el equipo: 2.6.1 en la raíz y 3.0 en /v3/, cada una con
+      su service worker. Falta: publicarla y la variante real con ingreso de un usuario real, junto con Erika).
 
 **Salida:** un usuario real inicia sesión en `/v3/`, ve el menú de su rol y la versión demo funciona sin red.
 
