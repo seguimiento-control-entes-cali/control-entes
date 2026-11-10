@@ -34,6 +34,18 @@ export function aPerfil(f: FilaPerfil): Perfil {
   };
 }
 
+/** El QR llega como "data:image/svg+xml;utf-8,<svg …>" sin codificar; se codifica para que se dibuje completo
+ *  (igual que qrSeguro de la 2.x, src/js/08-vistas-catalogos-y-seguridad.js). */
+export function qrSeguro(qr: string): string {
+  const s = String(qr || '');
+  const i = s.indexOf(',');
+  if (i < 0 || !/^data:image\/svg\+xml/i.test(s) || /;base64,/i.test(s.slice(0, i + 1))) return s;
+  const svg = s.slice(i + 1);
+  return (
+    'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(/%3C/i.test(svg) ? decodeURIComponent(svg) : svg)
+  );
+}
+
 const red = () =>
   new ErrorDatos('red', 'No hay conexión con el servidor. Revise su internet e intente de nuevo.');
 
@@ -101,6 +113,47 @@ export function datosSupabase(sb: SupabaseClient): Datos {
       async recuperarClave(correo, volverA) {
         const { error } = await sb.auth.resetPasswordForEmail(correo.trim(), { redirectTo: volverA });
         if (error) throw new ErrorDatos('otro', 'No se pudo enviar el enlace: ' + error.message);
+      },
+      async cambiarClave(nueva) {
+        const { error } = await sb.auth.updateUser({ password: nueva });
+        if (error) throw new ErrorDatos('otro', 'No se pudo guardar: ' + error.message);
+      },
+      async tieneVerificacion() {
+        const { data, error } = await sb.auth.mfa.listFactors();
+        if (error) throw red();
+        return (data?.totp ?? []).some(f => f.status === 'verified');
+      },
+      async iniciarVerificacion() {
+        const { data: f, error: e1 } = await sb.auth.mfa.listFactors();
+        if (e1) throw red();
+        // Igual que la 2.x: se quitan los intentos anteriores sin terminar
+        for (const x of (f?.all ?? []).filter(x => x.factor_type === 'totp' && x.status !== 'verified'))
+          await sb.auth.mfa.unenroll({ factorId: x.id });
+        const n = (f?.totp ?? []).filter(x => x.status === 'verified').length;
+        const nombre = 'Celular ' + (n + 1) + ' (' + new Date().toLocaleDateString('es-CO') + ')';
+        const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: nombre });
+        if (error || !data)
+          throw new ErrorDatos(
+            'otro',
+            'No se pudo iniciar la verificación en dos pasos: ' + (error?.message ?? '')
+          );
+        return { factorId: data.id, qr: qrSeguro(data.totp.qr_code), secreto: data.totp.secret };
+      },
+      async confirmarVerificacion(factorId, codigo) {
+        const limpio = codigo.replace(/\D/g, '');
+        if (limpio.length !== 6) throw new ErrorDatos('codigo', 'Escriba los 6 dígitos que muestra la app.');
+        const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code: limpio });
+        if (error)
+          throw new ErrorDatos(
+            'codigo',
+            'El código no es correcto o ya cambió. Escriba el código actual de la app.'
+          );
+      },
+      async cancelarVerificacion(factorId) {
+        await sb.auth.mfa.unenroll({ factorId }).then(
+          () => undefined,
+          () => undefined
+        );
       }
     },
     identidad: {

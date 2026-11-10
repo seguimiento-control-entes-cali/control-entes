@@ -2,6 +2,7 @@
 import { leerEntorno } from '../config/entorno';
 import { crearDatos, type Datos } from '../datos';
 import { aplicarTema, leerTema } from '../shared/lib';
+export { esLlegadaParaClave } from '../dominio/seguridad';
 
 export function arrancar(env: Record<string, string | undefined>): Datos {
   return crearDatos(leerEntorno(env));

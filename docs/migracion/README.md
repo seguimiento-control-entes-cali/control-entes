@@ -516,7 +516,11 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
       `@supabase/supabase-js` 2.118.0, probada con un cliente simulado en `frontend/pruebas/datos-supabase.test.ts`; falta
       la prueba con la base real, junto con Erika).
 - [ ] Ingreso con verificación en dos pasos, cierre de sesión y restablecimiento de contraseña (2026-11-08: pantalla y
-      recorridos hechos en demo, `src/app/App.test.tsx`; falta la implementación Supabase).
+      recorridos hechos en demo, `src/app/App.test.tsx`; 2026-11-09: implementación Supabase; 2026-11-10: igual que la
+      2.x, al llegar desde el correo de invitación o recuperación se pide la contraseña nueva, y el Super administrador
+      sin celular verificado debe activar la verificación en dos pasos con el código QR (recomendada para Despacho y
+      Control Interno); reglas en `dominio/seguridad.ts` con paridad en `pruebas/paridad-2x.test.ts`. Falta la prueba
+      con la base real, junto con Erika).
 - [x] `app/`: Layout, navegación y barra de pestañas por rol, `GuardaRol`, límite de errores (2026-11-08/09: marco y menú por
       rol con paridad con NAV de la 2.x, barra del celular con 3 accesos y "Más", pantallas ajenas al rol llevan a la
       inicial, `LimiteErrores`).

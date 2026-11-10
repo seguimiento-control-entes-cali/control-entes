@@ -465,3 +465,20 @@ body {
     font-weight: bold;
   }
 }
+
+/* Activación de la verificación en dos pasos (código QR para la app autenticadora) */
+.pasos {
+  margin: 0 0 12px 18px;
+  line-height: 1.6;
+}
+.qr {
+  display: block;
+  margin: 10px auto;
+  background: #fff;
+  padding: 8px;
+  border-radius: 10px;
+}
+.secreto {
+  user-select: all;
+  word-break: break-all;
+}
