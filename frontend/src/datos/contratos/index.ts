@@ -29,6 +29,23 @@ export interface RepositorioAuth {
   salir(): Promise<void>;
   /** Envía el correo para cambiar la contraseña; `volverA` debe estar en las Redirect URLs de Supabase. */
   recuperarClave(correo: string, volverA: string): Promise<void>;
+  /** Cambia la contraseña de quien tiene la sesión (también al llegar por invitación o recuperación). */
+  cambiarClave(nueva: string): Promise<void>;
+  /** true si la cuenta ya tiene al menos un celular verificado para la verificación en dos pasos. */
+  tieneVerificacion(): Promise<boolean>;
+  /** Empieza a activar la verificación en dos pasos: código QR y clave para la app autenticadora. */
+  iniciarVerificacion(): Promise<InscripcionVerificacion>;
+  /** Confirma la activación con el código de 6 dígitos que muestra la app. */
+  confirmarVerificacion(factorId: string, codigo: string): Promise<void>;
+  /** Deja sin efecto una activación que no se terminó. */
+  cancelarVerificacion(factorId: string): Promise<void>;
+}
+export interface InscripcionVerificacion {
+  factorId: string;
+  /** Imagen del código QR, lista para usar en <img src>. */
+  qr: string;
+  /** Clave para escribir a mano en la app si no se puede escanear. */
+  secreto: string;
 }
 
 // ---------- identidad (hoy: profiles, accesos) ----------

@@ -51,11 +51,19 @@ export const PERFILES_DEMO: readonly Perfil[] = [
 ];
 
 const pideCodigo = (p: Perfil) => p.rol === 'admin';
+/** Imagen de muestra en lugar del código QR (en la demostración no hay app autenticadora que lo lea). */
+const QR_DEMO =
+  'data:image/svg+xml;charset=utf-8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#fff"/>' +
+      '<text x="50" y="55" font-size="12" text-anchor="middle" fill="#333">QR de demostración</text></svg>'
+  );
 
 export function datosDemo(): Datos {
   let actual: { perfil: Perfil; sesion: Sesion } | null = null;
   let pendiente: Perfil | null = null;
   const accesos: string[] = [];
+  const verificados = new Set<string>();
 
   return {
     auth: {
@@ -90,6 +98,28 @@ export function datosDemo(): Datos {
       },
       async recuperarClave() {
         // En la demostración no se envían correos.
+      },
+      async cambiarClave() {
+        if (!actual) throw new ErrorDatos('otro', 'Primero ingrese con su correo y contraseña.');
+        // En la demostración la contraseña no cambia (siempre es "demo").
+      },
+      async tieneVerificacion() {
+        return !!actual && (pideCodigo(actual.perfil) || verificados.has(actual.perfil.id));
+      },
+      async iniciarVerificacion() {
+        if (!actual) throw new ErrorDatos('otro', 'Primero ingrese con su correo y contraseña.');
+        return { factorId: 'demo-factor-' + actual.perfil.id, qr: QR_DEMO, secreto: 'DEMO DEMO DEMO DEMO' };
+      },
+      async confirmarVerificacion(factorId, codigo) {
+        if (codigo.replace(/\D/g, '') !== CODIGO_DEMO)
+          throw new ErrorDatos(
+            'codigo',
+            'El código no es correcto o ya cambió. Escriba el código actual de la app.'
+          );
+        verificados.add(factorId.replace('demo-factor-', ''));
+      },
+      async cancelarVerificacion() {
+        // Nada que deshacer en la demostración.
       }
     },
     identidad: {

@@ -8,6 +8,8 @@ import { esHabil, festivosColombia, sumarHabiles } from '../src/dominio/dias-hab
 import { calcularSemaforo, ETIQUETA_SEMAFORO } from '../src/dominio/semaforo';
 import { NOMBRE_ROL, ROLES } from '../src/dominio/roles';
 import { MENU, menuDe, pantallaInicial } from '../src/dominio/menu';
+import { exigenciaVerificacion } from '../src/dominio/seguridad';
+import { qrSeguro } from '../src/datos/supabase';
 
 interface Req2x {
   estado: string;
@@ -113,5 +115,33 @@ describe('paridad con la 2.x', () => {
   it('textos de roles y del semáforo', () => {
     expect(NOMBRE_ROL).toEqual(app.ROLES);
     expect(ETIQUETA_SEMAFORO).toEqual(app.SEM);
+  });
+});
+
+describe('paridad con la 2.x · cuenta (contraseña y verificación en dos pasos)', () => {
+  const cuenta = cargarApp(['qrSeguro', 'mfaRolesObligatorio', 'mfaRolesRecomendado']) as {
+    qrSeguro: (q: string) => string;
+    mfaRolesObligatorio: string[];
+    mfaRolesRecomendado: string[];
+  };
+  it('mismos roles con verificación obligatoria y recomendada', () => {
+    for (const r of ROLES) {
+      const esperado = cuenta.mfaRolesObligatorio.includes(r)
+        ? 'obligatoria'
+        : cuenta.mfaRolesRecomendado.includes(r)
+          ? 'recomendada'
+          : 'opcional';
+      expect(exigenciaVerificacion(r), r).toBe(esperado);
+    }
+  });
+  it('mismo arreglo del código QR', () => {
+    for (const q of [
+      'data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg"><path fill="#000" d="M0 0h1"/></svg>',
+      'data:image/svg+xml;utf-8,%3Csvg%3E%23%3C%2Fsvg%3E',
+      'data:image/png;base64,iVBORw0KGgo=',
+      'sin-coma',
+      ''
+    ])
+      expect(qrSeguro(q)).toBe(cuenta.qrSeguro(q));
   });
 });
