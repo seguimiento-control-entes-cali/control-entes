@@ -547,9 +547,14 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 **Salida:** un usuario real inicia sesión en `/v3/`, ve el menú de su rol y la versión demo funciona sin red.
 
 #### F2 · Primeras pantallas (2026-12-03 → 2026-12-11, sin el 8-dic; antes 2026-11-09 → 2026-11-13)
-- [ ] Contratos `historico`, `directorio`, `auditoria` (Supabase + demo).
+- [ ] Contratos `historico`, `directorio`, `auditoria` (Supabase + demo) (2026-11-10: `directorio` hecho, con
+      `dominio/directorio.ts` y paridad con la 2.x en `pruebas/paridad-directorio.test.ts`; la lista de dependencias
+      sale del histórico por páginas de 1000, igual que la 2.x).
 - [ ] `dominio/estadisticas.ts` (`statsOf`, `scopeOrg`, `maskPII`) con pruebas de paridad.
 - [ ] Pantallas: **Directorio**, **Histórico** (con detalle), **Cumplimiento**, **Auditoría** (con verificación de la cadena), **Actividad**.
+      (2026-11-10: **Directorio** hecho: indicadores, inconsistencias, búsqueda sin tildes, filtro, edición con las
+      validaciones de la 2.x solo para Super administrador y Despacho, "Probar chat" y CSV; `src/app/Directorio.test.tsx`;
+      revisado en Edge en computador y celular sin desbordes.)
 - [ ] Playwright: ingreso y recorrido de esas pantallas por rol (supervisión y secretario).
 - [ ] Decidir D-17 (variante privada).
 - [ ] Revisión con usuarios piloto.

@@ -228,18 +228,16 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         return (data ?? []).map(x => ({ ...x, correo: x.correo || '' }));
       },
       async guardar(r) {
-        const { error } = await sb
-          .from('directorio')
-          .upsert(
-            {
-              organismo: r.organismo,
-              cargo: r.cargo,
-              nombre: r.nombre,
-              telefono: r.telefono,
-              correo: r.correo
-            },
-            { onConflict: 'organismo,cargo' }
-          );
+        const { error } = await sb.from('directorio').upsert(
+          {
+            organismo: r.organismo,
+            cargo: r.cargo,
+            nombre: r.nombre,
+            telefono: r.telefono,
+            correo: r.correo
+          },
+          { onConflict: 'organismo,cargo' }
+        );
         if (error)
           throw new ErrorDatos(
             /row-level security|permission/i.test(error.message) ? 'sin_permiso' : 'otro',

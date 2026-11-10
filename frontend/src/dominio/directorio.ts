@@ -234,3 +234,8 @@ export function filasCsvDirectorio(lista: readonly Responsable[]): string[][] {
     ...lista.map(x => [x.organismo, x.cargo, x.nombre, x.telefono])
   ];
 }
+
+/** Quién puede editar el directorio en pantalla (canRole(['admin','alcalde']) de la 2.x; la base lo exige por RLS). */
+export function puedeEditarDirectorio(rol: string): boolean {
+  return rol === 'admin' || rol === 'alcalde';
+}

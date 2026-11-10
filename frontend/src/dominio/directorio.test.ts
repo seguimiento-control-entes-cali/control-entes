@@ -68,10 +68,7 @@ describe('directorio del gabinete', () => {
 
   it('valida igual que "Guardar" de la 2.x', () => {
     const base = R('DAGMA');
-    const lista = [
-      base,
-      R('Secretaría de Salud', 'Ana Pérez', '573001234567', 'ana.perez@cali.gov.co')
-    ];
+    const lista = [base, R('Secretaría de Salud', 'Ana Pérez', '573001234567', 'ana.perez@cali.gov.co')];
     const v = (e: Partial<{ cargo: string; nombre: string; telefono: string; correo: string }>) =>
       validarResponsable({ cargo: '', nombre: '', telefono: '', correo: '', ...e }, base, 0, lista);
     expect(v({ telefono: '12345' })).toEqual({ error: 'El celular debe tener 10 dígitos e iniciar en 3' });
