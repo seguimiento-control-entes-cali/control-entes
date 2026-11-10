@@ -1,2 +1,2 @@
-// F1: utilidades sin negocio (fechas, formato).
-export {};
+// Utilidades sin reglas de negocio.
+export { aplicarTema, guardarTema, leerTema, NOMBRE_TEMA, siguienteTema, type Tema } from './tema';

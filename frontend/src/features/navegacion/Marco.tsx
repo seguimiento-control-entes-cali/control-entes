@@ -6,6 +6,7 @@ import type { Perfil } from '../../datos/contratos';
 import { menuDe, pantallaInicial } from '../../dominio/menu';
 import { NOMBRE_ROL } from '../../dominio/roles';
 import { Boton, LimiteErrores, Tarjeta } from '../../shared/ui';
+import { aplicarTema, guardarTema, leerTema, NOMBRE_TEMA, siguienteTema } from '../../shared/lib';
 
 function PantallaPendiente({ textos, inicial }: { textos: Map<string, string>; inicial: string }) {
   const { id = '' } = useParams();
@@ -27,6 +28,13 @@ export function Marco({ perfil, alSalir }: { perfil: Perfil; alSalir: () => void
   // Celular: barra inferior con las 3 primeras opciones del rol y "Más" para abrir el menú completo
   const principales = grupos.flatMap(g => g.opciones).slice(0, 3);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [tema, setTema] = useState(() => leerTema(globalThis.localStorage));
+  const cambiarTema = () => {
+    const t = siguienteTema(tema);
+    setTema(t);
+    guardarTema(globalThis.localStorage, t);
+    aplicarTema(document.documentElement, t);
+  };
   return (
     <div className="marco">
       <nav
@@ -50,6 +58,9 @@ export function Marco({ perfil, alSalir }: { perfil: Perfil; alSalir: () => void
         <div className="menu-usuario">
           <p>{perfil.correo}</p>
           <p className="sub">{NOMBRE_ROL[perfil.rol]}</p>
+          <Boton variante="secundario" onClick={cambiarTema}>
+            {NOMBRE_TEMA[tema]}
+          </Boton>
           <Boton variante="secundario" onClick={alSalir}>
             Salir
           </Boton>

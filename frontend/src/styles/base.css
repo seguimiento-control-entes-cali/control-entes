@@ -1,12 +1,57 @@
 /* Colores de docs/tokens.json (los mismos de la 2.x). En F1 se convierten en el sistema de temas completo. */
+/* Colores de docs/tokens.json (bandera de Cali y oro del escudo; contrastes WCAG AA). Tema claro por defecto. */
 :root {
+  color-scheme: light;
   --azul-cali: #0b3d91;
+  --azul-claro: #2f66c9;
   --oro-escudo: #d4a72c;
   --fondo: #f3f5fa;
   --panel: #ffffff;
   --linea: #e1e6ef;
   --tinta: #13203a;
   --tinta-suave: #55627a;
+  --menu-fondo: #0b3d91;
+  --rojo-texto: #b0172f;
+  --rojo-fondo: #fce8eb;
+  --amarillo-texto: #9a5b00;
+  --amarillo-fondo: #fdf3dc;
+  --verde-texto: #0e6e36;
+  --verde-fondo: #e3f4ea;
+}
+/* Tema oscuro: con la preferencia del equipo, salvo que se elija "claro"; o elegido a mano */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    color-scheme: dark;
+    --azul-cali: #8fb4ff;
+    --fondo: #041a40;
+    --panel: #062456;
+    --linea: #1d3a6e;
+    --tinta: #eef3fc;
+    --tinta-suave: #b5c3dd;
+    --menu-fondo: #020f27;
+    --rojo-texto: #ffb3bf;
+    --rojo-fondo: #4a1220;
+    --amarillo-texto: #ffd27a;
+    --amarillo-fondo: #43330b;
+    --verde-texto: #8ee6b0;
+    --verde-fondo: #0d3a24;
+  }
+}
+:root[data-tema="oscuro"] {
+  color-scheme: dark;
+  --azul-cali: #8fb4ff;
+  --fondo: #041a40;
+  --panel: #062456;
+  --linea: #1d3a6e;
+  --tinta: #eef3fc;
+  --tinta-suave: #b5c3dd;
+  --menu-fondo: #020f27;
+  --rojo-texto: #ffb3bf;
+  --rojo-fondo: #4a1220;
+  --amarillo-texto: #ffd27a;
+  --amarillo-fondo: #43330b;
+  --verde-texto: #8ee6b0;
+  --verde-fondo: #0d3a24;
 }
 
 * {
@@ -111,7 +156,7 @@ body {
   margin-top: 6px;
 }
 .boton-primario {
-  background: var(--azul-cali);
+  background: #0b3d91;
   color: #fff;
   border: 0;
 }
@@ -125,8 +170,8 @@ body {
   cursor: default;
 }
 .aviso {
-  color: #b0172f;
-  background: #fce8eb;
+  color: var(--rojo-texto);
+  background: var(--rojo-fondo);
   padding: 8px 10px;
   border-radius: 6px;
   margin: 0 0 8px;
@@ -151,16 +196,16 @@ body {
   background: currentColor;
 }
 .pildora-rojo {
-  color: #b0172f;
-  background: #fce8eb;
+  color: var(--rojo-texto);
+  background: var(--rojo-fondo);
 }
 .pildora-amarillo {
-  color: #9a5b00;
-  background: #fdf3dc;
+  color: var(--amarillo-texto);
+  background: var(--amarillo-fondo);
 }
 .pildora-verde {
-  color: #0e6e36;
-  background: #e3f4ea;
+  color: var(--verde-texto);
+  background: var(--verde-fondo);
 }
 .marco {
   display: grid;
@@ -168,7 +213,11 @@ body {
   min-height: 100vh;
 }
 .menu {
-  background: var(--azul-cali);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--menu-fondo);
   color: #fff;
   padding: 16px;
   display: flex;
@@ -253,13 +302,13 @@ body {
   color: var(--tinta-suave);
 }
 .kpi-rojo .kpi-valor {
-  color: #b0172f;
+  color: var(--rojo-texto);
 }
 .kpi-amarillo .kpi-valor {
-  color: #9a5b00;
+  color: var(--amarillo-texto);
 }
 .kpi-verde .kpi-valor {
-  color: #0e6e36;
+  color: var(--verde-texto);
 }
 .vacio {
   text-align: center;
@@ -377,6 +426,7 @@ body {
   }
   .menu.menu-abierto {
     display: flex;
+    height: auto;
     position: fixed;
     inset: 0 0 56px 0;
     z-index: 40;
