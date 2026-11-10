@@ -23,15 +23,23 @@ git('fetch', '-q', 'origin', 'main');
 if (git('status', '--porcelain')) falla('hay cambios sin guardar en el repositorio.');
 const local = git('rev-parse', 'main');
 const remoto = git('rev-parse', 'origin/main');
-if (local !== remoto) falla(`main local (${local.slice(0, 7)}) no es igual a origin/main (${remoto.slice(0, 7)}).`);
+if (local !== remoto)
+  falla(`main local (${local.slice(0, 7)}) no es igual a origin/main (${remoto.slice(0, 7)}).`);
 
-const cred = execFileSync('git', ['credential', 'fill'], { input: 'protocol=https\nhost=github.com\n\n', encoding: 'utf8' });
+const cred = execFileSync('git', ['credential', 'fill'], {
+  input: 'protocol=https\nhost=github.com\n\n',
+  encoding: 'utf8'
+});
 const token = (/^password=(.*)$/m.exec(cred) || [])[1];
 if (!token) falla('no hay llave de GitHub en Git Credential Manager.');
 const api = async (ruta, opciones = {}) => {
   const r = await fetch('https://api.github.com/repos/' + REPO + ruta, {
     ...opciones,
-    headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'User-Agent': 'control-entes-publicar' }
+    headers: {
+      Authorization: 'Bearer ' + token,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'control-entes-publicar'
+    }
   });
   if (!r.ok && r.status !== 204) falla(`GitHub respondió ${r.status} en ${ruta}`);
   return r.status === 204 ? null : r.json();
@@ -50,9 +58,11 @@ for (let i = 0; i < 120; i++) {
   corrida = (await api(`/actions/workflows/${WORKFLOW}/runs?per_page=1`)).workflow_runs[0];
   if (corrida && corrida.id !== antes && corrida.status === 'completed') break;
 }
-if (!corrida || corrida.id === antes || corrida.status !== 'completed') falla('la tarea no terminó en 20 minutos.');
+if (!corrida || corrida.id === antes || corrida.status !== 'completed')
+  falla('la tarea no terminó en 20 minutos.');
 console.log(`Ejecución #${corrida.run_number}: ${corrida.conclusion} (${corrida.html_url})`);
-if (corrida.conclusion !== 'success') falla('la tarea de publicación no terminó bien; el sitio sigue con la versión anterior.');
+if (corrida.conclusion !== 'success')
+  falla('la tarea de publicación no terminó bien; el sitio sigue con la versión anterior.');
 
 // 3. Comprobar el sitio en línea
 const version = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
@@ -69,5 +79,6 @@ for (let i = 0; i < 18 && !ok; i++) {
   if (!ok) await espera(10000);
   else console.log(`En línea: versión ${version} · caché ${cache} · /v3/ responde ${v3}`);
 }
-if (!ok) falla(`la tarea terminó bien, pero el sitio aún no muestra la versión ${version} con la caché ${cache}.`);
+if (!ok)
+  falla(`la tarea terminó bien, pero el sitio aún no muestra la versión ${version} con la caché ${cache}.`);
 console.log('PUBLICADO Y VERIFICADO.');
