@@ -35,6 +35,11 @@ de verificación del final del script; todas sus columnas deben salir en `true`.
 **Copias de seguridad en formato 3.** Ejecutar `23_respaldo_texto.sql` y después volver a desplegar la función
 `respaldo` (en ese orden; si se despliega antes, la copia sigue en el formato 2 con un aviso). Ver `docs/RESPALDOS.md`.
 
+**Permisos sobrantes.** Ejecutar `26_permisos_sobrantes.sql` (requiere los scripts 01 a 22): quita a `anon` los
+permisos sobre la vista `v_requerimientos`, deja a `authenticated` solo la lectura y quita a PUBLIC la ejecución de
+`cerrar_requerimiento`. No cambia datos y se puede repetir; las 5 columnas de su verificación deben salir en `true`.
+En una instalación nueva ya viene dentro de `00_instalar_todo.sql`.
+
 **Aviso diario de planes de mejoramiento** (solo cuando DATIC autorice el piloto; queda apagado hasta que se active):
 1. Ejecutar `24_avisos_planes.sql` (casilla de activación apagada, correo de copia y tabla `pm_avisos`).
 2. Desplegar la función `avisos-planes` **sin** verificación JWT (valida por su cuenta quién la llama). Tiene dos
