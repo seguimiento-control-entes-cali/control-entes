@@ -12,3 +12,28 @@ export function arrancar(env: Record<string, string | undefined>): Datos {
 export function aplicarTemaGuardado(): void {
   aplicarTema(document.documentElement, leerTema(globalThis.localStorage));
 }
+
+/** Lo que se usa del service worker del navegador (navigator.serviceWorker). */
+export interface ContenedorSW {
+  controller: unknown;
+  addEventListener(tipo: 'controllerchange', oyente: () => void): void;
+}
+
+/**
+ * Cuando se publica una versión nueva, el service worker nuevo toma el control (autoUpdate: skipWaiting y
+ * clientsClaim), pero la página abierta seguía mostrando la versión anterior hasta recargar dos veces. Al cambiar
+ * de service worker se recarga una sola vez. No recarga en la primera instalación (antes no había ninguno).
+ */
+export function recargarAlActualizar(
+  sw: ContenedorSW | undefined = globalThis.navigator?.serviceWorker,
+  recargar: () => void = () => location.reload()
+): void {
+  if (!sw) return;
+  const habia = !!sw.controller;
+  let hecho = false;
+  sw.addEventListener('controllerchange', () => {
+    if (!habia || hecho) return;
+    hecho = true;
+    recargar();
+  });
+}

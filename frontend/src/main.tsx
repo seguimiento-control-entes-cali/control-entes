@@ -2,10 +2,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
-import { arrancar, aplicarTemaGuardado, esLlegadaParaClave } from './app/arranque';
+import { arrancar, aplicarTemaGuardado, esLlegadaParaClave, recargarAlActualizar } from './app/arranque';
 import './styles/base.css';
 
 aplicarTemaGuardado();
+recargarAlActualizar();
 // Se lee antes de crear el cliente de Supabase, que limpia el enlace de la barra de direcciones (igual que la 2.x)
 const llegadaClave = esLlegadaParaClave(location.hash);
 const raiz = document.getElementById('raiz');
