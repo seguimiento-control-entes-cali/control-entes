@@ -558,7 +558,9 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
       ente, organismo y estado, búsqueda, páginas de 100, detalle, CSV, alcance por dependencia y cierres de la app;
       `dominio/historico.ts` con paridad en `pruebas/paridad-historico.test.ts` (incluye el ocultamiento de datos
       personales de los 2.568 asuntos de la demo). Faltan: tema y cruce en el detalle (con Cruces, F3) y "Cargar Excel
-      de control" (F3).)
+      de control" (F3). 2026-11-11: **Cumplimiento** hecho: totales, 3 alertas, ranking por número o por %, semáforo
+      (20 % / 40 %, mínimo 10), radicados incumplidos por organismo y CSV; `dominio/cumplimiento.ts` con paridad en
+      `pruebas/paridad-cumplimiento.test.ts` (mismo ranking que la 2.x en las 24 combinaciones con los 2.568 radicados).)
 - [ ] Playwright: ingreso y recorrido de esas pantallas por rol (supervisión y secretario).
 - [ ] Decidir D-17 (variante privada).
 - [ ] Revisión con usuarios piloto.
