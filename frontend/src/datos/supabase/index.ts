@@ -208,6 +208,24 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         return { diasRojo: data?.dias_rojo || 5, correoDisciplinario: data?.correo_disciplinario ?? '' };
       }
     },
+    auditoria: {
+      async eventos() {
+        const { data, error } = await sb
+          .from('audit_log')
+          .select('id, tabla, accion, registro_id, usuario, payload, cambios, prev_hash, hash, created_at')
+          .order('id', { ascending: false })
+          .limit(300);
+        if (error) throw red();
+        return data ?? [];
+      },
+      async verificar() {
+        const { data, error } = await sb.rpc('verificar_cadena_auditoria');
+        if (error) throw new ErrorDatos('otro', 'No se pudo verificar la cadena: ' + error.message);
+        const r = data?.[0];
+        if (!r) throw new ErrorDatos('otro', 'La verificación no devolvió resultado.');
+        return { ok: r.ok, total: r.total, primer_id_roto: r.primer_id_roto };
+      }
+    },
     historico: {
       async radicados() {
         // Igual que la 2.x (loadHist + aplicarCierresApp): por páginas de 1000 y luego los cierres hechos en la app
