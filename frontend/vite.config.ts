@@ -7,6 +7,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: './',
+  // El diseño viene de los estilos, fuentes e íconos de la 2.x (src/css y vendor/web, fuera de frontend/)
+  server: { fs: { allow: ['..'] } },
   plugins: [
     react(),
     VitePWA({

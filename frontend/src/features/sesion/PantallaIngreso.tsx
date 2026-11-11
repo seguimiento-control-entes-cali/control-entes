@@ -2,7 +2,8 @@
 // Mismos pasos y mensajes que la 2.x. "¿Olvidaste tu contraseña?" vuelve a la dirección actual de la app.
 import { useState, type FormEvent } from 'react';
 import { ErrorDatos } from '../../datos/contratos';
-import { Aviso, Boton, Campo, Tarjeta } from '../../shared/ui';
+import { Aviso, Boton, Campo } from '../../shared/ui';
+import { MarcoIngreso } from './MarcoIngreso';
 import { useDatos } from './contexto';
 
 const mensaje = (e: unknown) =>
@@ -52,51 +53,53 @@ export function PantallaIngreso({ alIngresar }: { alIngresar: () => void }) {
   }
 
   return (
-    <main className="ingreso">
-      <Tarjeta titulo="Control de Entes">
-        <p className="sub">Alcaldía de Santiago de Cali · Acceso institucional</p>
-        <form onSubmit={enviar} noValidate>
-          {paso === 'clave' ? (
-            <>
-              <Campo
-                etiqueta="Correo institucional"
-                id="correo"
-                type="email"
-                autoComplete="username"
-                value={correo}
-                onChange={e => setCorreo(e.target.value)}
-              />
-              <Campo
-                etiqueta="Contraseña"
-                id="clave"
-                type="password"
-                autoComplete="current-password"
-                value={clave}
-                onChange={e => setClave(e.target.value)}
-              />
-            </>
-          ) : (
+    <MarcoIngreso titulo="Control de Entes" subtitulo="Alcaldía de Santiago de Cali · Acceso institucional">
+      <form onSubmit={enviar} noValidate>
+        {paso === 'clave' ? (
+          <>
             <Campo
-              etiqueta="Código de 6 dígitos de la app autenticadora"
-              id="codigo"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={codigo}
-              onChange={e => setCodigo(e.target.value)}
+              etiqueta="Correo institucional"
+              id="correo"
+              type="email"
+              placeholder="nombre@cali.gov.co"
+              autoComplete="username"
+              value={correo}
+              onChange={e => setCorreo(e.target.value)}
             />
-          )}
-          {error && <Aviso>{error}</Aviso>}
-          {nota && <p className="nota">{nota}</p>}
-          <Boton type="submit" disabled={ocupado}>
-            Ingresar
-          </Boton>
-        </form>
-        {paso === 'clave' && (
-          <Boton variante="secundario" type="button" onClick={recuperar}>
-            ¿Olvidaste tu contraseña?
-          </Boton>
+            <Campo
+              etiqueta="Contraseña"
+              id="clave"
+              type="password"
+              autoComplete="current-password"
+              value={clave}
+              onChange={e => setClave(e.target.value)}
+            />
+          </>
+        ) : (
+          <Campo
+            etiqueta="Código de 6 dígitos de la app autenticadora"
+            id="codigo"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={codigo}
+            onChange={e => setCodigo(e.target.value)}
+          />
         )}
-      </Tarjeta>
-    </main>
+        {error && <Aviso>{error}</Aviso>}
+        {nota && <p className="hint">{nota}</p>}
+        <Boton type="submit" disabled={ocupado} icono="fa-right-to-bracket" style={{ width: '100%' }}>
+          Ingresar
+        </Boton>
+      </form>
+      {paso === 'clave' && (
+        <Boton
+          variante="secundario"
+          onClick={recuperar}
+          style={{ width: '100%', marginTop: 10, border: 0, background: 'none', boxShadow: 'none' }}
+        >
+          ¿Olvidaste tu contraseña?
+        </Boton>
+      )}
+    </MarcoIngreso>
   );
 }

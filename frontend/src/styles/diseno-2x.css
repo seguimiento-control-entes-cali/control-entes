@@ -1,0 +1,19 @@
+/* Diseño de la 3.0 = diseño de la 2.x (pedido de Erika, 10-nov-2026): se usan LOS MISMOS archivos de estilos,
+   fuentes e íconos de la 2.x, en el mismo orden que scripts/build.mjs (src/css/NN-*.css). No editar aquí: un cambio de
+   diseño se hace en src/css/ y lo reciben las dos versiones. */
+@import "../../../vendor/web/fuentes.css";
+@import "../../../vendor/web/fontawesome/css/all.min.css";
+@import "../../../src/css/01-base-y-variables.css";
+@import "../../../src/css/02-estructura.css";
+@import "../../../src/css/03-componentes.css";
+@import "../../../src/css/04-modal-avisos-ingreso.css";
+@import "../../../src/css/05-cumplimiento-e-historico.css";
+@import "../../../src/css/06-directorio.css";
+@import "../../../src/css/07-centro-de-mando.css";
+@import "../../../src/css/08-barra-de-pestanas.css";
+@import "../../../src/css/09-informe-ejecutivo.css";
+@import "../../../src/css/10-celular.css";
+@import "../../../src/css/11-tema-sala-de-control.css";
+@import "../../../src/css/12-cruces-y-temas.css";
+@import "../../../src/css/13-tablero-solido.css";
+@import "../../../src/css/14-planes-de-mejoramiento.css";

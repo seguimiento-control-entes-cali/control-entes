@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Boton } from './componentes';
 
-/** Ventana con el diálogo nativo del navegador: atrapa el foco, se cierra con Escape y no deja tocar el fondo. */
+/** Ventana igual a la 2.x (overlay + modal con cabecera azul): se cierra con Escape, con la × o al tocar afuera. */
 export function Modal({
   abierto,
   titulo,
@@ -16,49 +16,41 @@ export function Modal({
   children: ReactNode;
   pie?: ReactNode;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const d = ref.current;
-    if (!d) return;
-    // jsdom (pruebas) no implementa showModal: se usa el atributo open
-    if (abierto && !d.open) {
-      if (typeof d.showModal === 'function') d.showModal();
-      else d.setAttribute('open', '');
-    }
-    if (!abierto && d.open) {
-      if (typeof d.close === 'function') d.close();
-      else d.removeAttribute('open');
-    }
-  }, [abierto]);
+    if (!abierto) return;
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') alCerrar();
+    };
+    document.addEventListener('keydown', tecla);
+    ref.current?.querySelector<HTMLElement>('input,select,textarea,button')?.focus();
+    return () => document.removeEventListener('keydown', tecla);
+  }, [abierto, alCerrar]);
+  if (!abierto) return null;
   return (
-    <dialog
-      ref={ref}
-      className="modal"
-      aria-labelledby="modal-titulo"
-      onCancel={e => {
-        e.preventDefault();
-        alCerrar();
+    <div
+      className="overlay"
+      onMouseDown={e => {
+        if (e.target === e.currentTarget) alCerrar();
       }}
     >
-      {abierto && (
-        <>
-          <header className="modal-cabeza">
-            <h2 id="modal-titulo">{titulo}</h2>
-            <button type="button" className="modal-cerrar" aria-label="Cerrar ventana" onClick={alCerrar}>
-              ×
-            </button>
-          </header>
-          <div className="modal-cuerpo">{children}</div>
-          <footer className="modal-pie">
-            {pie ?? (
-              <Boton variante="secundario" onClick={alCerrar}>
-                Cerrar
-              </Boton>
-            )}
-          </footer>
-        </>
-      )}
-    </dialog>
+      <div ref={ref} className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+        <header>
+          <h3 id="modal-titulo">{titulo}</h3>
+          <button type="button" className="icon-btn" aria-label="Cerrar ventana" onClick={alCerrar}>
+            <i className="fa-solid fa-xmark" aria-hidden="true" />
+          </button>
+        </header>
+        <div className="body">{children}</div>
+        <footer>
+          {pie ?? (
+            <Boton variante="secundario" onClick={alCerrar}>
+              Cerrar
+            </Boton>
+          )}
+        </footer>
+      </div>
+    </div>
   );
 }
 
@@ -85,15 +77,19 @@ export function ProveedorAvisos({ children, duracion = 4000 }: { children: React
   return (
     <ContextoAvisos.Provider value={avisar}>
       {children}
-      <div className="avisos" aria-live="polite">
+      <div id="toasts" aria-live="polite">
         {avisos.map(a => (
-          <p
+          <div
             key={a.id}
-            className={`aviso-emergente aviso-${a.tono}`}
+            className={'toast' + (a.tono === 'error' ? ' err' : '')}
             role={a.tono === 'error' ? 'alert' : 'status'}
           >
-            {a.texto}
-          </p>
+            <i
+              className={'fa-solid ' + (a.tono === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check')}
+              aria-hidden="true"
+            />
+            <span>{a.texto}</span>
+          </div>
         ))}
       </div>
     </ContextoAvisos.Provider>

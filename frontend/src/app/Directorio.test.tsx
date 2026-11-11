@@ -30,7 +30,8 @@ async function entrar(correo: string) {
 }
 async function abrirDirectorio() {
   fireEvent.click(menu().getByRole('link', { name: 'Directorio del gabinete' }));
-  return screen.findByRole('heading', { name: 'Directorio del gabinete', level: 1 });
+  await screen.findByRole('heading', { name: 'Directorio del gabinete', level: 2 });
+  return screen.findAllByRole('form');
 }
 
 afterEach(cleanup);
@@ -64,7 +65,7 @@ describe('3.0 · Directorio del gabinete (demo)', () => {
     fireEvent.change(screen.getByPlaceholderText('Buscar dependencia, nombre o cargo'), {
       target: { value: 'salud publica' }
     });
-    const titulos = screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent);
+    const titulos = [...document.querySelectorAll('.dir-org')].map(h => h.textContent);
     expect(titulos.length).toBeGreaterThan(0);
     expect(titulos.every(t => /salud/i.test(t ?? ''))).toBe(true);
     fireEvent.change(screen.getByPlaceholderText('Buscar dependencia, nombre o cargo'), {
@@ -86,6 +87,6 @@ describe('3.0 · Directorio del gabinete (demo)', () => {
     await entrar('enlace.demo@cali.gov.co');
     expect(menu().queryByRole('link', { name: 'Directorio del gabinete' })).toBeNull();
     window.location.hash = '#/directorio';
-    expect(await screen.findByRole('heading', { name: 'Mi dependencia' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Mi dependencia', level: 3 })).toBeTruthy();
   });
 });

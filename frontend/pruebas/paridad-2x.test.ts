@@ -7,7 +7,7 @@ import { sumarDias } from '../src/dominio/fechas';
 import { esHabil, festivosColombia, sumarHabiles } from '../src/dominio/dias-habiles';
 import { calcularSemaforo, ETIQUETA_SEMAFORO } from '../src/dominio/semaforo';
 import { NOMBRE_ROL, ROLES } from '../src/dominio/roles';
-import { MENU, menuDe, pantallaInicial } from '../src/dominio/menu';
+import { ICONO, MENU, menuDe, pantallaInicial, TITULO } from '../src/dominio/menu';
 import { exigenciaVerificacion } from '../src/dominio/seguridad';
 import { qrSeguro } from '../src/datos/supabase';
 
@@ -143,5 +143,17 @@ describe('paridad con la 2.x · cuenta (contraseña y verificación en dos pasos
       ''
     ])
       expect(qrSeguro(q)).toBe(cuenta.qrSeguro(q));
+  });
+});
+
+describe('paridad con la 2.x · íconos, títulos y barra del celular', () => {
+  const d = cargarApp(['NAV', 'TITLES']) as {
+    NAV: { items: { id: string; icon: string }[] }[];
+    TITLES: Record<string, [string, string]>;
+  };
+  it('mismo ícono por pantalla y mismos títulos y subtítulos', () => {
+    const iconos = Object.fromEntries(d.NAV.flatMap(g => g.items.map(i => [i.id, i.icon])));
+    expect(ICONO).toEqual(iconos);
+    expect(TITULO).toEqual(d.TITLES);
   });
 });

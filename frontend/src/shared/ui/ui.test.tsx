@@ -31,7 +31,7 @@ describe('componentes base', () => {
         <Vacio titulo="Nada por aquí">Pruebe otro filtro.</Vacio>
       </>
     );
-    expect(screen.getByText('12').closest('.kpi')?.className).toContain('kpi-rojo');
+    expect(screen.getByText('12').closest('.kpi')?.className).toBe('card kpi r');
     expect(screen.getByRole('status').textContent).toContain('Pruebe otro filtro.');
   });
 

@@ -1,6 +1,7 @@
 // Directorio del gabinete (2.x: src/js/15-directorio.js y las acciones dirSave, dirAdd y dirCsv de 18-acciones.js).
 // Un responsable por dependencia, con nombre completo, celular de WhatsApp y correo institucional. Editan solo el
 // Super administrador y el Despacho; la base lo exige además por RLS (políticas dir_ins y dir_upd).
+// Mismo HTML y clases de la 2.x (g-kpi, warn-card, toolbar, dir-list, dir-row…) para que se vea igual.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState, type FormEvent } from 'react';
 import { ErrorDatos, type Perfil } from '../../datos/contratos';
@@ -21,7 +22,7 @@ import {
   type FiltroDirectorio,
   type Responsable
 } from '../../dominio/directorio';
-import { Aviso, Boton, Kpi, Pildora, Tarjeta, useAvisos, Vacio } from '../../shared/ui';
+import { Aviso, Boton, Icono, Kpi, Pildora, useAvisos, Vacio } from '../../shared/ui';
 import { descargarCsv } from '../../shared/lib';
 import { useDatos } from '../sesion/contexto';
 
@@ -68,19 +69,9 @@ export function PantallaDirectorio({ perfil }: { perfil: Perfil }) {
   };
 
   return (
-    <section className="pantalla" aria-labelledby="titulo-directorio">
-      <h1 id="titulo-directorio">Directorio del gabinete</h1>
-      <div className="kpis">
-        <Kpi
-          tono="verde"
-          etiqueta="Listas para WhatsApp"
-          valor={
-            <>
-              {resumen.listas}
-              <span className="kpi-de"> / {resumen.total}</span>
-            </>
-          }
-        />
+    <>
+      <div className="grid g-kpi" style={{ marginBottom: 14 }}>
+        <Kpi tono="verde" etiqueta="Listas para WhatsApp" valor={resumen.listas} de={resumen.total} />
         <Kpi tono="amarillo" etiqueta="Falta nombre o celular" valor={resumen.incompletas} />
         <Kpi tono="rojo" etiqueta="Sin responsable" valor={resumen.sinResponsable} />
         <Kpi
@@ -91,66 +82,77 @@ export function PantallaDirectorio({ perfil }: { perfil: Perfil }) {
       </div>
 
       {(resumen.huerfanos.length > 0 || resumen.duplicados.length > 0) && (
-        <Tarjeta titulo="Revisa antes de notificar">
+        <div className="card warn-card" style={{ marginBottom: 14 }}>
+          <h3>
+            <Icono nombre="fa-triangle-exclamation" /> Revisa antes de notificar
+          </h3>
           {resumen.huerfanos.length > 0 && (
             <>
-              <p className="sub">
+              <div className="sub" style={{ margin: '6px 0' }}>
                 Estos registros del directorio no corresponden a ninguna dependencia, por eso no se usarán
                 para WhatsApp. Corrige el nombre del organismo en Supabase para que coincida exactamente:
-              </p>
-              <ul className="lista-simple">
-                {resumen.huerfanos.map(h => (
-                  <li key={h.organismo + h.cargo}>
-                    <b>{h.organismo}</b> · {h.cargo} · {h.nombre || 'sin nombre'}
-                  </li>
-                ))}
-              </ul>
+              </div>
+              {resumen.huerfanos.map(h => (
+                <div className="list-row" key={h.organismo + h.cargo}>
+                  <div className="grow">
+                    <b>{h.organismo}</b>
+                    <small>
+                      {h.cargo} · {h.nombre || 'sin nombre'}
+                    </small>
+                  </div>
+                </div>
+              ))}
             </>
           )}
           {resumen.duplicados.length > 0 && (
             <>
-              <p className="sub">El mismo celular está asignado a más de un responsable:</p>
-              <ul className="lista-simple">
-                {resumen.duplicados.map(d => (
-                  <li key={d.celular}>
-                    <b className="mono">{formatoCelular(d.celular)}</b> ·{' '}
-                    {d.organismos.map(nombreCorto).join(' · ')}
-                  </li>
-                ))}
-              </ul>
+              <div className="sub" style={{ margin: '10px 0 6px' }}>
+                El mismo celular está asignado a más de un responsable:
+              </div>
+              {resumen.duplicados.map(d => (
+                <div className="list-row" key={d.celular}>
+                  <div className="grow">
+                    <b className="mono">{formatoCelular(d.celular)}</b>
+                    <small>{d.organismos.map(nombreCorto).join(' · ')}</small>
+                  </div>
+                </div>
+              ))}
             </>
           )}
-        </Tarjeta>
+        </div>
       )}
 
-      <div className="barra-herramientas">
-        <label className="buscar">
-          <span className="solo-lector">Buscar</span>
+      <div className="toolbar">
+        <div className="grow">
+          <Icono nombre="fa-magnifying-glass" />
           <input
-            type="search"
+            aria-label="Buscar"
             placeholder="Buscar dependencia, nombre o cargo"
             value={texto}
             onChange={e => setTexto(e.target.value)}
           />
-        </label>
-        <label>
-          <span className="solo-lector">Mostrar</span>
-          <select value={filtro} onChange={e => setFiltro(e.target.value as FiltroDirectorio)}>
-            <option value="todos">Todas</option>
-            <option value="pend">Pendientes por completar</option>
-            <option value="ok">Listas para WhatsApp</option>
-            <option value="sin">Sin responsable</option>
-          </select>
-        </label>
+        </div>
+        <select
+          aria-label="Mostrar"
+          value={filtro}
+          onChange={e => setFiltro(e.target.value as FiltroDirectorio)}
+        >
+          <option value="todos">Todas</option>
+          <option value="pend">Pendientes por completar</option>
+          <option value="ok">Listas para WhatsApp</option>
+          <option value="sin">Sin responsable</option>
+        </select>
         <Boton
           variante="secundario"
+          icono="fa-file-csv"
+          className="no-print"
           onClick={() => descargarCsv('directorio_gabinete.csv', filasCsvDirectorio(lista))}
         >
           Exportar
         </Boton>
       </div>
 
-      <div className="directorio">
+      <div className="dir-list">
         {visibles.length ? (
           visibles.map(f =>
             f.responsable ? (
@@ -162,26 +164,34 @@ export function PantallaDirectorio({ perfil }: { perfil: Perfil }) {
                 alGuardar={guardado}
               />
             ) : (
-              <article key={f.organismo} className="tarjeta directorio-fila">
-                <header className="directorio-cabeza">
-                  <h2 className="directorio-org">{f.organismo}</h2>
-                  <Pildora tono="rojo" texto="Sin responsable" />
-                  {editar && <Boton onClick={() => agregar(f.organismo)}>Agregar responsable</Boton>}
-                </header>
-              </article>
+              <div key={f.organismo} className="dir-row card">
+                <div className="dir-h">
+                  <div>
+                    <b className="dir-org">{f.organismo}</b>
+                    <Pildora tono="rojo" texto="Sin responsable" />
+                  </div>
+                  {editar && (
+                    <Boton className="sm" icono="fa-user-plus" onClick={() => agregar(f.organismo)}>
+                      Agregar responsable
+                    </Boton>
+                  )}
+                </div>
+              </div>
             )
           )
         ) : (
-          <Vacio titulo="Ninguna dependencia coincide con la búsqueda" />
+          <div className="card">
+            <Vacio titulo="Ninguna dependencia coincide con la búsqueda" />
+          </div>
         )}
       </div>
-      <p className="nota">
+      <div className="muted" style={{ marginTop: 12, fontSize: '.78rem' }}>
         Solo secretarios y directores (no subsecretarios, asesores ni jefes de oficina). Cada responsable
         queda amarrado a su dependencia: el nombre del organismo no se escribe a mano, se toma de la lista
         oficial. El celular debe tener 10 dígitos e iniciar en 3, y el nombre debe ir completo (nombres y
         apellidos) para que el saludo del mensaje salga correcto.
-      </p>
-    </section>
+      </div>
+    </>
   );
 }
 
@@ -227,7 +237,7 @@ function FilaResponsable({
   }
 
   const campo = (k: keyof typeof v, titulo: string, extra: { mono?: boolean; placeholder?: string } = {}) => (
-    <div className="campo">
+    <div className="field">
       <label htmlFor={id(k)}>{titulo}</label>
       {editar ? (
         <input
@@ -240,53 +250,42 @@ function FilaResponsable({
           onChange={e => setV(s => ({ ...s, [k]: e.target.value }))}
         />
       ) : (
-        <p id={id(k)} className={'solo-lectura' + (extra.mono ? ' mono' : '')}>
+        <div id={id(k)} className={'ro' + (extra.mono ? ' mono' : '')}>
           {k === 'telefono' ? formatoCelular(celular) : r[k] || '—'}
-        </p>
+        </div>
+      )}
+      {k === 'correo' && !r.correo && (
+        <div className="hint err">Sin correo: solo se podrá notificar por WhatsApp</div>
       )}
     </div>
   );
 
   return (
-    <article className="tarjeta directorio-fila">
-      <header className="directorio-cabeza">
-        <h2 className="directorio-org">{fila.organismo}</h2>
-        <Pildora tono={etiqueta.tono} texto={etiqueta.texto} />
-      </header>
-      <form
-        className="directorio-campos"
-        onSubmit={guardar}
-        noValidate
-        aria-label={'Responsable de ' + fila.organismo}
-      >
+    <div className="dir-row card">
+      <div className="dir-h">
+        <div>
+          <b className="dir-org">{fila.organismo}</b>
+          <Pildora tono={etiqueta.tono} texto={etiqueta.texto} />
+        </div>
+      </div>
+      <form className="dir-f" onSubmit={guardar} noValidate aria-label={'Responsable de ' + fila.organismo}>
         {campo('cargo', 'Cargo')}
         {campo('nombre', 'Nombre completo', { placeholder: 'Nombres y apellidos' })}
         {campo('telefono', 'Celular (WhatsApp)', { mono: true, placeholder: '3001234567' })}
-        <div>
-          {campo('correo', 'Correo institucional', {
-            mono: true,
-            placeholder: 'nombre.apellido@cali.gov.co'
-          })}
-          {!r.correo && <p className="nota nota-error">Sin correo: solo se podrá notificar por WhatsApp</p>}
-        </div>
-        <div className="directorio-acciones">
+        {campo('correo', 'Correo institucional', { mono: true, placeholder: 'nombre.apellido@cali.gov.co' })}
+        <div className="dir-a">
           {editar && (
-            <Boton type="submit" disabled={ocupado}>
+            <Boton type="submit" disabled={ocupado} icono="fa-floppy-disk">
               Guardar
             </Boton>
           )}
           {celular && (
-            <a
-              className="boton boton-secundario"
-              href={'https://wa.me/' + celular}
-              target="_blank"
-              rel="noopener"
-            >
-              Probar chat
+            <a className="btn" href={'https://wa.me/' + celular} target="_blank" rel="noopener">
+              <Icono nombre="fa-whatsapp" tipo="brands" /> Probar chat
             </a>
           )}
         </div>
       </form>
-    </article>
+    </div>
   );
 }
