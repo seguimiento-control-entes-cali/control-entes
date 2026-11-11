@@ -8,13 +8,16 @@ export function Modal({
   titulo,
   alCerrar,
   children,
-  pie
+  pie,
+  ancha = false
 }: {
   abierto: boolean;
   titulo: string;
   alCerrar: () => void;
   children: ReactNode;
   pie?: ReactNode;
+  /** Ventana ancha (wide de la 2.x: hasta 720 px). */
+  ancha?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -34,7 +37,14 @@ export function Modal({
         if (e.target === e.currentTarget) alCerrar();
       }}
     >
-      <div ref={ref} className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+      <div
+        ref={ref}
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-titulo"
+        style={ancha ? { width: 'min(720px, 100%)' } : undefined}
+      >
         <header>
           <h3 id="modal-titulo">{titulo}</h3>
           <button type="button" className="icon-btn" aria-label="Cerrar ventana" onClick={alCerrar}>
