@@ -3,6 +3,7 @@
 import type { Rol } from '../../dominio/roles';
 import type { Organismo, Responsable } from '../../dominio/directorio';
 import type { RadicadoHistorico } from '../../dominio/historico';
+import type { EventoAuditoria, ResultadoVerificacion } from '../../dominio/auditoria';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -103,6 +104,16 @@ export interface RepositorioHistorico {
   radicados(): Promise<{ filas: RadicadoHistorico[]; corte: string }>;
 }
 
+// ---------- auditoria (hoy: audit_log y la función verificar_cadena_auditoria) ----------
+export interface RepositorioAuditoria {
+  /** Los 300 eventos más recientes, del más nuevo al más antiguo. */
+  eventos(): Promise<EventoAuditoria[]>;
+  /** Comprueba toda la cadena de huellas SHA-256. */
+  verificar(): Promise<ResultadoVerificacion>;
+  /** Solo en la demostración: altera en memoria el evento 2 para mostrar que la verificación lo detecta. */
+  simularManipulacion?: () => Promise<boolean>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
@@ -110,4 +121,5 @@ export interface Datos {
   catalogos: RepositorioCatalogos;
   directorio: RepositorioDirectorio;
   historico: RepositorioHistorico;
+  auditoria: RepositorioAuditoria;
 }

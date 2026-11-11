@@ -10,6 +10,7 @@ import { Icono, LimiteErrores, Tarjeta } from '../../shared/ui';
 import { PantallaDirectorio } from '../directorio/PantallaDirectorio';
 import { PantallaHistorico } from '../historico/PantallaHistorico';
 import { PantallaCumplimiento } from '../cumplimiento/PantallaCumplimiento';
+import { PantallaAuditoria } from '../auditoria/PantallaAuditoria';
 import escudo from '../../../../src/assets/escudo.png';
 
 function PantallaPendiente({ textos, inicial }: { textos: Map<string, string>; inicial: string }) {
@@ -198,6 +199,7 @@ export function Marco({
                 {textos.has('directorio') && (
                   <Route path="/directorio" element={<PantallaDirectorio perfil={perfil} />} />
                 )}
+                {textos.has('auditoria') && <Route path="/auditoria" element={<PantallaAuditoria />} />}
                 {textos.has('cumplimiento') && (
                   <Route path="/cumplimiento" element={<PantallaCumplimiento />} />
                 )}

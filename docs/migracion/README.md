@@ -560,7 +560,10 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
       personales de los 2.568 asuntos de la demo). Faltan: tema y cruce en el detalle (con Cruces, F3) y "Cargar Excel
       de control" (F3). 2026-11-11: **Cumplimiento** hecho: totales, 3 alertas, ranking por número o por %, semáforo
       (20 % / 40 %, mínimo 10), radicados incumplidos por organismo y CSV; `dominio/cumplimiento.ts` con paridad en
-      `pruebas/paridad-cumplimiento.test.ts` (mismo ranking que la 2.x en las 24 combinaciones con los 2.568 radicados).)
+      `pruebas/paridad-cumplimiento.test.ts` (mismo ranking que la 2.x en las 24 combinaciones con los 2.568 radicados).
+      2026-11-11: **Auditoría** hecha: 300 eventos más recientes, verificación de la cadena SHA-256 (en la base con
+      `verificar_cadena_auditoria`; en la demo con SHA-256 en código, igual a la oficial) y "Simular manipulación" en la
+      demo; `dominio/auditoria.ts` y `pruebas/auditoria.test.ts`.)
 - [ ] Playwright: ingreso y recorrido de esas pantallas por rol (supervisión y secretario).
 - [ ] Decidir D-17 (variante privada).
 - [ ] Revisión con usuarios piloto.

@@ -5,6 +5,7 @@ import { ErrorDatos, type Datos, type Perfil, type Sesion } from '../contratos';
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
+import { nuevoEvento, verificarCadena, type EventoAuditoria } from '../../dominio/auditoria';
 
 export const CLAVE_DEMO = 'demo';
 export const CODIGO_DEMO = '123456';
@@ -67,6 +68,28 @@ export function datosDemo(): Datos {
   const accesos: string[] = [];
   const verificados = new Set<string>();
   const directorio: Responsable[] = RESPONSABLES_DEMO.map(r => ({ ...r }));
+  // Pista de auditoría en memoria, como la demo de la 2.x (empieza con la carga inicial)
+  const auditoria: EventoAuditoria[] = [];
+  const auditar = (
+    tabla: string,
+    accion: string,
+    registro: string,
+    payload: unknown,
+    usuario: string,
+    cambios?: unknown
+  ) =>
+    auditoria.push(
+      nuevoEvento(auditoria, {
+        tabla,
+        accion,
+        registro_id: registro,
+        usuario,
+        payload: JSON.parse(JSON.stringify(payload)),
+        cambios: cambios ?? {},
+        created_at: new Date().toISOString()
+      })
+    );
+  auditar('requerimientos', 'INSERT', 'seed', { nota: 'Carga inicial de demostración' }, 'sistema');
 
   return {
     auth: {
@@ -144,6 +167,21 @@ export function datosDemo(): Datos {
         return { diasRojo: 5, correoDisciplinario: '' };
       }
     },
+    auditoria: {
+      async eventos() {
+        return auditoria.slice().reverse().slice(0, 300);
+      },
+      async verificar() {
+        return verificarCadena(auditoria);
+      },
+      async simularManipulacion() {
+        const e = auditoria[1];
+        if (!e) return false;
+        (e.payload as Record<string, unknown>).asunto = 'ALTERADO';
+        (e.payload as Record<string, unknown>).manipulado = true;
+        return true;
+      }
+    },
     historico: {
       async radicados() {
         // El histórico de ejemplo (datos/demo/historico.json, ficticio) se carga aparte, solo cuando se abre
@@ -167,8 +205,17 @@ export function datosDemo(): Datos {
         const i = directorio.findIndex(
           x => claveOrganismo(x.organismo) === claveOrganismo(r.organismo) && x.cargo === r.cargo
         );
+        const antes = i >= 0 ? directorio[i] : undefined;
         if (i >= 0) directorio[i] = { ...r };
         else directorio.push({ ...r });
+        auditar(
+          'directorio',
+          antes ? 'UPDATE' : 'INSERT',
+          r.organismo + '|' + r.cargo,
+          r,
+          actual.perfil.correo,
+          antes ? { antes } : {}
+        );
       }
     }
   };
