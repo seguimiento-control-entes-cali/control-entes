@@ -144,6 +144,13 @@ export function datosDemo(): Datos {
         return { diasRojo: 5, correoDisciplinario: '' };
       }
     },
+    historico: {
+      async radicados() {
+        // El histórico de ejemplo (datos/demo/historico.json, ficticio) se carga aparte, solo cuando se abre
+        const { radicadosDemo } = await import('./historico-demo');
+        return radicadosDemo();
+      }
+    },
     directorio: {
       async organismos() {
         return ORGANISMOS_DEMO.map(o => ({ ...o }));
