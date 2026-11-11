@@ -563,7 +563,13 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
       `pruebas/paridad-cumplimiento.test.ts` (mismo ranking que la 2.x en las 24 combinaciones con los 2.568 radicados).
       2026-11-11: **Auditoría** hecha: 300 eventos más recientes, verificación de la cadena SHA-256 (en la base con
       `verificar_cadena_auditoria`; en la demo con SHA-256 en código, igual a la oficial) y "Simular manipulación" en la
-      demo; `dominio/auditoria.ts` y `pruebas/auditoria.test.ts`.)
+      demo; `dominio/auditoria.ts` y `pruebas/auditoria.test.ts`. 2026-11-11: **Actividad** hecha: indicadores, quién modificó
+      qué (con el detalle campo: antes → después), seguimiento de notificaciones, actividad por usuario e informes;
+      `dominio/actividad.ts` con paridad en `pruebas/paridad-actividad.test.ts`. Con esto quedan las 5 pantallas de la F2.)
+
+**Decisión de Erika (2026-11-11):** la migración llega hasta la F4 y se entrega a DATIC (repositorio, código, pruebas,
+base bajo control de versiones y documento con dos opciones: seguir con Supabase o instalar en el servidor de la
+Alcaldía). F5 a F8 quedan como hoja de ruta para DATIC.
 - [ ] Playwright: ingreso y recorrido de esas pantallas por rol (supervisión y secretario).
 - [ ] Decidir D-17 (variante privada).
 - [ ] Revisión con usuarios piloto.

@@ -208,6 +208,57 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         return { diasRojo: data?.dias_rojo || 5, correoDisciplinario: data?.correo_disciplinario ?? '' };
       }
     },
+    actividad: {
+      async perfiles() {
+        const { data, error } = await sb
+          .from('profiles')
+          .select('id, email, rol, dependencia_id, activo')
+          .order('email');
+        if (error) throw red();
+        return data ?? [];
+      },
+      async ultimosAccesos() {
+        // Igual que la 2.x: los 1000 ingresos más recientes y, de cada cuenta, el último
+        const { data, error } = await sb
+          .from('accesos')
+          .select('user_id, created_at')
+          .order('created_at', { ascending: false })
+          .limit(1000);
+        const acc: Record<string, string> = {};
+        if (!error) for (const x of data ?? []) if (!acc[x.user_id]) acc[x.user_id] = x.created_at;
+        return acc;
+      },
+      async notificaciones() {
+        const { data, error } = await sb
+          .from('notificaciones')
+          .select('created_at, organismo, enviado_por, n_items')
+          .order('created_at', { ascending: false })
+          .limit(300);
+        if (error) return [];
+        return (data ?? []).map(x => ({
+          ts: x.created_at,
+          org: x.organismo,
+          usuario: x.enviado_por,
+          n: x.n_items
+        }));
+      },
+      async informes() {
+        const { data, error } = await sb
+          .from('informes')
+          .select('created_at, generado_por, alcance, vigencias, n_registros, huella')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (error) return [];
+        return (data ?? []).map(x => ({
+          ts: x.created_at,
+          usuario: x.generado_por,
+          alcance: x.alcance,
+          vigencias: x.vigencias,
+          n: x.n_registros,
+          huella: x.huella
+        }));
+      }
+    },
     auditoria: {
       async eventos() {
         const { data, error } = await sb
