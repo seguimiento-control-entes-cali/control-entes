@@ -17,14 +17,13 @@ export class LimiteErrores extends Component<{ children: ReactNode }, { fallo: b
   override render() {
     if (!this.state.fallo) return this.props.children;
     return (
-      <div className="error-pantalla" role="alert">
-        <h2>Algo salió mal en esta pantalla</h2>
-        <p>Sus datos no se perdieron. Vuelva a intentar; si el problema continúa, avise al administrador.</p>
-        <button
-          type="button"
-          className="boton boton-primario"
-          onClick={() => this.setState({ fallo: false })}
-        >
+      <div className="card empty" role="alert">
+        <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />
+        <h3>Algo salió mal en esta pantalla</h3>
+        <p className="muted">
+          Sus datos no se perdieron. Vuelva a intentar; si el problema continúa, avise al administrador.
+        </p>
+        <button type="button" className="btn primary" onClick={() => this.setState({ fallo: false })}>
           Volver a intentar
         </button>
       </div>

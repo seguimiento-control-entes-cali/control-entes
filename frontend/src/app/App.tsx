@@ -14,7 +14,7 @@ import { LimiteErrores, ProveedorAvisos, useAvisos } from '../shared/ui';
 
 const AVISO_RECOMENDADA = 'ce_mfa_aviso';
 
-function Inicio({ llegadaClave }: { llegadaClave: boolean }) {
+function Inicio({ llegadaClave, demo }: { llegadaClave: boolean; demo: boolean }) {
   const datos = useDatos();
   const cliente = useQueryClient();
   const avisar = useAvisos();
@@ -73,18 +73,21 @@ function Inicio({ llegadaClave }: { llegadaClave: boolean }) {
         alSalir={salir}
       />
     );
-  return <Marco perfil={perfil.data} alSalir={salir} />;
+  return <Marco perfil={perfil.data} alSalir={salir} demo={demo} />;
 }
 
 export function App({
   datos,
   cliente = new QueryClient(),
-  llegadaClave = false
+  llegadaClave = false,
+  demo = false
 }: {
   datos: Datos;
   cliente?: QueryClient;
   /** true si la página se abrió desde el correo de invitación o de recuperación de contraseña. */
   llegadaClave?: boolean;
+  /** Variante de demostración: muestra "MODO DEMO" y el aviso de datos de ejemplo, como la 2.x. */
+  demo?: boolean;
 }) {
   return (
     <ContextoDatos.Provider value={datos}>
@@ -92,7 +95,7 @@ export function App({
         <ProveedorAvisos>
           <LimiteErrores>
             <HashRouter>
-              <Inicio llegadaClave={llegadaClave} />
+              <Inicio llegadaClave={llegadaClave} demo={demo} />
             </HashRouter>
           </LimiteErrores>
         </ProveedorAvisos>

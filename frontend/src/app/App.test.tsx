@@ -42,10 +42,16 @@ describe('3.0 · ingreso y menú (demo)', () => {
     expect(menu().queryByRole('link', { name: 'Configuración' })).toBeNull();
     // barra del celular: las 3 primeras opciones del rol y "Más"
     const pestanas = within(screen.getByRole('navigation', { name: 'Accesos rápidos' }));
-    expect(pestanas.getAllByRole('link')).toHaveLength(3);
-    expect(pestanas.getByRole('button', { name: 'Más' })).toBeTruthy();
+    // igual que la 2.x: Mi dependencia, Requerimientos, ORFEO e Informe, y "Menú"
+    expect(pestanas.getAllByRole('link').map(a => a.textContent)).toEqual([
+      'Mi dependencia',
+      'Requerim.',
+      'ORFEO',
+      'Informe'
+    ]);
+    expect(pestanas.getByRole('button', { name: 'Menú administrativo' })).toBeTruthy();
     // abre en su pantalla inicial (igual que la 2.x)
-    expect(await screen.findByRole('heading', { name: 'Mi dependencia' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Mi dependencia', level: 3 })).toBeTruthy();
     expect(window.location.hash).toBe('#/dependencia');
   });
 
@@ -63,9 +69,9 @@ describe('3.0 · ingreso y menú (demo)', () => {
     ingresar();
     await screen.findByRole('navigation', { name: 'Menú principal' });
     expect(menu().getByRole('link', { name: 'Configuración' })).toBeTruthy();
-    expect(await screen.findByRole('heading', { name: 'Centro de mando' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Centro de mando', level: 2 })).toBeTruthy();
     fireEvent.click(menu().getByRole('link', { name: 'Auditoría' }));
-    expect(await screen.findByRole('heading', { name: 'Auditoría' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Auditoría', level: 2 })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Salir' }));
     expect(await screen.findByLabelText(/correo institucional/i)).toBeTruthy();
   });

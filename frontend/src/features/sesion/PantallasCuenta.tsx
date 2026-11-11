@@ -4,7 +4,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ErrorDatos, type InscripcionVerificacion } from '../../datos/contratos';
 import { errorClaveNueva } from '../../dominio/seguridad';
-import { Aviso, Boton, Campo, Tarjeta } from '../../shared/ui';
+import { Aviso, Boton, Campo } from '../../shared/ui';
+import { MarcoIngreso } from './MarcoIngreso';
 import { useDatos } from './contexto';
 
 const mensaje = (e: unknown) =>
@@ -34,34 +35,36 @@ export function DefinirClave({ alGuardar }: { alGuardar: () => void }) {
   }
 
   return (
-    <main className="ingreso">
-      <Tarjeta titulo="Defina su contraseña">
-        <p className="sub">Bienvenido(a). Defina la contraseña con la que ingresará de ahora en adelante.</p>
-        <form onSubmit={guardar} noValidate>
-          <Campo
-            etiqueta="Contraseña nueva"
-            id="clave-nueva"
-            type="password"
-            autoComplete="new-password"
-            value={a}
-            onChange={e => setA(e.target.value)}
-          />
-          <p className="nota">Mínimo 10 caracteres, con letras y números.</p>
-          <Campo
-            etiqueta="Repita la contraseña"
-            id="clave-repetida"
-            type="password"
-            autoComplete="new-password"
-            value={b}
-            onChange={e => setB(e.target.value)}
-          />
-          {error && <Aviso>{error}</Aviso>}
-          <Boton type="submit" disabled={ocupado}>
-            Guardar contraseña
-          </Boton>
-        </form>
-      </Tarjeta>
-    </main>
+    <MarcoIngreso
+      titulo="Defina su contraseña"
+      subtitulo="Bienvenido(a). Defina la contraseña con la que ingresará de ahora en adelante."
+    >
+      <form onSubmit={guardar} noValidate>
+        <Campo
+          etiqueta="Contraseña nueva"
+          id="clave-nueva"
+          type="password"
+          autoComplete="new-password"
+          value={a}
+          onChange={e => setA(e.target.value)}
+        />
+        <p className="hint" style={{ margin: '-8px 0 12px' }}>
+          Mínimo 10 caracteres, con letras y números.
+        </p>
+        <Campo
+          etiqueta="Repita la contraseña"
+          id="clave-repetida"
+          type="password"
+          autoComplete="new-password"
+          value={b}
+          onChange={e => setB(e.target.value)}
+        />
+        {error && <Aviso>{error}</Aviso>}
+        <Boton type="submit" disabled={ocupado}>
+          Guardar contraseña
+        </Boton>
+      </form>
+    </MarcoIngreso>
   );
 }
 
@@ -107,54 +110,50 @@ export function ActivarVerificacion({ alActivar, alSalir }: { alActivar: () => v
   }
 
   return (
-    <main className="ingreso">
-      <Tarjeta titulo="Active la verificación en dos pasos">
-        <p className="sub">
-          Por seguridad, la cuenta de Super administrador debe tener verificación en dos pasos. Toma un
-          minuto.
-        </p>
-        <ol className="pasos">
-          <li>
-            Instale en su celular <b>Google Authenticator</b> o <b>Microsoft Authenticator</b> (gratis).
-          </li>
-          <li>En la app, agregue una cuenta y escanee este código:</li>
-        </ol>
-        {ins ? (
-          <>
-            <img
-              className="qr"
-              src={ins.qr}
-              alt="Código QR para la app autenticadora"
-              width={210}
-              height={210}
-            />
-            <p className="nota">
-              Si no puede escanear, escriba esta clave en la app:{' '}
-              <code className="secreto">{ins.secreto}</code>
-            </p>
-          </>
-        ) : (
-          !error && <p className="cargando">Preparando el código…</p>
-        )}
-        <form onSubmit={confirmar} noValidate>
-          <Campo
-            etiqueta="3. Escriba el código de 6 dígitos que muestra la app"
-            id="codigo-activar"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            value={codigo}
-            onChange={e => setCodigo(e.target.value)}
+    <MarcoIngreso
+      titulo="Active la verificación en dos pasos"
+      subtitulo="Por seguridad, la cuenta de Super administrador debe tener verificación en dos pasos. Toma un minuto."
+    >
+      <ol style={{ margin: '0 0 12px 18px', lineHeight: 1.6 }}>
+        <li>
+          Instale en su celular <b>Google Authenticator</b> o <b>Microsoft Authenticator</b> (gratis).
+        </li>
+        <li>En la app, agregue una cuenta y escanee este código:</li>
+      </ol>
+      {ins ? (
+        <>
+          <img
+            className="qr"
+            src={ins.qr}
+            alt="Código QR para la app autenticadora"
+            width={210}
+            height={210}
           />
-          {error && <Aviso>{error}</Aviso>}
-          <Boton type="submit" disabled={ocupado || !ins}>
-            Confirmar
-          </Boton>
-        </form>
-        <Boton variante="secundario" type="button" onClick={salir}>
-          Cerrar sesión
+          <p className="hint">
+            Si no puede escanear, escriba esta clave en la app: <code className="secreto">{ins.secreto}</code>
+          </p>
+        </>
+      ) : (
+        !error && <p className="cargando">Preparando el código…</p>
+      )}
+      <form onSubmit={confirmar} noValidate>
+        <Campo
+          etiqueta="3. Escriba el código de 6 dígitos que muestra la app"
+          id="codigo-activar"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          value={codigo}
+          onChange={e => setCodigo(e.target.value)}
+        />
+        {error && <Aviso>{error}</Aviso>}
+        <Boton type="submit" disabled={ocupado || !ins}>
+          Confirmar
         </Boton>
-      </Tarjeta>
-    </main>
+      </form>
+      <Boton variante="secundario" type="button" onClick={salir}>
+        Cerrar sesión
+      </Boton>
+    </MarcoIngreso>
   );
 }
