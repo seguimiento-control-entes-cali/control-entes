@@ -7,6 +7,10 @@ describe('modo sin conexión (PWA)', () => {
     expect(config).toMatch(/runtimeCaching:\s*\[\]/);
     expect(config.toLowerCase()).not.toMatch(/supabase\.co/);
   });
+  it('la versión nueva toma el control sola (sin quedar en espera)', () => {
+    expect(config).toMatch(/skipWaiting:\s*true/);
+    expect(config).toMatch(/clientsClaim:\s*true/);
+  });
   it('rutas relativas para poder publicarse en /v3/', () => {
     expect(config).toMatch(/base:\s*'\.\/'/);
     expect(config).toMatch(/scope:\s*'\.\/'/);

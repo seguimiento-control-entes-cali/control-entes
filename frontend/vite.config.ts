@@ -34,6 +34,10 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,woff2}'], // los íconos los agrega el plugin desde el manifiesto
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
+        // La versión nueva toma el control apenas se instala (sin esto quedaba "en espera" mientras hubiera una
+        // pestaña abierta); src/app/arranque.ts recarga la página una vez al cambiar.
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: []
       }
     })
