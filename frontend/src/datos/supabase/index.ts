@@ -8,6 +8,12 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { ErrorDatos, type Datos, type Perfil, type Sesion } from '../contratos';
 import { esRol } from '../../dominio/roles';
 import type { Database } from './tipos.generados';
+import {
+  aplicarCierres,
+  desdeBaseDeDatos,
+  fechaDeCorte,
+  type FilaHistoricoBD
+} from '../../dominio/historico';
 
 /** Cliente con los tipos de la base (tipos.generados.ts): un nombre de tabla o columna mal escrito no compila. */
 export type ClienteSupabase = SupabaseClient<Database>;
@@ -200,6 +206,40 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           .maybeSingle();
         if (error) throw red();
         return { diasRojo: data?.dias_rojo || 5, correoDisciplinario: data?.correo_disciplinario ?? '' };
+      }
+    },
+    historico: {
+      async radicados() {
+        // Igual que la 2.x (loadHist + aplicarCierresApp): por páginas de 1000 y luego los cierres hechos en la app
+        let todas: FilaHistoricoBD[] = [];
+        for (let desde = 0; ; desde += 1000) {
+          const { data, error } = await sb
+            .from('historico_requerimientos')
+            .select(
+              'vigencia, radicacion_ente, ente, orfeo_entrada, fecha_recibo, organismo, tipo_organismo, asunto, termino_dias_habiles, fecha_maxima, orfeo_respuesta, fecha_respuesta, respondio, oportunidad, retraso_dias_habiles, dias_habiles_responder'
+            )
+            .order('id')
+            .range(desde, desde + 999);
+          if (error) throw red();
+          todas = todas.concat(data ?? []);
+          if (!data || data.length < 1000) break;
+        }
+        const base = desdeBaseDeDatos(todas);
+        const { data: cierres, error } = await sb
+          .from('requerimientos')
+          .select('hist_key, orfeo_salida, fecha_cierre')
+          .not('hist_key', 'is', null)
+          .eq('estado', 'cerrado');
+        if (error || !cierres?.length) return base;
+        const filas = aplicarCierres(
+          base.filas,
+          cierres.map(c => ({
+            hist_key: c.hist_key ?? '',
+            orfeo_salida: c.orfeo_salida ?? '',
+            fecha_cierre: c.fecha_cierre ?? ''
+          }))
+        );
+        return { filas, corte: fechaDeCorte(filas) };
       }
     },
     directorio: {

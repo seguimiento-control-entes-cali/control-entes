@@ -2,6 +2,7 @@
 // implementaciones (datos/supabase y datos/demo) se intercambian sin tocar las pantallas.
 import type { Rol } from '../../dominio/roles';
 import type { Organismo, Responsable } from '../../dominio/directorio';
+import type { RadicadoHistorico } from '../../dominio/historico';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -96,10 +97,17 @@ export interface RepositorioDirectorio {
   guardar(r: Responsable): Promise<void>;
 }
 
+// ---------- historico (hoy: historico_requerimientos + cierres hechos en la app en requerimientos) ----------
+export interface RepositorioHistorico {
+  /** Todos los radicados del histórico (con los cierres de la app ya aplicados) y la fecha de corte. */
+  radicados(): Promise<{ filas: RadicadoHistorico[]; corte: string }>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
   identidad: RepositorioIdentidad;
   catalogos: RepositorioCatalogos;
   directorio: RepositorioDirectorio;
+  historico: RepositorioHistorico;
 }

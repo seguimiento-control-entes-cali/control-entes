@@ -554,7 +554,11 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 - [ ] Pantallas: **Directorio**, **Histórico** (con detalle), **Cumplimiento**, **Auditoría** (con verificación de la cadena), **Actividad**.
       (2026-11-10: **Directorio** hecho: indicadores, inconsistencias, búsqueda sin tildes, filtro, edición con las
       validaciones de la 2.x solo para Super administrador y Despacho, "Probar chat" y CSV; `src/app/Directorio.test.tsx`;
-      revisado en Edge en computador y celular sin desbordes.)
+      revisado en Edge en computador y celular sin desbordes. 2026-11-11: **Histórico** hecho: filtros por vigencia,
+      ente, organismo y estado, búsqueda, páginas de 100, detalle, CSV, alcance por dependencia y cierres de la app;
+      `dominio/historico.ts` con paridad en `pruebas/paridad-historico.test.ts` (incluye el ocultamiento de datos
+      personales de los 2.568 asuntos de la demo). Faltan: tema y cruce en el detalle (con Cruces, F3) y "Cargar Excel
+      de control" (F3).)
 - [ ] Playwright: ingreso y recorrido de esas pantallas por rol (supervisión y secretario).
 - [ ] Decidir D-17 (variante privada).
 - [ ] Revisión con usuarios piloto.
