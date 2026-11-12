@@ -172,6 +172,15 @@ repositorio `control-entes`. Dirección pública de la app: https://seguimiento-
 
 Alternativa sin GitHub Actions: `npm run build` y subir el contenido de `dist/institucional/` a cualquier hosting estático con HTTPS.
 
+### Consulta diaria (plan gratuito de Supabase)
+
+El plan gratuito pausa el proyecto tras una semana sin uso. `.github/workflows/mantener-activo.yml` llama todos los
+días a las 8:00 a. m. de Colombia a `public.hoy_colombia()` (script 22) con la clave publicable de
+`configuracion.json` (`scripts/mantener-activo.mjs`): solo lectura, sin secretos. Si falla, GitHub avisa por correo.
+Se puede lanzar a mano en Actions → *Mantener activo Supabase* → **Run workflow**. GitHub desactiva las tareas
+programadas de un repositorio público tras 60 días sin cambios: si aparece el aviso, pulsar **Enable workflow**.
+Con el plan Pro (sin pausas) este flujo se puede desactivar.
+
 ## 4. Actualizaciones en celulares instalados
 
 Al publicar una versión nueva, cambiar `version` en `package.json` y `CACHE` en `public/sw.js`. Los celulares
