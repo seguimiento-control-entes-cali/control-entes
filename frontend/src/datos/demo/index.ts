@@ -6,6 +6,7 @@ import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
 import { nuevoEvento, verificarCadena, type EventoAuditoria } from '../../dominio/auditoria';
+import { diferencias } from '../../dominio/actividad';
 
 export const CLAVE_DEMO = 'demo';
 export const CODIGO_DEMO = '123456';
@@ -65,7 +66,7 @@ const QR_DEMO =
 export function datosDemo(): Datos {
   let actual: { perfil: Perfil; sesion: Sesion } | null = null;
   let pendiente: Perfil | null = null;
-  const accesos: string[] = [];
+  const accesos: Record<string, string> = {};
   const verificados = new Set<string>();
   const directorio: Responsable[] = RESPONSABLES_DEMO.map(r => ({ ...r }));
   // Pista de auditoría en memoria, como la demo de la 2.x (empieza con la carga inicial)
@@ -153,7 +154,7 @@ export function datosDemo(): Datos {
         return actual?.perfil ?? null;
       },
       async registrarAcceso() {
-        if (actual) accesos.push(actual.perfil.id);
+        if (actual) accesos[actual.perfil.id] = new Date().toISOString();
       }
     },
     catalogos: {
@@ -165,6 +166,26 @@ export function datosDemo(): Datos {
       },
       async configuracion() {
         return { diasRojo: 5, correoDisciplinario: '' };
+      }
+    },
+    actividad: {
+      async perfiles() {
+        return PERFILES_DEMO.map(p => ({
+          id: p.id,
+          email: p.correo,
+          rol: p.rol,
+          dependencia_id: p.dependenciaId,
+          activo: p.activo
+        }));
+      },
+      async ultimosAccesos() {
+        return { ...accesos };
+      },
+      async notificaciones() {
+        return []; // la demostración de la 3.0 aún no envía avisos (Notificaciones WhatsApp llega en la F3)
+      },
+      async informes() {
+        return []; // el Informe ejecutivo llega en la F3
       }
     },
     auditoria: {
@@ -214,7 +235,7 @@ export function datosDemo(): Datos {
           r.organismo + '|' + r.cargo,
           r,
           actual.perfil.correo,
-          antes ? { antes } : {}
+          antes ? diferencias({ ...antes }, { ...r }) : {}
         );
       }
     }

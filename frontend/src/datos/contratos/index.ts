@@ -4,6 +4,7 @@ import type { Rol } from '../../dominio/roles';
 import type { Organismo, Responsable } from '../../dominio/directorio';
 import type { RadicadoHistorico } from '../../dominio/historico';
 import type { EventoAuditoria, ResultadoVerificacion } from '../../dominio/auditoria';
+import type { Notificacion, PerfilActividad } from '../../dominio/actividad';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -114,6 +115,26 @@ export interface RepositorioAuditoria {
   simularManipulacion?: () => Promise<boolean>;
 }
 
+// ---------- actividad (hoy: profiles, accesos, notificaciones e informes) ----------
+export interface InformeGenerado {
+  ts: string;
+  usuario: string;
+  alcance: string;
+  vigencias: string;
+  n: number;
+  huella: string;
+}
+export interface RepositorioActividad {
+  /** Todas las cuentas (solo supervisión las ve, por RLS). */
+  perfiles(): Promise<PerfilActividad[]>;
+  /** Último ingreso de cada cuenta: { id de la cuenta: fecha y hora }. */
+  ultimosAccesos(): Promise<Record<string, string>>;
+  /** Las 300 notificaciones más recientes (de la más nueva a la más vieja). */
+  notificaciones(): Promise<Notificacion[]>;
+  /** Los 100 informes ejecutivos más recientes. */
+  informes(): Promise<InformeGenerado[]>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
@@ -122,4 +143,5 @@ export interface Datos {
   directorio: RepositorioDirectorio;
   historico: RepositorioHistorico;
   auditoria: RepositorioAuditoria;
+  actividad: RepositorioActividad;
 }
