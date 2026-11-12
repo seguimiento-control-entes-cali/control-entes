@@ -1,0 +1,22 @@
+# Consulta diaria para que el proyecto gratuito de Supabase no se pause por inactividad (una semana sin uso).
+# Llama a public.hoy_colombia() con la clave publicable de configuracion.json: solo lectura, sin secretos.
+# Si falla, GitHub avisa por correo. Se puede lanzar a mano en Actions → "Mantener activo Supabase" → Run workflow.
+# Nota: GitHub desactiva las tareas programadas de un repositorio público tras 60 días sin cambios; si eso pasa,
+# se vuelve a activar con el botón "Enable workflow" de la misma pantalla.
+name: Mantener activo Supabase
+on:
+  schedule:
+    - cron: '0 13 * * *' # todos los días a las 8:00 a. m. de Colombia (13:00 UTC)
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  consulta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Consulta de solo lectura a Supabase
+        run: node scripts/mantener-activo.mjs
