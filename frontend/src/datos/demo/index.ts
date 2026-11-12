@@ -1,7 +1,7 @@
 // Implementación en memoria de los contratos para la variante de demostración (D-16): sin red y sin Supabase.
 // Cuentas ficticias, una por rol; contraseña "demo". La del Super administrador pide además el código 123456,
 // para poder mostrar la verificación en dos pasos.
-import { ErrorDatos, type Datos, type Perfil, type Sesion } from '../contratos';
+import { ErrorDatos, type Datos, type Dependencia, type Ente, type Perfil, type Sesion } from '../contratos';
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
@@ -63,12 +63,22 @@ const QR_DEMO =
       '<text x="50" y="55" font-size="12" text-anchor="middle" fill="#333">QR de demostración</text></svg>'
   );
 
+/** Mismo orden que la base (order('nombre')). */
+const porNombre = (a: { nombre: string }, b: { nombre: string }) => a.nombre.localeCompare(b.nombre, 'es');
+
 export function datosDemo(): Datos {
   let actual: { perfil: Perfil; sesion: Sesion } | null = null;
   let pendiente: Perfil | null = null;
   const accesos: Record<string, string> = {};
   const verificados = new Set<string>();
   const directorio: Responsable[] = RESPONSABLES_DEMO.map(r => ({ ...r }));
+  const entes: Ente[] = ENTES_DEMO.map(e => ({ ...e }));
+  const dependencias: Dependencia[] = DEPENDENCIAS_DEMO.map(d => ({
+    ...d,
+    secretarioNombre: '',
+    correo: '',
+    telefono: ''
+  }));
   // Pista de auditoría en memoria, como la demo de la 2.x (empieza con la carga inicial)
   const auditoria: EventoAuditoria[] = [];
   const auditar = (
@@ -91,6 +101,32 @@ export function datosDemo(): Datos {
       })
     );
   auditar('requerimientos', 'INSERT', 'seed', { nota: 'Carga inicial de demostración' }, 'sistema');
+  // Igual que saveCatalog de la 2.x en la demo: actualiza o agrega con el id siguiente, y lo deja en la auditoría
+  function guardarEnCatalogo<T extends { id: number }>(
+    tabla: 'entes' | 'dependencias',
+    lista: T[],
+    o: Omit<T, 'id'> & { id?: number }
+  ) {
+    if (!actual || actual.perfil.rol !== 'admin')
+      throw new ErrorDatos('sin_permiso', 'Solo el Super administrador puede editar los catálogos.');
+    const i = o.id === undefined ? -1 : lista.findIndex(x => x.id === o.id);
+    if (i >= 0) {
+      const antes = { ...lista[i] } as T;
+      lista[i] = { ...lista[i], ...o } as T;
+      auditar(
+        tabla,
+        'UPDATE',
+        String(o.id),
+        o,
+        actual.perfil.correo,
+        diferencias({ ...antes }, { ...lista[i] })
+      );
+    } else {
+      const nuevo = { ...o, id: Math.max(0, ...lista.map(x => x.id)) + 1 } as T;
+      lista.push(nuevo);
+      auditar(tabla, 'INSERT', String(nuevo.id), nuevo, actual.perfil.correo, {});
+    }
+  }
 
   return {
     auth: {
@@ -159,13 +195,19 @@ export function datosDemo(): Datos {
     },
     catalogos: {
       async entes() {
-        return ENTES_DEMO.map(e => ({ ...e }));
+        return entes.map(e => ({ ...e })).sort(porNombre);
       },
       async dependencias() {
-        return DEPENDENCIAS_DEMO.map(d => ({ ...d }));
+        return dependencias.map(d => ({ ...d })).sort(porNombre);
       },
       async configuracion() {
         return { diasRojo: 5, correoDisciplinario: '' };
+      },
+      async guardarEnte(e) {
+        guardarEnCatalogo('entes', entes, e);
+      },
+      async guardarDependencia(d) {
+        guardarEnCatalogo('dependencias', dependencias, d);
       }
     },
     actividad: {

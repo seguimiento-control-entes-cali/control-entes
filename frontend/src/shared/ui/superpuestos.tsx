@@ -26,7 +26,11 @@ export function Modal({
       if (e.key === 'Escape') alCerrar();
     };
     document.addEventListener('keydown', tecla);
-    ref.current?.querySelector<HTMLElement>('input,select,textarea,button')?.focus();
+    // Igual que la 2.x: el cursor queda en la primera casilla del formulario (si no hay, en el primer botón)
+    (
+      ref.current?.querySelector<HTMLElement>('.body input,.body select,.body textarea') ??
+      ref.current?.querySelector<HTMLElement>('button')
+    )?.focus();
     return () => document.removeEventListener('keydown', tecla);
   }, [abierto, alCerrar]);
   if (!abierto) return null;
