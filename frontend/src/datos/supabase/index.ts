@@ -56,6 +56,12 @@ export function qrSeguro(qr: string): string {
   );
 }
 
+/** Error al guardar: sin permiso (RLS) o el mensaje del servidor. */
+const errorGuardar = (error: { message: string }, que: string) =>
+  /row-level security|permission/i.test(error.message)
+    ? new ErrorDatos('sin_permiso', 'No tiene permiso para editar ' + que + '.')
+    : new ErrorDatos('otro', 'No se pudo guardar: ' + error.message);
+
 const red = () =>
   new ErrorDatos('red', 'No hay conexión con el servidor. Revise su internet e intente de nuevo.');
 
@@ -194,9 +200,19 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         return data ?? [];
       },
       async dependencias() {
-        const { data, error } = await sb.from('dependencias').select('id, nombre, activo').order('nombre');
+        const { data, error } = await sb
+          .from('dependencias')
+          .select('id, nombre, secretario_nombre, correo, telefono, activo')
+          .order('nombre');
         if (error) throw red();
-        return data ?? [];
+        return (data ?? []).map(d => ({
+          id: d.id,
+          nombre: d.nombre,
+          secretarioNombre: d.secretario_nombre ?? '',
+          correo: d.correo ?? '',
+          telefono: d.telefono ?? '',
+          activo: d.activo
+        }));
       },
       async configuracion() {
         const { data, error } = await sb
@@ -206,6 +222,29 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           .maybeSingle();
         if (error) throw red();
         return { diasRojo: data?.dias_rojo || 5, correoDisciplinario: data?.correo_disciplinario ?? '' };
+      },
+      // Igual que saveCatalog de la 2.x: update por id o insert. La auditoría la escribe el servidor (triggers).
+      async guardarEnte({ id, ...e }) {
+        const fila = { nombre: e.nombre, sigla: e.sigla, tipo: e.tipo, activo: e.activo };
+        const { error } =
+          id === undefined
+            ? await sb.from('entes').insert(fila)
+            : await sb.from('entes').update(fila).eq('id', id);
+        if (error) throw errorGuardar(error, 'los catálogos');
+      },
+      async guardarDependencia({ id, ...d }) {
+        const fila = {
+          nombre: d.nombre,
+          secretario_nombre: d.secretarioNombre,
+          correo: d.correo,
+          telefono: d.telefono,
+          activo: d.activo
+        };
+        const { error } =
+          id === undefined
+            ? await sb.from('dependencias').insert(fila)
+            : await sb.from('dependencias').update(fila).eq('id', id);
+        if (error) throw errorGuardar(error, 'los catálogos');
       }
     },
     actividad: {

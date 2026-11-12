@@ -78,6 +78,10 @@ export interface Ente {
 export interface Dependencia {
   id: number;
   nombre: string;
+  /** Secretario(a) de Despacho y su contacto (columnas secretario_nombre, correo y telefono). */
+  secretarioNombre: string;
+  correo: string;
+  telefono: string;
   activo: boolean;
 }
 export interface Configuracion {
@@ -88,6 +92,10 @@ export interface RepositorioCatalogos {
   entes(): Promise<Ente[]>;
   dependencias(): Promise<Dependencia[]>;
   configuracion(): Promise<Configuracion>;
+  /** Crea (sin id) o actualiza un ente de control. Solo Super administrador (RLS entes_ins y entes_upd). */
+  guardarEnte(e: Omit<Ente, 'id'> & { id?: number }): Promise<void>;
+  /** Crea (sin id) o actualiza una dependencia. Solo Super administrador (RLS deps_ins y deps_upd). */
+  guardarDependencia(d: Omit<Dependencia, 'id'> & { id?: number }): Promise<void>;
 }
 
 // ---------- directorio (hoy: directorio, historico_requerimientos para la lista de dependencias) ----------

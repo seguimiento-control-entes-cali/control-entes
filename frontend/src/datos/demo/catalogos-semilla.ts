@@ -74,7 +74,7 @@ export const ENTES_DEMO: readonly Ente[] = [
   }
 ];
 
-export const DEPENDENCIAS_DEMO: readonly Dependencia[] = [
+export const DEPENDENCIAS_DEMO: readonly Pick<Dependencia, 'id' | 'nombre' | 'activo'>[] = [
   {
     'id': 1,
     'nombre': 'Departamento Administrativo de Contratación Pública',
