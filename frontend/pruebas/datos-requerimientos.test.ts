@@ -85,3 +85,91 @@ describe('requerimientos · Supabase simulado', () => {
     });
   });
 });
+
+const archivo = (t = '%PDF-1.4 x') => ({
+  name: 'soporte.pdf',
+  arrayBuffer: () => Promise.resolve(Uint8Array.from(t, c => c.charCodeAt(0)).buffer)
+});
+
+describe('cerrar y escalar · demostración (mismas reglas que la base)', () => {
+  it('cierra con huella, no repite ORFEO, no cierra de otra dependencia y escala solo abiertos', async () => {
+    const e = demo();
+    await e.auth.ingresar('enlace.demo@cali.gov.co', CLAVE_DEMO);
+    const [r] = (await e.requerimientos.lista(Y)).filter(x => x.estado === 'abierto');
+    if (!r) throw new Error('la demo debería tener un abierto en Salud');
+    const { hash } = await e.requerimientos.cerrar(r, '2026414301000777', `${Y}-11-01`, archivo());
+    expect(hash).toMatch(/^[0-9a-f]{64}$/);
+    const cerrado = (await e.requerimientos.lista(Y)).find(x => x.id === r.id);
+    expect(cerrado).toMatchObject({
+      estado: 'cerrado',
+      orfeo_salida: '2026414301000777',
+      soporte_hash: hash
+    });
+    await expect(e.requerimientos.cerrar(r, '2026414301000778', `${Y}-11-01`, archivo())).rejects.toThrow(
+      'El requerimiento ya está cerrado'
+    );
+    await expect(e.requerimientos.escalar(r.id, 'registro')).rejects.toThrow(
+      'El requerimiento no existe o ya está cerrado'
+    );
+    const a = demo();
+    await a.auth.ingresar('admin.demo@cali.gov.co', CLAVE_DEMO);
+    await a.auth.verificarCodigo(CODIGO_DEMO);
+    const otro = (await a.requerimientos.lista(Y)).find(
+      x => x.estado === 'abierto' && x.dependencia_id !== 21
+    );
+    if (!otro) throw new Error('la demo debería tener abiertos de otras dependencias');
+    const e2 = demo();
+    await e2.auth.ingresar('enlace.demo@cali.gov.co', CLAVE_DEMO);
+    await expect(
+      e2.requerimientos.cerrar(otro, '2026414301000779', `${Y}-11-01`, archivo())
+    ).rejects.toMatchObject({
+      codigo: 'sin_permiso'
+    });
+    await a.requerimientos.escalar(otro.id, 'whatsapp');
+    expect((await a.requerimientos.lista(Y)).find(x => x.id === otro.id)?.escalado_at).toBeTruthy();
+    const ev = await a.auditoria.eventos();
+    expect(ev.some(x => x.tabla === 'alertas_log')).toBe(true);
+  });
+});
+
+describe('cerrar · Supabase simulado', () => {
+  function cliente(errorRpc?: string) {
+    const llamadas: string[] = [];
+    const sb = {
+      storage: {
+        from: (b: string) => ({
+          upload: (p: string) => (llamadas.push(`upload ${b} ${p}`), Promise.resolve({ error: null })),
+          remove: (l: string[]) => (
+            llamadas.push(`remove ${b} ${l.join()}`), Promise.resolve({ error: null })
+          )
+        })
+      },
+      rpc: (f: string, a: Record<string, unknown>) => {
+        llamadas.push(`rpc ${f} ${String(a.p_orfeo)} ${String(a.p_path)} ${String(a.p_hash).length}`);
+        return Promise.resolve({ error: errorRpc ? { message: errorRpc } : null });
+      }
+    };
+    return {
+      r: datosSupabase(sb as unknown as Parameters<typeof datosSupabase>[0]).requerimientos,
+      llamadas
+    };
+  }
+  const req = { id: 'u1', radicado: '2026EE004937', vigencia: 2026 };
+
+  it('sube el PDF a soportes y llama a cerrar_requerimiento con la ruta y la huella', async () => {
+    const x = cliente();
+    await x.r.cerrar(req, '2026414301000171', '2026-11-10', archivo());
+    expect(x.llamadas[0]).toMatch(/^upload soportes 2026\/2026EE004937_\d+\.pdf$/);
+    expect(x.llamadas[1]).toMatch(
+      /^rpc cerrar_requerimiento 2026414301000171 2026\/2026EE004937_\d+\.pdf 64$/
+    );
+  });
+
+  it('si el cierre falla, borra el PDF subido y avisa con el texto de la 2.x', async () => {
+    const x = cliente('duplicate key value violates unique constraint "uq_orfeo"');
+    await expect(x.r.cerrar(req, '2026414301000171', '2026-11-10', archivo())).rejects.toThrow(
+      'Ese radicado ORFEO ya fue registrado en otro requerimiento'
+    );
+    expect(x.llamadas[2]).toMatch(/^remove soportes 2026\/2026EE004937_\d+\.pdf$/);
+  });
+});

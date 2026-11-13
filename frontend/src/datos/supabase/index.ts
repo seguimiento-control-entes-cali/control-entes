@@ -10,6 +10,8 @@ import { esRol } from '../../dominio/roles';
 import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import type { Database } from './tipos.generados';
+import { huellaArchivo } from '../../dominio/huella-archivo';
+import { rutaSoporte } from '../../dominio/requerimientos';
 import {
   aplicarCierres,
   desdeBaseDeDatos,
@@ -418,6 +420,31 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
       },
       async crear(o) {
         const { error } = await sb.from('requerimientos').insert(o);
+        if (error) throw errorRequerimiento(error);
+      },
+      async cerrar(r, orfeo, fecha, archivo) {
+        const hash = await huellaArchivo(archivo);
+        const path = rutaSoporte(r, Date.now());
+        const up = await sb.storage
+          .from('soportes')
+          .upload(path, archivo as unknown as ArrayBuffer, { contentType: 'application/pdf', upsert: false });
+        if (up.error) throw new ErrorDatos('otro', 'No se pudo subir el PDF: ' + up.error.message);
+        const { error } = await sb.rpc('cerrar_requerimiento', {
+          p_id: r.id,
+          p_orfeo: orfeo,
+          p_fecha: fecha,
+          p_path: path,
+          p_hash: hash
+        });
+        if (error) {
+          // Igual que la 2.x: si el cierre no queda, el PDF subido se borra
+          await sb.storage.from('soportes').remove([path]);
+          throw errorRequerimiento(error);
+        }
+        return { hash };
+      },
+      async escalar(id, canal) {
+        const { error } = await sb.rpc('escalar_requerimiento', { p_id: id, p_canal: canal });
         if (error) throw errorRequerimiento(error);
       },
       async urlSoporte(path) {
