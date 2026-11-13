@@ -8,6 +8,7 @@ import type { Notificacion, PerfilActividad } from '../../dominio/actividad';
 import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import type { ArchivoSoporte } from '../../dominio/huella-archivo';
+import type { AccionCuenta, Cuenta } from '../../dominio/cuentas';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -198,6 +199,16 @@ export interface RepositorioRequerimientos {
   urlSoporte(path: string): Promise<string>;
 }
 
+// ---------- cuentas (hoy: profiles y la función gestion-cuentas) ----------
+export interface RepositorioCuentas {
+  /** Todas las cuentas, por correo (solo el Super administrador las administra). */
+  lista(): Promise<Cuenta[]>;
+  /** Llama a gestion-cuentas (preparar, invitar, activar_invitar, cambiar_correo, enlace_clave, activar, desactivar). */
+  gestionar(accion: AccionCuenta, datos: Record<string, unknown>): Promise<{ mensaje: string }>;
+  /** Cambia rol, dependencia o estado de una cuenta (tabla profiles). */
+  guardar(c: Pick<Cuenta, 'id' | 'rol' | 'dependencia_id' | 'activo'>): Promise<void>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
@@ -209,6 +220,7 @@ export interface Datos {
   actividad: RepositorioActividad;
   cruces: RepositorioCruces;
   requerimientos: RepositorioRequerimientos;
+  cuentas: RepositorioCuentas;
   /** Cuenta institucional desde la que se redactan los correos (remitente de configuracion.json). */
   remitente?: string;
 }
