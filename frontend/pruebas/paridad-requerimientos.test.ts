@@ -194,3 +194,44 @@ describe('paridad con la 2.x · Cargar respuesta ORFEO y Alertas', () => {
     );
   });
 });
+
+describe('paridad con la 2.x · Reportes y exportación', () => {
+  it('el consolidado dice lo mismo que vReportes de la 2.x', async () => {
+    const { consolidado, filasCsvRequerimientos } = await import('../src/dominio/requerimientos');
+    const d4 = cargarApp(['vReportes', 'S', 'SEM']) as {
+      vReportes: (c: { innerHTML: string }) => void;
+      S: { reqs: unknown[]; vigencia: number };
+      SEM: Record<string, string>;
+    };
+    const vivos = semilla
+      .filter(r => r.vigencia === vigencia)
+      .map(r => decorar(r, HOY, 5, ENTES_DEMO, DEPENDENCIAS_DEMO));
+    d4.S.reqs = vivos.map(r => ({ ...r }));
+    d4.S.vigencia = vigencia;
+    const c = { innerHTML: '' };
+    d4.vReportes(c);
+    const t = consolidado(vivos);
+    expect(c.innerHTML).toContain(
+      `Total ${t.k.total} · cerradas ${t.k.verde} · en término ${t.k.amarillo} · críticas ${t.k.rojo} · cumplimiento ${t.pct}%`
+    );
+    const filas = [
+      ...c.innerHTML.matchAll(
+        /<tr><td>([^<]+)<\/td><td class="right mono">(\d+)<\/td>.*?>(\d+)<\/td>.*?>(\d+)<\/td>.*?>(\d+)<\/td><td class="right mono">(\d+)%/g
+      )
+    ].map(m => m.slice(1));
+    expect(filas).toEqual(
+      t.porEnte.map(q => [
+        q.ente,
+        String(q.total),
+        String(q.rojo),
+        String(q.amarillo),
+        String(q.verde),
+        String(q.pct)
+      ])
+    );
+    // CSV: la columna Semáforo usa los mismos textos (SEM de la 2.x)
+    filasCsvRequerimientos(vivos)
+      .slice(1)
+      .forEach((f, i) => expect(f[8]).toBe(d4.SEM[(vivos[i] as (typeof vivos)[number]).sem]));
+  });
+});
