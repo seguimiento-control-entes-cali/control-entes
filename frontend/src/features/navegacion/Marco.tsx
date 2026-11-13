@@ -18,6 +18,10 @@ import { PantallaCruces } from '../cruces/PantallaCruces';
 import { PantallaMando } from '../mando/PantallaMando';
 import { PantallaInforme } from '../informe/PantallaInforme';
 import { PantallaNotificaciones } from '../notificaciones/PantallaNotificaciones';
+import { ProveedorVigencia, SelectorVigencia } from '../requerimientos/comun';
+import { PantallaTablero } from '../requerimientos/PantallaTablero';
+import { PantallaRequerimientos } from '../requerimientos/PantallaRequerimientos';
+import { VISTAS_CON_VIGENCIA } from '../../dominio/requerimientos';
 import escudo from '../../../../src/assets/escudo.png';
 
 function PantallaPendiente({ textos, inicial }: { textos: Map<string, string>; inicial: string }) {
@@ -112,7 +116,7 @@ export function Marco({
   };
 
   return (
-    <>
+    <ProveedorVigencia>
       <div className={'app' + (abierto ? ' open' : '') + (contraido ? ' collapsed' : '')}>
         <aside className="sidebar">
           <div className="brand">
@@ -190,6 +194,9 @@ export function Marco({
               <small>{subtitulo}</small>
             </div>
             <div className="spacer" />
+            {(VISTAS_CON_VIGENCIA as readonly string[]).includes(vista) && textos.has(vista) && (
+              <SelectorVigencia />
+            )}
             <Reloj />
             <Modo demo={demo} />
           </header>
@@ -205,6 +212,13 @@ export function Marco({
               <Routes>
                 {textos.has('mando') && (
                   <Route path="/mando" element={<PantallaMando perfil={perfil} demo={demo} />} />
+                )}
+                {textos.has('tablero') && <Route path="/tablero" element={<PantallaTablero />} />}
+                {textos.has('requerimientos') && (
+                  <Route
+                    path="/requerimientos"
+                    element={<PantallaRequerimientos perfil={perfil} demo={demo} />}
+                  />
                 )}
                 {textos.has('notificaciones') && (
                   <Route path="/notificaciones" element={<PantallaNotificaciones />} />
@@ -269,6 +283,6 @@ export function Marco({
           <span>Menú</span>
         </button>
       </nav>
-    </>
+    </ProveedorVigencia>
   );
 }

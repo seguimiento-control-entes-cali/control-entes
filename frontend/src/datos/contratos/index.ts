@@ -6,6 +6,7 @@ import type { RadicadoHistorico } from '../../dominio/historico';
 import type { EventoAuditoria, ResultadoVerificacion } from '../../dominio/auditoria';
 import type { Notificacion, PerfilActividad } from '../../dominio/actividad';
 import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
+import type { Requerimiento } from '../../dominio/requerimientos';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -166,6 +167,24 @@ export interface RepositorioCruces {
   guardarRevision(clave: string, estado: '' | RevisionCruce['estado'], nota?: string): Promise<void>;
 }
 
+// ---------- requerimientos (hoy: v_requerimientos, requerimientos; scripts 01 y 22) ----------
+export interface RepositorioRequerimientos {
+  /** Requerimientos de una vigencia (RLS: secretario y enlace solo los de su dependencia). */
+  lista(vigencia: number): Promise<Requerimiento[]>;
+  /** Registra uno nuevo (RLS: Super administrador, o enlace en su dependencia). */
+  crear(r: {
+    radicado: string;
+    vigencia: number;
+    ente_id: number;
+    dependencia_id: number;
+    asunto: string;
+    fecha_radicacion: string;
+    fecha_limite: string;
+  }): Promise<void>;
+  /** Enlace temporal (5 minutos) para ver el PDF de soporte del depósito privado soportes. */
+  urlSoporte(path: string): Promise<string>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
@@ -176,6 +195,7 @@ export interface Datos {
   auditoria: RepositorioAuditoria;
   actividad: RepositorioActividad;
   cruces: RepositorioCruces;
+  requerimientos: RepositorioRequerimientos;
   /** Cuenta institucional desde la que se redactan los correos (remitente de configuracion.json). */
   remitente?: string;
 }

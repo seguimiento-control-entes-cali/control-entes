@@ -11,6 +11,9 @@ import {
   type Sesion
 } from '../contratos';
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
+import { semillaRequerimientos } from './requerimientos-semilla';
+import { fechaColombia } from '../../dominio/fechas';
+import type { Requerimiento } from '../../dominio/requerimientos';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
 import { nuevoEvento, verificarCadena, type EventoAuditoria } from '../../dominio/auditoria';
@@ -95,6 +98,8 @@ export function datosDemo(): Datos {
   const revisiones = new Map<string, RevisionCruce>();
   const informes: InformeGenerado[] = [];
   const notificaciones: Notificacion[] = [];
+  // Requerimientos del módulo operativo (los mismos 15 de la 2.x, con fechas relativas a hoy)
+  const reqs: Requerimiento[] = semillaRequerimientos(fechaColombia(new Date()));
   const auditar = (
     tabla: string,
     accion: string,
@@ -305,6 +310,40 @@ export function datosDemo(): Datos {
         // El histórico de ejemplo (datos/demo/historico.json, ficticio) se carga aparte, solo cuando se abre
         const { radicadosDemo } = await import('./historico-demo');
         return radicadosDemo();
+      }
+    },
+    requerimientos: {
+      async lista(vigencia) {
+        // Igual que la base (RLS req_read): secretario y enlace solo ven los de su dependencia
+        const p = actual?.perfil;
+        const propia = p && ['secretario', 'enlace'].includes(p.rol) ? p.dependenciaId : null;
+        return reqs
+          .filter(r => r.vigencia === vigencia && (propia === null || r.dependencia_id === propia))
+          .map(r => ({ ...r }));
+      },
+      async crear(o) {
+        const p = actual?.perfil;
+        // Igual que la base (RLS req_ins): Super administrador, o enlace en su propia dependencia
+        if (!p || !(p.rol === 'admin' || (p.rol === 'enlace' && o.dependencia_id === p.dependenciaId)))
+          throw new ErrorDatos('sin_permiso', 'Tu rol no tiene permiso para esta operación');
+        if (reqs.some(r => r.radicado === o.radicado))
+          throw new ErrorDatos('otro', 'El radicado ' + o.radicado + ' ya existe');
+        const r: Requerimiento = {
+          ...o,
+          id: 'd' + Date.now(),
+          estado: 'abierto',
+          orfeo_salida: null,
+          fecha_cierre: null,
+          soporte_path: null,
+          soporte_hash: null,
+          escalado_at: null
+        };
+        reqs.push(r);
+        auditar('requerimientos', 'INSERT', r.id, r, p.correo);
+      },
+      async urlSoporte() {
+        // La demostración no guarda archivos (igual que la 2.x, que oculta el botón)
+        throw new ErrorDatos('otro', 'La demostración no guarda los PDF de soporte.');
       }
     },
     cruces: {
