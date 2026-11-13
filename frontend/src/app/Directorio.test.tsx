@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Directorio del gabinete en la demo (datos ficticios de datos/demo/): por rol, editar, validar y buscar.
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient } from '@tanstack/react-query';
 import { App } from './App';
 import { arrancar } from './arranque';
@@ -87,6 +87,9 @@ describe('3.0 · Directorio del gabinete (demo)', () => {
     await entrar('enlace.demo@cali.gov.co');
     expect(menu().queryByRole('link', { name: 'Directorio del gabinete' })).toBeNull();
     window.location.hash = '#/directorio';
-    expect(await screen.findByRole('heading', { name: 'Mi dependencia', level: 3 })).toBeTruthy();
+    expect(
+      await screen.findByRole('heading', { name: 'Pendientes y vencidos de esta dependencia', level: 3 })
+    ).toBeTruthy();
+    await waitFor(() => expect(window.location.hash).toBe('#/dependencia'));
   });
 });

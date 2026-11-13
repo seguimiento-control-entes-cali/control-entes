@@ -199,13 +199,14 @@ export function PantallaHistorico({ perfil }: { perfil: Perfil }) {
       </div>
 
       <Modal abierto={!!detalle} titulo={detalle?.rad || 'Sin número'} alCerrar={() => setDetalle(null)}>
-        {detalle && <Detalle r={detalle} />}
+        {detalle && <DetalleRadicado r={detalle} />}
       </Modal>
     </>
   );
 }
 
-function Detalle({ r }: { r: RadicadoHistorico }) {
+/** Ventana de detalle de un radicado (histDetail de la 2.x); también la usa el Expediente de dependencia. */
+export function DetalleRadicado({ r }: { r: RadicadoHistorico }) {
   const p = pildoraDe(r.opo);
   const fila = (t: string, v: ReactNode, mono = false) => (
     <div>
