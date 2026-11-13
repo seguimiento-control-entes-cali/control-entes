@@ -14,6 +14,7 @@ import { PantallaAuditoria } from '../auditoria/PantallaAuditoria';
 import { PantallaActividad } from '../actividad/PantallaActividad';
 import { PantallaCatalogo } from '../catalogos/PantallaCatalogo';
 import { PantallaExpediente } from '../dependencia/PantallaExpediente';
+import { PantallaCruces } from '../cruces/PantallaCruces';
 import escudo from '../../../../src/assets/escudo.png';
 
 function PantallaPendiente({ textos, inicial }: { textos: Map<string, string>; inicial: string }) {
@@ -217,6 +218,9 @@ export function Marco({
                     path="/dependencias"
                     element={<PantallaCatalogo key="dependencias" tabla="dependencias" perfil={perfil} />}
                   />
+                )}
+                {textos.has('cruces') && (
+                  <Route path="/cruces" element={<PantallaCruces perfil={perfil} />} />
                 )}
                 {textos.has('auditoria') && <Route path="/auditoria" element={<PantallaAuditoria />} />}
                 {textos.has('cumplimiento') && (

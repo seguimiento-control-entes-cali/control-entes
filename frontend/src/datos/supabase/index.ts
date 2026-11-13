@@ -7,6 +7,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { ErrorDatos, type Datos, type Perfil, type Sesion } from '../contratos';
 import { esRol } from '../../dominio/roles';
+import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Database } from './tipos.generados';
 import {
   aplicarCierres,
@@ -348,6 +349,44 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           }))
         );
         return { filas, corte: fechaDeCorte(filas) };
+      }
+    },
+    cruces: {
+      // Igual que loadCruceMeta de la 2.x: si no se pueden leer, se trabaja sin decisiones guardadas
+      async temasManuales() {
+        const { data, error } = await sb.from('tema_manual').select('row_key, tema, usuario, updated_at');
+        const r: Record<string, TemaManual> = {};
+        if (!error)
+          for (const x of data ?? []) r[x.row_key] = { tema: x.tema, usuario: x.usuario, ts: x.updated_at };
+        return r;
+      },
+      async revisiones() {
+        const { data, error } = await sb
+          .from('cruce_revision')
+          .select('clave, estado, nota, usuario, updated_at');
+        const r: Record<string, RevisionCruce> = {};
+        if (!error)
+          for (const x of data ?? [])
+            r[x.clave] = {
+              estado: x.estado as RevisionCruce['estado'],
+              nota: x.nota || '',
+              usuario: x.usuario,
+              ts: x.updated_at
+            };
+        return r;
+      },
+      // Quién y cuándo los pone el servidor (firmar_decision); la auditoría la lleva audit_trigger
+      async guardarTema(llave, tema) {
+        const { error } = tema
+          ? await sb.from('tema_manual').upsert({ row_key: llave, tema }, { onConflict: 'row_key' })
+          : await sb.from('tema_manual').delete().eq('row_key', llave);
+        if (error) throw errorGuardar(error, 'los temas');
+      },
+      async guardarRevision(clave, estado, nota = '') {
+        const { error } = estado
+          ? await sb.from('cruce_revision').upsert({ clave, estado, nota }, { onConflict: 'clave' })
+          : await sb.from('cruce_revision').delete().eq('clave', clave);
+        if (error) throw errorGuardar(error, 'los cruces');
       }
     },
     directorio: {

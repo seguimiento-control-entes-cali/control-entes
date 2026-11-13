@@ -5,6 +5,7 @@ import type { Organismo, Responsable } from '../../dominio/directorio';
 import type { RadicadoHistorico } from '../../dominio/historico';
 import type { EventoAuditoria, ResultadoVerificacion } from '../../dominio/auditoria';
 import type { Notificacion, PerfilActividad } from '../../dominio/actividad';
+import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -143,6 +144,18 @@ export interface RepositorioActividad {
   informes(): Promise<InformeGenerado[]>;
 }
 
+// ---------- cruces (hoy: tema_manual y cruce_revision; scripts 08) ----------
+export interface RepositorioCruces {
+  /** Temas corregidos a mano, por llave de fila (vigencia|ORFEO entrada|radicado del ente|organismo). */
+  temasManuales(): Promise<Record<string, TemaManual>>;
+  /** Cruces confirmados o descartados, por clave del cruce. */
+  revisiones(): Promise<Record<string, RevisionCruce>>;
+  /** Guarda el tema de un requerimiento; vacío = vuelve al automático. Admin, alcalde y Control Interno (RLS). */
+  guardarTema(llave: string, tema: string): Promise<void>;
+  /** Confirma o descarta un cruce; vacío = quita la revisión. Admin, alcalde y Control Interno (RLS). */
+  guardarRevision(clave: string, estado: '' | RevisionCruce['estado'], nota?: string): Promise<void>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
@@ -152,4 +165,5 @@ export interface Datos {
   historico: RepositorioHistorico;
   auditoria: RepositorioAuditoria;
   actividad: RepositorioActividad;
+  cruces: RepositorioCruces;
 }
