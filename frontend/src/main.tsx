@@ -20,7 +20,8 @@ createRoot(raiz).render(
       datos={arrancar({
         VITE_VARIANTE: import.meta.env.VITE_VARIANTE,
         VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-        VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY
+        VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        VITE_REMITENTE: import.meta.env.VITE_REMITENTE
       })}
     />
   </StrictMode>
