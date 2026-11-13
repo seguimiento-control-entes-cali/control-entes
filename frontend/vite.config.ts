@@ -4,9 +4,18 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import paquete from './package.json';
+
+// Fecha de construcción en Colombia (AAAA-MM-DD), como CE_BUILD.construido de la 2.x
+const construido = new Date(Date.now() - 5 * 3600_000).toISOString().slice(0, 10);
 
 export default defineConfig({
   base: './',
+  // Versión y fecha de construcción que se muestran en Configuración
+  define: {
+    __CE_VERSION__: JSON.stringify(paquete.version),
+    __CE_CONSTRUIDO__: JSON.stringify(construido)
+  },
   // El diseño viene de los estilos, fuentes e íconos de la 2.x (src/css y vendor/web, fuera de frontend/)
   server: { fs: { allow: ['..'] } },
   plugins: [
