@@ -133,3 +133,64 @@ describe('paridad con la 2.x · Tablero y Requerimientos', () => {
     );
   });
 });
+
+describe('paridad con la 2.x · Cargar respuesta ORFEO y Alertas', () => {
+  const d3 = cargarApp(['waLink', 'decorate', 'S', 'DIRLIST']) as {
+    waLink: (r: unknown) => { msg: string; wa: string; mail: string };
+    decorate: (r: Fila) => Fila;
+    S: { cfg: { dias_rojo: number }; entes: unknown[]; deps: unknown[] };
+    DIRLIST: unknown[];
+  };
+  d3.S.cfg = { dias_rojo: 5 };
+  d3.S.entes = ENTES_DEMO.map(e => ({ ...e }));
+  d3.S.deps = DEPENDENCIAS_DEMO.map(x => ({ ...x, correo: x.id === 21 ? 'salud@cali.gov.co' : '' }));
+  d3.DIRLIST.push({
+    organismo: 'Secretaría de Salud Pública',
+    cargo: 'Secretario(a) de Despacho',
+    nombre: 'Ana Pérez',
+    telefono: '573001234567'
+  });
+
+  it('mismo mensaje y enlaces de WhatsApp y correo que waLink, para cada requerimiento abierto', async () => {
+    const { mensajeAlerta } = await import('../src/dominio/requerimientos');
+    const { formatoCorto } = await import('../src/dominio/historico');
+    for (const r of semilla.filter(x => x.estado === 'abierto')) {
+      const a = decorar(r, HOY, 5, ENTES_DEMO, DEPENDENCIAS_DEMO);
+      const b = d3.waLink(d3.decorate({ ...r }));
+      const cel = a.dependencia_id === 21 ? '573001234567' : '';
+      const correo = a.dependencia_id === 21 ? 'salud@cali.gov.co' : '';
+      expect(mensajeAlerta(a, cel, correo, formatoCorto), r.radicado).toEqual(b);
+    }
+  });
+
+  it('validaciones del cierre en el orden y con los textos de la 2.x', async () => {
+    const { validarCarga, rutaSoporte } = await import('../src/dominio/requerimientos');
+    const f = (s: string) => s.split('-').reverse().join('/');
+    const r = { fecha_radicacion: '2026-11-02' };
+    const pdf = { nombre: 'soporte.pdf', tipo: 'application/pdf', tamano: 1000, cabecera: '%PDF-' };
+    const base = { orfeo: '2026414301000001', fecha: '2026-11-10', archivo: pdf };
+    const v = (x: Partial<typeof base>, ex: { orfeo_salida: string | null }[] = []) =>
+      validarCarga({ ...base, ...x }, r, '2026-11-13', ex, f);
+    expect(v({})).toBeNull();
+    expect(v({ orfeo: '123' })).toBe('El radicado ORFEO debe tener entre 10 y 20 dígitos');
+    expect(v({}, [{ orfeo_salida: base.orfeo }])).toBe(
+      'Este radicado ORFEO ya está asociado a otro requerimiento'
+    );
+    expect(v({ fecha: '' })).toBe('Indica la fecha de envío');
+    expect(v({ fecha: '2026-11-14' })).toBe('La fecha de envío no puede ser futura');
+    expect(v({ fecha: '2026-11-01' })).toBe(
+      'La fecha de envío no puede ser anterior a la radicación (02/11/2026)'
+    );
+    expect(v({ archivo: null as unknown as typeof pdf })).toBe('Adjunta el soporte en PDF');
+    expect(v({ archivo: { ...pdf, nombre: 'a.docx', tipo: 'application/msword' } })).toBe(
+      'El soporte debe ser un archivo PDF'
+    );
+    expect(v({ archivo: { ...pdf, tamano: 11 * 1024 * 1024 } })).toBe('El PDF supera los 10 MB');
+    expect(v({ archivo: { ...pdf, cabecera: 'PK\u0003\u0004\u0014' } })).toBe(
+      'El archivo no parece ser un PDF válido'
+    );
+    expect(rutaSoporte({ radicado: 'Rad. Nº 12/2026 – Acción', vigencia: 2026 }, 1700000000000)).toBe(
+      '2026/Rad._N_12_2026_Accion_1700000000000.pdf'
+    );
+  });
+});

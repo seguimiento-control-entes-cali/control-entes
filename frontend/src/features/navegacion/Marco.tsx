@@ -21,6 +21,8 @@ import { PantallaNotificaciones } from '../notificaciones/PantallaNotificaciones
 import { ProveedorVigencia, SelectorVigencia } from '../requerimientos/comun';
 import { PantallaTablero } from '../requerimientos/PantallaTablero';
 import { PantallaRequerimientos } from '../requerimientos/PantallaRequerimientos';
+import { PantallaCarga } from '../requerimientos/PantallaCarga';
+import { PantallaAlertas } from '../requerimientos/PantallaAlertas';
 import { VISTAS_CON_VIGENCIA } from '../../dominio/requerimientos';
 import escudo from '../../../../src/assets/escudo.png';
 
@@ -219,6 +221,10 @@ export function Marco({
                     path="/requerimientos"
                     element={<PantallaRequerimientos perfil={perfil} demo={demo} />}
                   />
+                )}
+                {textos.has('carga') && <Route path="/carga" element={<PantallaCarga />} />}
+                {textos.has('alertas') && (
+                  <Route path="/alertas" element={<PantallaAlertas perfil={perfil} />} />
                 )}
                 {textos.has('notificaciones') && (
                   <Route path="/notificaciones" element={<PantallaNotificaciones />} />

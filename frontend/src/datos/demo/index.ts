@@ -12,6 +12,7 @@ import {
 } from '../contratos';
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { semillaRequerimientos } from './requerimientos-semilla';
+import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
@@ -100,6 +101,7 @@ export function datosDemo(): Datos {
   const notificaciones: Notificacion[] = [];
   // Requerimientos del módulo operativo (los mismos 15 de la 2.x, con fechas relativas a hoy)
   const reqs: Requerimiento[] = semillaRequerimientos(fechaColombia(new Date()));
+  const alertasLog: { requerimiento_id: string; canal: string }[] = [];
   const auditar = (
     tabla: string,
     accion: string,
@@ -340,6 +342,49 @@ export function datosDemo(): Datos {
         };
         reqs.push(r);
         auditar('requerimientos', 'INSERT', r.id, r, p.correo);
+      },
+      async cerrar(r, orfeo, fecha, archivo) {
+        const p = actual?.perfil;
+        const t = reqs.find(x => x.id === r.id);
+        // Mismas reglas que cerrar_requerimiento en la base (supabase/22_fecha_colombia.sql)
+        if (!p || !['admin', 'secretario', 'enlace'].includes(p.rol))
+          throw new ErrorDatos('sin_permiso', 'Tu rol no puede registrar respuestas ORFEO');
+        if (!t) throw new ErrorDatos('otro', 'El requerimiento no existe');
+        if (p.rol !== 'admin' && t.dependencia_id !== p.dependenciaId)
+          throw new ErrorDatos('sin_permiso', 'Este requerimiento pertenece a otra dependencia');
+        if (t.estado === 'cerrado') throw new ErrorDatos('otro', 'El requerimiento ya está cerrado');
+        if (reqs.some(x => x.orfeo_salida === orfeo))
+          throw new ErrorDatos(
+            'otro',
+            'El radicado ORFEO ' + orfeo + ' ya fue registrado en otro requerimiento'
+          );
+        const hash = await huellaArchivo(archivo);
+        const antes = { ...t };
+        Object.assign(t, {
+          estado: 'cerrado',
+          orfeo_salida: orfeo,
+          fecha_cierre: fecha,
+          soporte_hash: hash,
+          soporte_path: archivo.name ?? null
+        });
+        auditar('requerimientos', 'UPDATE', t.id, t, p.correo, diferencias(antes, { ...t }));
+        return { hash };
+      },
+      async escalar(id, canal) {
+        const p = actual?.perfil;
+        if (!p || !['admin', 'alcalde', 'control_interno', 'enlace'].includes(p.rol))
+          throw new ErrorDatos('sin_permiso', 'Tu rol no puede escalar alertas');
+        const t = reqs.find(x => x.id === id && x.estado === 'abierto');
+        if (!t) throw new ErrorDatos('otro', 'El requerimiento no existe o ya está cerrado');
+        t.escalado_at = new Date().toISOString();
+        alertasLog.push({ requerimiento_id: id, canal });
+        auditar(
+          'alertas_log',
+          'INSERT',
+          String(alertasLog.length),
+          { requerimiento_id: id, canal },
+          p.correo
+        );
       },
       async urlSoporte() {
         // La demostración no guarda archivos (igual que la 2.x, que oculta el botón)

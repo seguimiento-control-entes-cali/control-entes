@@ -7,6 +7,7 @@ import type { EventoAuditoria, ResultadoVerificacion } from '../../dominio/audit
 import type { Notificacion, PerfilActividad } from '../../dominio/actividad';
 import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Requerimiento } from '../../dominio/requerimientos';
+import type { ArchivoSoporte } from '../../dominio/huella-archivo';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -181,6 +182,18 @@ export interface RepositorioRequerimientos {
     fecha_radicacion: string;
     fecha_limite: string;
   }): Promise<void>;
+  /**
+   * Cierra un requerimiento con su ORFEO de salida, la fecha de envío y el PDF de soporte (closeReq de la 2.x): sube el
+   * PDF al depósito soportes y llama a cerrar_requerimiento; si el cierre falla, borra el PDF. Devuelve la huella.
+   */
+  cerrar(
+    r: Pick<Requerimiento, 'id' | 'radicado' | 'vigencia'>,
+    orfeo: string,
+    fecha: string,
+    archivo: ArchivoSoporte
+  ): Promise<{ hash: string }>;
+  /** Registra un escalamiento (escalar_requerimiento): canal registro, whatsapp, correo o disciplinario. */
+  escalar(id: string, canal: string): Promise<void>;
   /** Enlace temporal (5 minutos) para ver el PDF de soporte del depósito privado soportes. */
   urlSoporte(path: string): Promise<string>;
 }
