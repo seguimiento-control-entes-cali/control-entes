@@ -61,6 +61,7 @@ jobs:
           if [ "$VITE_VARIANTE" = institucional ]; then
             export VITE_SUPABASE_URL="$(node -p "require('../configuracion.json').supabaseUrl")"
             export VITE_SUPABASE_ANON_KEY="$(node -p "require('../configuracion.json').supabaseAnonKey")"
+            export VITE_REMITENTE="$(node -p "require('../configuracion.json').remitente || ''")"
             case "$VITE_SUPABASE_ANON_KEY" in
               sb_publishable_*) ;;
               *) echo "configuracion.json no tiene una clave publicable (sb_publishable_): no se publica"; exit 1 ;;

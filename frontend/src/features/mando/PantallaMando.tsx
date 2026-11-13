@@ -42,6 +42,7 @@ import {
   type Ventana
 } from '../../dominio/mando';
 import { Aviso, Icono } from '../../shared/ui';
+import { useNotificar } from '../notificaciones/Ventanas';
 import { useDatos } from '../sesion/contexto';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
@@ -172,6 +173,7 @@ export function PantallaMando({ perfil, demo = false }: { perfil: Perfil; demo?:
         : pintarTablero(orden, new Map()),
     [orden, todas, mes, corte, ventana]
   );
+  const { notificar, despacho, ventanas } = useNotificar(vigs);
 
   useEffect(() => {
     const t = setTimeout(() => setRevelar(false), 1400);
@@ -452,6 +454,11 @@ export function PantallaMando({ perfil, demo = false }: { perfil: Perfil; demo?:
           </p>
         )}
         <div className="brief-a">
+          {notifica && cola.length > 0 && (
+            <button type="button" className="btn primary" onClick={despacho}>
+              <Icono nombre="fa-whatsapp" tipo="brands" /> Notificar dependencias en cola
+            </button>
+          )}
           {sinCel > 0 && notifica && (
             <button type="button" className="btn" onClick={() => ir('/directorio')}>
               <Icono nombre="fa-address-book" /> Completar directorio
@@ -473,6 +480,11 @@ export function PantallaMando({ perfil, demo = false }: { perfil: Perfil; demo?:
               por WhatsApp.
             </div>
           </div>
+          {notifica && (
+            <button type="button" className="btn danger" onClick={despacho}>
+              <Icono nombre="fa-paper-plane" /> Modo despacho
+            </button>
+          )}
         </div>
         <div className="seg" style={{ margin: '6px 0 12px' }}>
           {VIGENCIAS_MANDO.map(y => (
@@ -541,6 +553,17 @@ export function PantallaMando({ perfil, demo = false }: { perfil: Perfil; demo?:
                           {ln ? formatoFechaHora(ln.ts) : 'Nunca'}
                         </td>
                         <td className="right" style={{ whiteSpace: 'nowrap' }}>
+                          {notifica && (
+                            <>
+                              <button
+                                type="button"
+                                className="btn sm primary"
+                                onClick={() => notificar(o.org)}
+                              >
+                                <Icono nombre="fa-whatsapp" tipo="brands" /> Notificar
+                              </button>{' '}
+                            </>
+                          )}
                           <button type="button" className="btn sm" onClick={() => abrir(o.org)}>
                             Expediente
                           </button>
@@ -554,6 +577,7 @@ export function PantallaMando({ perfil, demo = false }: { perfil: Perfil; demo?:
           )}
         </div>
       </div>
+      {ventanas}
     </>
   );
 }

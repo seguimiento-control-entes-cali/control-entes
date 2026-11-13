@@ -29,14 +29,6 @@ export const fondoSemaforo = (s: SemaforoHistorico) =>
 export const textoSemaforo = (s: SemaforoHistorico) =>
   s === 'muestra' ? 'MUESTRA INSUFICIENTE' : s.toUpperCase();
 
-/** Nombres de las plantillas de notificación (TPL de src/js/14-notificaciones.js). */
-export const PLANTILLAS: Readonly<Record<string, string>> = {
-  vencidos: 'Requerimientos sin respuesta (vencidos)',
-  preventivo: 'Recordatorio preventivo (por vencer)',
-  desempeno: 'Resumen de desempeño',
-  reconocimiento: 'Reconocimiento por buen cumplimiento'
-};
-
 export interface OpcionesInforme {
   /** 'todas' o el año. */
   vig: string;

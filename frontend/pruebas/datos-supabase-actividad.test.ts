@@ -9,7 +9,20 @@ const TABLAS: Record<string, unknown[]> = {
     { user_id: 'u2', created_at: '2026-11-10T15:00:00Z' },
     { user_id: 'u1', created_at: '2026-11-01T15:00:00Z' }
   ],
-  notificaciones: [{ created_at: '2026-11-09T12:00:00Z', organismo: 'Salud', enviado_por: 'u1', n_items: 4 }],
+  notificaciones: [
+    {
+      created_at: '2026-11-09T12:00:00Z',
+      organismo: 'Salud',
+      enviado_por: 'u1',
+      n_items: 4,
+      destinatario: 'Ana',
+      plantilla: 'vencidos',
+      telefono: '573001234567',
+      correo: null,
+      canal: null,
+      mensaje: 'Hola'
+    }
+  ],
   informes: [
     {
       created_at: '2026-11-08T12:00:00Z',
@@ -44,7 +57,18 @@ describe('capa de datos · Supabase · actividad', () => {
     expect(await a.perfiles()).toHaveLength(1);
     expect(await a.ultimosAccesos()).toEqual({ u1: '2026-11-11T15:00:00Z', u2: '2026-11-10T15:00:00Z' });
     expect(await a.notificaciones()).toEqual([
-      { ts: '2026-11-09T12:00:00Z', org: 'Salud', usuario: 'u1', n: 4 }
+      {
+        ts: '2026-11-09T12:00:00Z',
+        org: 'Salud',
+        usuario: 'u1',
+        n: 4,
+        nombre: 'Ana',
+        tpl: 'vencidos',
+        tel: '573001234567',
+        correo: '',
+        canal: 'whatsapp',
+        mensaje: 'Hola'
+      }
     ]);
     expect(await a.informes()).toEqual([
       { ts: '2026-11-08T12:00:00Z', usuario: 'u1', alcance: 'Todas', vigencias: '2026', n: 10, huella: 'abc' }

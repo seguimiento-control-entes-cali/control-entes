@@ -20,7 +20,15 @@ describe('leerEntorno', () => {
         VITE_SUPABASE_URL: URL_OK + '/',
         VITE_SUPABASE_ANON_KEY: CLAVE_OK
       })
-    ).toEqual({ variante: 'institucional', supabaseUrl: URL_OK, supabaseAnonKey: CLAVE_OK });
+    ).toEqual({ variante: 'institucional', supabaseUrl: URL_OK, supabaseAnonKey: CLAVE_OK, remitente: '' });
+  });
+
+  it('remitente: solo un correo @cali.gov.co (como la 2.x); si no, queda vacío', () => {
+    expect(leerEntorno({ VITE_REMITENTE: ' Nombre.Apellido@cali.gov.co ' }).remitente).toBe(
+      'nombre.apellido@cali.gov.co'
+    );
+    expect(leerEntorno({ VITE_REMITENTE: 'alguien@gmail.com' }).remitente).toBe('');
+    expect(leerEntorno({ VITE_REMITENTE: 'x@caliXgovXco' }).remitente).toBe('');
   });
 
   it('rechaza claves secretas en cualquier variante', () => {

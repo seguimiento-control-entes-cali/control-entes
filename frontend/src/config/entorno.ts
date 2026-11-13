@@ -7,6 +7,8 @@ export interface Entorno {
   variante: VarianteEntorno;
   supabaseUrl: string;
   supabaseAnonKey: string;
+  /** Cuenta institucional desde la que se redactan los correos (VITE_REMITENTE; vacío si no es @cali.gov.co). */
+  remitente?: string;
 }
 
 export class ErrorEntorno extends Error {
@@ -29,12 +31,14 @@ export function leerEntorno(env: Record<string, string | undefined>): Entorno {
     throw new ErrorEntorno(`VITE_VARIANTE debe ser ${VARIANTES.join(', ')} (llegó "${variante}")`);
   const supabaseUrl = (env.VITE_SUPABASE_URL || '').trim().replace(/\/+$/, '');
   const supabaseAnonKey = (env.VITE_SUPABASE_ANON_KEY || '').trim();
+  const r = (env.VITE_REMITENTE || '').trim().toLowerCase();
+  const remitente = /^[a-z0-9._%+-]+@cali\.gov\.co$/.test(r) ? r : '';
 
   if (/^sb_secret_/.test(supabaseAnonKey) || /service_role/i.test(supabaseAnonKey))
     throw new ErrorEntorno(
       'VITE_SUPABASE_ANON_KEY tiene una clave secreta: use solo la clave publicable (sb_publishable_…)'
     );
-  if (variante === 'demo') return { variante, supabaseUrl, supabaseAnonKey };
+  if (variante === 'demo') return { variante, supabaseUrl, supabaseAnonKey, remitente };
 
   if (!/^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(supabaseUrl))
     throw new ErrorEntorno('VITE_SUPABASE_URL debe ser https://<proyecto>.supabase.co');
@@ -45,5 +49,5 @@ export function leerEntorno(env: Record<string, string | undefined>): Entorno {
     throw new ErrorEntorno(
       'VITE_SUPABASE_ANON_KEY debe ser la clave publicable del proyecto (sb_publishable_…)'
     );
-  return { variante, supabaseUrl, supabaseAnonKey };
+  return { variante, supabaseUrl, supabaseAnonKey, remitente };
 }
