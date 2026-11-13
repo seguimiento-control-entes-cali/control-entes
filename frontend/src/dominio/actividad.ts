@@ -147,6 +147,9 @@ export interface Notificacion {
   org: string;
   usuario: string | null;
   n: number;
+  /** Destinatario y plantilla (el Informe ejecutivo los muestra). */
+  nombre?: string;
+  tpl?: string;
 }
 
 /**

@@ -1,7 +1,15 @@
 // Implementación en memoria de los contratos para la variante de demostración (D-16): sin red y sin Supabase.
 // Cuentas ficticias, una por rol; contraseña "demo". La del Super administrador pide además el código 123456,
 // para poder mostrar la verificación en dos pasos.
-import { ErrorDatos, type Datos, type Dependencia, type Ente, type Perfil, type Sesion } from '../contratos';
+import {
+  ErrorDatos,
+  type Datos,
+  type Dependencia,
+  type Ente,
+  type InformeGenerado,
+  type Perfil,
+  type Sesion
+} from '../contratos';
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
@@ -85,6 +93,7 @@ export function datosDemo(): Datos {
   // Decisiones de Cruces y temas (la 2.x las guarda en el navegador en la demo; aquí, en memoria)
   const temasMan = new Map<string, TemaManual>();
   const revisiones = new Map<string, RevisionCruce>();
+  const informes: InformeGenerado[] = [];
   const auditar = (
     tabla: string,
     accion: string,
@@ -239,7 +248,27 @@ export function datosDemo(): Datos {
         return []; // la demostración de la 3.0 aún no envía avisos (Notificaciones WhatsApp llega en la F3)
       },
       async informes() {
-        return []; // el Informe ejecutivo llega en la F3
+        return informes.map(i => ({ ...i }));
+      },
+      async registrarInforme(e) {
+        // Igual que la 2.x en la demo: se guarda y queda en la auditoría
+        const usuario = actual?.perfil.correo ?? '';
+        informes.unshift({
+          ts: new Date().toISOString(),
+          usuario,
+          alcance: e.alcance,
+          vigencias: e.vigencias,
+          n: e.n,
+          huella: e.huella
+        });
+        informes.splice(100);
+        auditar(
+          'informes',
+          'INSERT',
+          String(informes.length),
+          { alcance: e.alcance, vigencias: e.vigencias, huella: e.huella },
+          usuario
+        );
       }
     },
     auditoria: {
