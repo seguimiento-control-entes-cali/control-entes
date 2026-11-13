@@ -8,6 +8,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { ErrorDatos, type Datos, type Perfil, type Sesion } from '../contratos';
 import { esRol } from '../../dominio/roles';
 import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
+import type { Requerimiento } from '../../dominio/requerimientos';
 import type { Database } from './tipos.generados';
 import {
   aplicarCierres,
@@ -62,6 +63,19 @@ const errorGuardar = (error: { message: string }, que: string) =>
   /row-level security|permission/i.test(error.message)
     ? new ErrorDatos('sin_permiso', 'No tiene permiso para editar ' + que + '.')
     : new ErrorDatos('otro', 'No se pudo guardar: ' + error.message);
+
+/** Errores de requerimientos con los mismos textos de la 2.x (dbErr de src/js/04-capa-de-datos.js). */
+export function errorRequerimiento(error: { message: string }): ErrorDatos {
+  const m = error.message;
+  if (/duplicate key.*radicado/i.test(m))
+    return new ErrorDatos('otro', 'Ese radicado ya existe en el sistema');
+  if (/duplicate key.*orfeo/i.test(m))
+    return new ErrorDatos('otro', 'Ese radicado ORFEO ya fue registrado en otro requerimiento');
+  if (/row-level security/i.test(m))
+    return new ErrorDatos('sin_permiso', 'Tu rol no tiene permiso para esta operación');
+  if (/duplicate key/i.test(m)) return new ErrorDatos('otro', 'Ya existe un registro con esos datos');
+  return new ErrorDatos('otro', m);
+}
 
 const red = () =>
   new ErrorDatos('red', 'No hay conexión con el servidor. Revise su internet e intente de nuevo.');
@@ -380,6 +394,36 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           }))
         );
         return { filas, corte: fechaDeCorte(filas) };
+      }
+    },
+    requerimientos: {
+      async lista(vigencia) {
+        // Igual que la 2.x: por páginas de 1000, ordenados por fecha límite e id
+        let desde = 0,
+          out: Requerimiento[] = [];
+        for (;;) {
+          const { data, error } = await sb
+            .from('v_requerimientos')
+            .select('*')
+            .eq('vigencia', vigencia)
+            .order('fecha_limite')
+            .order('id')
+            .range(desde, desde + 999);
+          if (error) throw errorRequerimiento(error);
+          out = out.concat((data ?? []) as Requerimiento[]);
+          if ((data ?? []).length < 1000) break;
+          desde += 1000;
+        }
+        return out;
+      },
+      async crear(o) {
+        const { error } = await sb.from('requerimientos').insert(o);
+        if (error) throw errorRequerimiento(error);
+      },
+      async urlSoporte(path) {
+        const { data, error } = await sb.storage.from('soportes').createSignedUrl(path, 300);
+        if (error) throw new ErrorDatos('otro', error.message);
+        return data.signedUrl;
       }
     },
     cruces: {
