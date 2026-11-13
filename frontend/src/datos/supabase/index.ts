@@ -13,6 +13,13 @@ import type { Database } from './tipos.generados';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { rutaSoporte } from '../../dominio/requerimientos';
 import {
+  esRespaldo,
+  type CargaExcel,
+  type ConfiguracionGeneral,
+  type EventoSistema,
+  type VistaPreviaAvisos
+} from '../../dominio/configuracion';
+import {
   aplicarCierres,
   desdeBaseDeDatos,
   fechaDeCorte,
@@ -83,6 +90,14 @@ const red = () =>
   new ErrorDatos('red', 'No hay conexión con el servidor. Revise su internet e intente de nuevo.');
 
 export function datosSupabase(sb: ClienteSupabase): Datos {
+  /** Llama a una función del servidor como la 2.x: su { error } o el error de la llamada se muestran tal cual. */
+  async function funcion(nombre: string, cuerpo: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const { data, error } = await sb.functions.invoke(nombre, { body: cuerpo });
+    const d = (data ?? {}) as Record<string, unknown>;
+    if (error) throw new ErrorDatos('otro', String(d.error ?? error.message));
+    if (d.error) throw new ErrorDatos('otro', String(d.error));
+    return d;
+  }
   async function perfilDe(usuarioId: string): Promise<Perfil | null> {
     const { data, error } = await sb.from('profiles').select('*').eq('id', usuarioId).maybeSingle();
     if (error) throw red();
@@ -396,6 +411,79 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           }))
         );
         return { filas, corte: fechaDeCorte(filas) };
+      }
+    },
+    sistema: {
+      async general() {
+        // select('*'): si un script no está instalado, su columna no llega y la pantalla lo indica (igual que la 2.x)
+        const { data, error } = await sb.from('config').select('*').eq('id', 1).maybeSingle();
+        if (error) throw red();
+        const { id: _id, ...c } = (data ?? { id: 1, dias_rojo: 5, correo_disciplinario: '' }) as Record<
+          string,
+          unknown
+        >;
+        void _id;
+        return c as unknown as ConfiguracionGeneral;
+      },
+      async guardar(c) {
+        const { error } = await sb.from('config').update(c).eq('id', 1);
+        if (error) throw errorRequerimiento(error);
+      },
+      async probarResumen() {
+        const r = await funcion('resumen-semanal', { prueba: true });
+        const errores = (r.errores as string[] | undefined) ?? [];
+        // Si el servidor de correo rechazó el envío se muestra su respuesta (antes se confundía con "sin pendientes")
+        if (errores.length) throw new ErrorDatos('otro', 'el servidor de correo respondió: ' + errores[0]);
+        return { enviados: Number(r.enviados ?? 0) };
+      },
+      async vistaPreviaAvisos() {
+        return (await funcion('avisos-planes', { vista_previa: true })) as unknown as VistaPreviaAvisos;
+      },
+      async respaldos() {
+        const { data, error } = await sb.storage
+          .from('respaldos')
+          .list('', { limit: 20, sortBy: { column: 'name', order: 'desc' } });
+        if (error) throw new ErrorDatos('otro', error.message);
+        return (data ?? [])
+          .filter(f => esRespaldo(f.name))
+          .map(f => {
+            const kb = (f.metadata as { size?: number } | null)?.size;
+            return { nombre: f.name, kb: kb ? Math.round(kb / 1024) : null };
+          });
+      },
+      async crearRespaldo() {
+        const r = await funcion('respaldo', {});
+        return { registros: Number(r.registros ?? 0), kb: Number(r.kb ?? 0) };
+      },
+      async urlRespaldo(nombre) {
+        const { data, error } = await sb.storage
+          .from('respaldos')
+          .createSignedUrl(nombre, 120, { download: nombre });
+        if (error) throw new ErrorDatos('otro', error.message);
+        return data.signedUrl;
+      },
+      async eventos() {
+        const { data, error } = await sb
+          .from('eventos_sistema')
+          .select('*')
+          .in('nivel', ['error', 'aviso'])
+          .eq('revisado', false)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (error) throw new ErrorDatos('otro', error.message);
+        return (data ?? []) as EventoSistema[];
+      },
+      async marcarRevisado(id) {
+        const { error } = await sb.from('eventos_sistema').update({ revisado: true }).eq('id', id);
+        if (error) throw new ErrorDatos('otro', error.message);
+      },
+      async ultimasCargas() {
+        const { data, error } = await sb
+          .from('historico_cargas')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        return error ? null : ((data ?? []) as unknown as CargaExcel[]);
       }
     },
     cuentas: {

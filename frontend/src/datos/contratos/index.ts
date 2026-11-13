@@ -9,6 +9,13 @@ import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import type { ArchivoSoporte } from '../../dominio/huella-archivo';
 import type { AccionCuenta, Cuenta } from '../../dominio/cuentas';
+import type {
+  ArchivoRespaldo,
+  CargaExcel,
+  ConfiguracionGeneral,
+  EventoSistema,
+  VistaPreviaAvisos
+} from '../../dominio/configuracion';
 
 /** Error de la capa de datos con un código estable para la interfaz (el mensaje ya viene en español). */
 export type CodigoError = 'credenciales' | 'codigo' | 'sin_permiso' | 'cuenta_inactiva' | 'red' | 'otro';
@@ -209,6 +216,30 @@ export interface RepositorioCuentas {
   guardar(c: Pick<Cuenta, 'id' | 'rol' | 'dependencia_id' | 'activo'>): Promise<void>;
 }
 
+// ---------- sistema (hoy: config, eventos_sistema, historico_cargas, depósito respaldos y las funciones
+// resumen-semanal, avisos-planes y respaldo) ----------
+export interface RepositorioSistema {
+  /** La fila de configuración tal como está en la base (sin las columnas de los scripts no instalados). */
+  general(): Promise<ConfiguracionGeneral>;
+  /** Guarda los cambios (solo el Super administrador, por RLS). */
+  guardar(c: Partial<ConfiguracionGeneral>): Promise<void>;
+  /** Envía el resumen semanal de prueba al correo de quien lo pide; devuelve cuántos correos salieron. */
+  probarResumen(): Promise<{ enviados: number }>;
+  /** Lo que el aviso diario de planes enviaría hoy (no envía nada). */
+  vistaPreviaAvisos(): Promise<VistaPreviaAvisos>;
+  /** Copias guardadas en el depósito respaldos (las 20 más recientes). */
+  respaldos(): Promise<ArchivoRespaldo[]>;
+  /** Crea una copia ahora (función respaldo). */
+  crearRespaldo(): Promise<{ registros: number; kb: number }>;
+  /** Enlace de descarga (2 minutos) de una copia. */
+  urlRespaldo(nombre: string): Promise<string>;
+  /** Errores y avisos sin revisar de las funciones automáticas y de la app. */
+  eventos(): Promise<EventoSistema[]>;
+  marcarRevisado(id: number): Promise<void>;
+  /** Las 5 cargas más recientes del Excel de control; null si falta el script 16. */
+  ultimasCargas(): Promise<CargaExcel[] | null>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
@@ -221,6 +252,7 @@ export interface Datos {
   cruces: RepositorioCruces;
   requerimientos: RepositorioRequerimientos;
   cuentas: RepositorioCuentas;
+  sistema: RepositorioSistema;
   /** Cuenta institucional desde la que se redactan los correos (remitente de configuracion.json). */
   remitente?: string;
 }

@@ -16,6 +16,7 @@ import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import type { Cuenta } from '../../dominio/cuentas';
+import type { ConfiguracionGeneral } from '../../dominio/configuracion';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
 import { nuevoEvento, verificarCadena, type EventoAuditoria } from '../../dominio/auditoria';
@@ -103,6 +104,19 @@ export function datosDemo(): Datos {
   // Requerimientos del módulo operativo (los mismos 15 de la 2.x, con fechas relativas a hoy)
   const reqs: Requerimiento[] = semillaRequerimientos(fechaColombia(new Date()));
   const alertasLog: { requerimiento_id: string; canal: string }[] = [];
+  // Configuración de la demostración (en memoria; el semáforo la usa al momento)
+  const config: ConfiguracionGeneral = {
+    dias_rojo: 5,
+    correo_disciplinario: '',
+    resumen_activo: false,
+    resumen_ultimo: null,
+    resumen_ultimo_detalle: '',
+    avisos_activo: false,
+    avisos_copia_correo: '',
+    avisos_ultimo: null,
+    avisos_ultimo_detalle: ''
+  };
+  const soloEnDemo = (que: string) => new ErrorDatos('otro', 'En modo demostración ' + que);
   // Cuentas de la pantalla Cuentas y roles (copia editable; el ingreso de la demo sigue usando PERFILES_DEMO)
   const cuentas: Cuenta[] = PERFILES_DEMO.map(x => ({
     id: x.id,
@@ -240,7 +254,7 @@ export function datosDemo(): Datos {
         return dependencias.map(d => ({ ...d })).sort(porNombre);
       },
       async configuracion() {
-        return { diasRojo: 5, correoDisciplinario: '' };
+        return { diasRojo: config.dias_rojo || 5, correoDisciplinario: config.correo_disciplinario };
       },
       async guardarEnte(e) {
         guardarEnCatalogo('entes', entes, e);
@@ -322,6 +336,41 @@ export function datosDemo(): Datos {
         // El histórico de ejemplo (datos/demo/historico.json, ficticio) se carga aparte, solo cuando se abre
         const { radicadosDemo } = await import('./historico-demo');
         return radicadosDemo();
+      }
+    },
+    sistema: {
+      async general() {
+        return { ...config };
+      },
+      async guardar(c) {
+        const p = actual?.perfil;
+        if (!p || p.rol !== 'admin')
+          throw new ErrorDatos('sin_permiso', 'Tu rol no tiene permiso para esta operación');
+        const antes = { ...config };
+        Object.assign(config, c);
+        auditar('config', 'UPDATE', '1', { ...config }, p.correo, diferencias(antes, { ...config }));
+      },
+      async probarResumen() {
+        throw soloEnDemo('no se envían correos');
+      },
+      async vistaPreviaAvisos() {
+        throw soloEnDemo('no hay vista previa del aviso');
+      },
+      async respaldos() {
+        return [];
+      },
+      async crearRespaldo() {
+        throw soloEnDemo('no se crean copias de seguridad.');
+      },
+      async urlRespaldo() {
+        throw soloEnDemo('no hay copias para descargar.');
+      },
+      async eventos() {
+        return [];
+      },
+      async marcarRevisado() {},
+      async ultimasCargas() {
+        return [];
       }
     },
     cuentas: {
