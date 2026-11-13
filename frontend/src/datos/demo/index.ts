@@ -7,6 +7,7 @@ import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
 import { nuevoEvento, verificarCadena, type EventoAuditoria } from '../../dominio/auditoria';
 import { diferencias } from '../../dominio/actividad';
+import { puedeClasificar, type RevisionCruce, type TemaManual } from '../../dominio/cruces';
 
 export const CLAVE_DEMO = 'demo';
 export const CODIGO_DEMO = '123456';
@@ -81,6 +82,9 @@ export function datosDemo(): Datos {
   }));
   // Pista de auditoría en memoria, como la demo de la 2.x (empieza con la carga inicial)
   const auditoria: EventoAuditoria[] = [];
+  // Decisiones de Cruces y temas (la 2.x las guarda en el navegador en la demo; aquí, en memoria)
+  const temasMan = new Map<string, TemaManual>();
+  const revisiones = new Map<string, RevisionCruce>();
   const auditar = (
     tabla: string,
     accion: string,
@@ -101,6 +105,14 @@ export function datosDemo(): Datos {
       })
     );
   auditar('requerimientos', 'INSERT', 'seed', { nota: 'Carga inicial de demostración' }, 'sistema');
+  function permisoCruces(): string {
+    if (!actual || !puedeClasificar(actual.perfil.rol))
+      throw new ErrorDatos(
+        'sin_permiso',
+        'Solo el Super administrador, el Despacho y Control Interno pueden clasificar temas y revisar cruces.'
+      );
+    return actual.perfil.correo;
+  }
   // Igual que saveCatalog de la 2.x en la demo: actualiza o agrega con el id siguiente, y lo deja en la auditoría
   function guardarEnCatalogo<T extends { id: number }>(
     tabla: 'entes' | 'dependencias',
@@ -250,6 +262,32 @@ export function datosDemo(): Datos {
         // El histórico de ejemplo (datos/demo/historico.json, ficticio) se carga aparte, solo cuando se abre
         const { radicadosDemo } = await import('./historico-demo');
         return radicadosDemo();
+      }
+    },
+    cruces: {
+      async temasManuales() {
+        return JSON.parse(JSON.stringify(Object.fromEntries(temasMan))) as Record<string, TemaManual>;
+      },
+      async revisiones() {
+        return JSON.parse(JSON.stringify(Object.fromEntries(revisiones))) as Record<string, RevisionCruce>;
+      },
+      async guardarTema(llave, tema) {
+        const usuario = permisoCruces();
+        if (tema) temasMan.set(llave, { tema, usuario, ts: new Date().toISOString() });
+        else temasMan.delete(llave);
+        auditar('tema_manual', tema ? 'UPDATE' : 'DELETE', llave, { tema: tema || null }, usuario);
+      },
+      async guardarRevision(clave, estado, nota = '') {
+        const usuario = permisoCruces();
+        if (estado) revisiones.set(clave, { estado, nota, usuario, ts: new Date().toISOString() });
+        else revisiones.delete(clave);
+        auditar(
+          'cruce_revision',
+          estado ? 'UPDATE' : 'DELETE',
+          clave,
+          { estado: estado || null, nota },
+          usuario
+        );
       }
     },
     directorio: {
