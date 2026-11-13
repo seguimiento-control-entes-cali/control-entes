@@ -17,6 +17,7 @@ import { PantallaExpediente } from '../dependencia/PantallaExpediente';
 import { PantallaCruces } from '../cruces/PantallaCruces';
 import { PantallaMando } from '../mando/PantallaMando';
 import { PantallaInforme } from '../informe/PantallaInforme';
+import { PantallaNotificaciones } from '../notificaciones/PantallaNotificaciones';
 import escudo from '../../../../src/assets/escudo.png';
 
 function PantallaPendiente({ textos, inicial }: { textos: Map<string, string>; inicial: string }) {
@@ -204,6 +205,9 @@ export function Marco({
               <Routes>
                 {textos.has('mando') && (
                   <Route path="/mando" element={<PantallaMando perfil={perfil} demo={demo} />} />
+                )}
+                {textos.has('notificaciones') && (
+                  <Route path="/notificaciones" element={<PantallaNotificaciones />} />
                 )}
                 {textos.has('informe') && (
                   <Route path="/informe" element={<PantallaInforme perfil={perfil} demo={demo} />} />

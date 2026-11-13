@@ -271,7 +271,9 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
       async notificaciones() {
         const { data, error } = await sb
           .from('notificaciones')
-          .select('created_at, organismo, enviado_por, n_items, destinatario, plantilla')
+          .select(
+            'created_at, organismo, enviado_por, n_items, destinatario, plantilla, telefono, correo, canal, mensaje'
+          )
           .order('created_at', { ascending: false })
           .limit(300);
         if (error) return [];
@@ -281,7 +283,11 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           usuario: x.enviado_por,
           n: x.n_items,
           nombre: x.destinatario,
-          tpl: x.plantilla
+          tpl: x.plantilla,
+          tel: x.telefono,
+          correo: x.correo || '',
+          canal: x.canal || 'whatsapp',
+          mensaje: x.mensaje
         }));
       },
       async informes() {
@@ -299,6 +305,19 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           n: x.n_registros,
           huella: x.huella
         }));
+      },
+      async registrarNotificacion(n) {
+        const { error } = await sb.from('notificaciones').insert({
+          organismo: n.org,
+          destinatario: n.nombre || '',
+          telefono: n.tel || '',
+          correo: n.correo || '',
+          plantilla: n.tpl ?? '',
+          n_items: n.n,
+          canal: n.canal || 'whatsapp',
+          mensaje: n.mensaje ?? ''
+        });
+        if (error) throw errorGuardar(error, 'las notificaciones');
       },
       async registrarInforme(e) {
         const { error } = await sb.from('informes').insert({

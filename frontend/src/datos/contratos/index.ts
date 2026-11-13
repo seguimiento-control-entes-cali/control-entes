@@ -142,6 +142,8 @@ export interface RepositorioActividad {
   notificaciones(): Promise<Notificacion[]>;
   /** Los 100 informes ejecutivos más recientes. */
   informes(): Promise<InformeGenerado[]>;
+  /** Registra una notificación enviada (logNotif de la 2.x; tabla notificaciones). */
+  registrarNotificacion(n: Omit<Notificacion, 'ts' | 'usuario'>): Promise<void>;
   /** Registra un informe generado con su huella (logInforme de la 2.x; tabla informes). */
   registrarInforme(e: {
     alcance: string;
@@ -174,4 +176,6 @@ export interface Datos {
   auditoria: RepositorioAuditoria;
   actividad: RepositorioActividad;
   cruces: RepositorioCruces;
+  /** Cuenta institucional desde la que se redactan los correos (remitente de configuracion.json). */
+  remitente?: string;
 }

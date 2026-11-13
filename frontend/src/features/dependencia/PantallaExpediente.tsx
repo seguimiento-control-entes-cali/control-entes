@@ -34,6 +34,7 @@ import { textoCorto } from '../../dominio/actividad';
 import { descargarCsv } from '../../shared/lib';
 import { Aviso, Icono, Modal } from '../../shared/ui';
 import { DetalleRadicado } from '../historico/PantallaHistorico';
+import { useNotificar } from '../notificaciones/Ventanas';
 import { useDatos } from '../sesion/contexto';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
@@ -176,6 +177,8 @@ export function PantallaExpediente({ perfil }: { perfil: Perfil }) {
   const llegada = (useLocation().state as { org?: string } | null)?.org ?? null;
   const [elegida, setElegida] = useState<string | null>(llegada);
   const [detalle, setDetalle] = useState<RadicadoHistorico | null>(null);
+  const { notificar, ventanas } = useNotificar();
+  const notifica = ['admin', 'alcalde', 'control_interno'].includes(perfil.rol);
 
   const todas = useMemo(() => datos.data?.filas ?? [], [datos.data]);
   const nombreDep = deps.data?.find(d => d.id === perfil.dependenciaId)?.nombre ?? null;
@@ -257,6 +260,11 @@ export function PantallaExpediente({ perfil }: { perfil: Perfil }) {
             >
               <Icono nombre="fa-file-csv" /> Descargar mi reporte
             </button>
+            {notifica && (
+              <button type="button" className="btn sm primary" onClick={() => notificar(org)}>
+                <Icono nombre="fa-whatsapp" tipo="brands" /> Notificar por WhatsApp
+              </button>
+            )}
           </div>
         </div>
         <div style={{ textAlign: 'center' }}>
@@ -405,6 +413,7 @@ export function PantallaExpediente({ perfil }: { perfil: Perfil }) {
       <Modal abierto={!!detalle} titulo={detalle?.rad || 'Sin número'} alCerrar={() => setDetalle(null)}>
         {detalle && <DetalleRadicado r={detalle} />}
       </Modal>
+      {ventanas}
     </>
   );
 }

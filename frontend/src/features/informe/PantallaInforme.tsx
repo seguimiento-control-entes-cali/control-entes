@@ -23,13 +23,13 @@ import {
   narrativa,
   nombrePdf,
   PALETA,
-  PLANTILLAS,
   textoHuella,
   textoSemaforo,
   vigenciasRegistro,
   type DependenciaInforme,
   type PuntoInforme
 } from '../../dominio/informe';
+import { nombrePlantilla } from '../../dominio/notificaciones';
 import { descargarCsv } from '../../shared/lib';
 import { Aviso, Icono, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
@@ -579,7 +579,7 @@ export function PantallaInforme({ perfil, demo = false }: { perfil: Perfil; demo
                     <td>{formatoFechaHora(n.ts)}</td>
                     <td>{nombreCorto(n.org)}</td>
                     <td>{n.nombre || '—'}</td>
-                    <td>{PLANTILLAS[n.tpl ?? ''] ?? n.tpl}</td>
+                    <td>{nombrePlantilla(n.tpl)}</td>
                   </tr>
                 ))}
               </tbody>

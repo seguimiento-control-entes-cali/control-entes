@@ -150,6 +150,10 @@ export interface Notificacion {
   /** Destinatario y plantilla (el Informe ejecutivo los muestra). */
   nombre?: string;
   tpl?: string;
+  tel?: string;
+  correo?: string;
+  canal?: string;
+  mensaje?: string;
 }
 
 /**

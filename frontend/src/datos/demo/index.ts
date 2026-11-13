@@ -14,7 +14,7 @@ import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
 import { nuevoEvento, verificarCadena, type EventoAuditoria } from '../../dominio/auditoria';
-import { diferencias } from '../../dominio/actividad';
+import { diferencias, type Notificacion } from '../../dominio/actividad';
 import { puedeClasificar, type RevisionCruce, type TemaManual } from '../../dominio/cruces';
 
 export const CLAVE_DEMO = 'demo';
@@ -94,6 +94,7 @@ export function datosDemo(): Datos {
   const temasMan = new Map<string, TemaManual>();
   const revisiones = new Map<string, RevisionCruce>();
   const informes: InformeGenerado[] = [];
+  const notificaciones: Notificacion[] = [];
   const auditar = (
     tabla: string,
     accion: string,
@@ -245,7 +246,20 @@ export function datosDemo(): Datos {
         return { ...accesos };
       },
       async notificaciones() {
-        return []; // la demostración de la 3.0 aún no envía avisos (Notificaciones WhatsApp llega en la F3)
+        return notificaciones.map(n => ({ ...n }));
+      },
+      async registrarNotificacion(n) {
+        // Igual que la 2.x en la demo: se guarda (máximo 300) y queda en la auditoría
+        const usuario = actual?.perfil.correo ?? '';
+        notificaciones.unshift({ ...n, ts: new Date().toISOString(), usuario });
+        notificaciones.splice(300);
+        auditar(
+          'notificaciones',
+          'INSERT',
+          String(notificaciones.length),
+          { organismo: n.org, destinatario: n.nombre ?? '', plantilla: n.tpl, n_items: n.n },
+          usuario
+        );
       },
       async informes() {
         return informes.map(i => ({ ...i }));

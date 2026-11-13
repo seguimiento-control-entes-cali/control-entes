@@ -5,9 +5,10 @@ import { datosDemo } from './demo';
 import { crearClienteSupabase, datosSupabase } from './supabase';
 
 export function crearDatos(entorno: Entorno): Datos {
-  if (entorno.variante === 'demo') return datosDemo();
+  const remitente = entorno.remitente ?? '';
+  if (entorno.variante === 'demo') return { ...datosDemo(), remitente };
   // institucional y privada: la base real. leerEntorno ya validó la dirección y que la clave sea la publicable.
-  return datosSupabase(crearClienteSupabase(entorno.supabaseUrl, entorno.supabaseAnonKey));
+  return { ...datosSupabase(crearClienteSupabase(entorno.supabaseUrl, entorno.supabaseAnonKey)), remitente };
 }
 
 export type { Datos } from './contratos';
