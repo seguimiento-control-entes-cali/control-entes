@@ -15,6 +15,7 @@ import { semillaRequerimientos } from './requerimientos-semilla';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import type { Requerimiento } from '../../dominio/requerimientos';
+import type { Cuenta } from '../../dominio/cuentas';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
 import { claveOrganismo, type Responsable } from '../../dominio/directorio';
 import { nuevoEvento, verificarCadena, type EventoAuditoria } from '../../dominio/auditoria';
@@ -102,6 +103,15 @@ export function datosDemo(): Datos {
   // Requerimientos del módulo operativo (los mismos 15 de la 2.x, con fechas relativas a hoy)
   const reqs: Requerimiento[] = semillaRequerimientos(fechaColombia(new Date()));
   const alertasLog: { requerimiento_id: string; canal: string }[] = [];
+  // Cuentas de la pantalla Cuentas y roles (copia editable; el ingreso de la demo sigue usando PERFILES_DEMO)
+  const cuentas: Cuenta[] = PERFILES_DEMO.map(x => ({
+    id: x.id,
+    email: x.correo,
+    nombre: x.nombre,
+    rol: x.rol,
+    dependencia_id: x.dependenciaId,
+    activo: x.activo
+  }));
   const auditar = (
     tabla: string,
     accion: string,
@@ -312,6 +322,85 @@ export function datosDemo(): Datos {
         // El histórico de ejemplo (datos/demo/historico.json, ficticio) se carga aparte, solo cuando se abre
         const { radicadosDemo } = await import('./historico-demo');
         return radicadosDemo();
+      }
+    },
+    cuentas: {
+      async lista() {
+        return cuentas.map(c => ({ ...c })).sort((a, b) => a.email.localeCompare(b.email));
+      },
+      // Igual que db.cuenta de la 2.x en la demostración: simula gestion-cuentas sin enviar correos
+      async gestionar(accion, datos) {
+        const p = actual?.perfil;
+        if (!p || p.rol !== 'admin')
+          throw new ErrorDatos('sin_permiso', 'Solo el Super administrador gestiona cuentas.');
+        const correo = String(datos.correo ?? '')
+          .trim()
+          .toLowerCase();
+        const dep = datos.dependencia
+          ? (dependencias.find(d => claveOrganismo(d.nombre) === claveOrganismo(String(datos.dependencia)))
+              ?.id ?? null)
+          : null;
+        const nueva = () => {
+          let c = cuentas.find(x => x.email === correo);
+          if (!c) {
+            c = {
+              id: 'u' + (cuentas.length + 1) + '_' + Date.now(),
+              email: correo,
+              nombre: '',
+              rol: 'secretario',
+              dependencia_id: null,
+              activo: false
+            };
+            cuentas.push(c);
+          }
+          return c;
+        };
+        const porId = () => {
+          const c = cuentas.find(x => x.id === datos.id);
+          if (!c) throw new ErrorDatos('otro', 'La cuenta no existe.');
+          return c;
+        };
+        const datosCuenta = (activo: boolean) => ({
+          nombre: String(datos.nombre ?? ''),
+          rol: String(datos.rol ?? 'secretario'),
+          dependencia_id: dep,
+          activo
+        });
+        let mensaje: string;
+        if (accion === 'preparar') {
+          Object.assign(nueva(), datosCuenta(false));
+          mensaje = 'Cuenta preparada para ' + correo + ', sin activar (simulado).';
+        } else if (accion === 'activar_invitar') {
+          const c = porId();
+          c.activo = true;
+          mensaje = 'Cuenta activada. Enlace enviado a ' + c.email + ' (simulado).';
+        } else if (accion === 'invitar') {
+          Object.assign(nueva(), datosCuenta(true));
+          mensaje = 'Invitación enviada a ' + correo + ' (simulada en modo demostración).';
+        } else if (accion === 'cambiar_correo') {
+          if (cuentas.some(x => x.email === correo && x.id !== datos.id))
+            throw new ErrorDatos('otro', 'Ese correo ya pertenece a otra cuenta.');
+          Object.assign(porId(), { email: correo, nombre: String(datos.nombre ?? ''), activo: true });
+          mensaje =
+            'La cuenta ahora es de ' + correo + '. El titular anterior ya no puede ingresar (simulado).';
+        } else if (accion === 'enlace_clave') mensaje = 'Enlace enviado a ' + correo + ' (simulado).';
+        else {
+          const c = cuentas.find(x => x.id === datos.id);
+          if (c) c.activo = accion === 'activar';
+          mensaje = accion === 'activar' ? 'Cuenta activada.' : 'Cuenta desactivada.';
+        }
+        auditar('cuentas_eventos', 'INSERT', accion, { accion, ...datos }, p.correo);
+        return { mensaje };
+      },
+      async guardar(c) {
+        const p = actual?.perfil;
+        if (!p || p.rol !== 'admin')
+          throw new ErrorDatos('sin_permiso', 'Solo el Super administrador gestiona cuentas.');
+        const t = cuentas.find(x => x.id === c.id);
+        if (!t) throw new ErrorDatos('otro', 'La cuenta no existe.');
+        const antes = { ...t };
+        Object.assign(t, { rol: c.rol, dependencia_id: c.dependencia_id, activo: c.activo });
+        auditar('profiles', 'UPDATE', t.id, t, p.correo, diferencias(antes, { ...t }));
       }
     },
     requerimientos: {

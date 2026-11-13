@@ -398,6 +398,45 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         return { filas, corte: fechaDeCorte(filas) };
       }
     },
+    cuentas: {
+      async lista() {
+        const { data, error } = await sb.from('profiles').select('*').order('email');
+        if (error) throw red();
+        return (data ?? []).map(x => ({
+          id: x.id,
+          email: x.email ?? '',
+          nombre: x.nombre ?? '',
+          rol: x.rol,
+          dependencia_id: x.dependencia_id,
+          activo: x.activo
+        }));
+      },
+      // Igual que db.cuenta de la 2.x: la función responde { mensaje } o { error }
+      async gestionar(accion, datos) {
+        const { data, error } = await sb.functions.invoke('gestion-cuentas', { body: { accion, ...datos } });
+        if (error) {
+          let msg = error.message;
+          try {
+            const contexto = (error as { context?: { json(): Promise<{ error?: string }> } }).context;
+            const j = contexto ? await contexto.json() : {};
+            if (j.error) msg = j.error;
+          } catch {
+            /* la respuesta no trae JSON */
+          }
+          if (/Failed to send|not found|404/i.test(msg))
+            msg =
+              'La función gestion-cuentas no está desplegada en Supabase (ver docs/DESPLIEGUE.md, sección Cuentas).';
+          throw new ErrorDatos('otro', msg);
+        }
+        const r = (data ?? {}) as { mensaje?: string; error?: string };
+        if (r.error) throw new ErrorDatos('otro', r.error);
+        return { mensaje: r.mensaje ?? 'Listo' };
+      },
+      async guardar({ id, ...c }) {
+        const { error } = await sb.from('profiles').update(c).eq('id', id);
+        if (error) throw errorRequerimiento(error);
+      }
+    },
     requerimientos: {
       async lista(vigencia) {
         // Igual que la 2.x: por páginas de 1000, ordenados por fecha límite e id
