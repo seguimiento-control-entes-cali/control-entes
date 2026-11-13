@@ -1,7 +1,7 @@
 // Módulo operativo: requerimientos vivos de la vigencia. Copia de la 2.x: decorate y counts de
 // src/js/05-reglas-de-negocio.js, diasTxt de 02-utilidades.js, y vTablero, renderReqRows y saveReq de
 // 07-vistas-operacion.js. Paridad comprobada en pruebas/paridad-requerimientos.test.ts.
-import { calcularSemaforo, type Semaforo } from './semaforo';
+import { calcularSemaforo, ETIQUETA_SEMAFORO, type Semaforo } from './semaforo';
 import { normalizarTexto } from './temas';
 
 /** Fila de public.v_requerimientos (la vista agrega ente, sigla y dependencia). */
@@ -253,3 +253,53 @@ export const enlaceDisciplinario = (correo: string, r: Pick<Requerimiento, 'radi
   encodeURIComponent('Requerimiento vencido ' + r.radicado) +
   '&body=' +
   encodeURIComponent(msg);
+
+// ---------- Reportes y exportación (vReportes y exportCsv) ----------
+/** Consolidado por ente (en el orden en que aparecen) y total de la vigencia. */
+export function consolidado(lista: readonly RequerimientoVivo[]) {
+  const k = conteos(lista);
+  const byEnte: Record<string, RequerimientoVivo[]> = {};
+  for (const r of lista) (byEnte[r.ente_n] = byEnte[r.ente_n] ?? []).push(r);
+  return {
+    k,
+    pct: k.total ? Math.round((k.verde * 100) / k.total) : 0,
+    porEnte: Object.entries(byEnte).map(([n, l]) => {
+      const q = conteos(l);
+      return { ente: n, ...q, pct: Math.round((q.verde * 100) / q.total) };
+    })
+  };
+}
+export const archivoCsvRequerimientos = (vigencia: number) => `control_entes_${vigencia}.csv`;
+/** Filas de control_entes_<vigencia>.csv (exportCsv de la 2.x). */
+export function filasCsvRequerimientos(lista: readonly RequerimientoVivo[]): unknown[][] {
+  return [
+    [
+      'Radicado',
+      'Vigencia',
+      'Ente',
+      'Dependencia',
+      'Asunto',
+      'Radicación',
+      'Límite',
+      'Estado',
+      'Semáforo',
+      'ORFEO salida',
+      'Fecha cierre',
+      'SHA-256 soporte'
+    ],
+    ...lista.map(r => [
+      r.radicado,
+      r.vigencia,
+      r.ente_n,
+      r.dep_n,
+      r.asunto,
+      r.fecha_radicacion,
+      r.fecha_limite,
+      r.estado,
+      ETIQUETA_SEMAFORO[r.sem],
+      r.orfeo_salida,
+      r.fecha_cierre,
+      r.soporte_hash
+    ])
+  ];
+}
