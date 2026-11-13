@@ -13,6 +13,7 @@ import { PantallaCumplimiento } from '../cumplimiento/PantallaCumplimiento';
 import { PantallaAuditoria } from '../auditoria/PantallaAuditoria';
 import { PantallaActividad } from '../actividad/PantallaActividad';
 import { PantallaCatalogo } from '../catalogos/PantallaCatalogo';
+import { PantallaExpediente } from '../dependencia/PantallaExpediente';
 import escudo from '../../../../src/assets/escudo.png';
 
 function PantallaPendiente({ textos, inicial }: { textos: Map<string, string>; inicial: string }) {
@@ -200,6 +201,9 @@ export function Marco({
               <Routes>
                 {textos.has('directorio') && (
                   <Route path="/directorio" element={<PantallaDirectorio perfil={perfil} />} />
+                )}
+                {textos.has('dependencia') && (
+                  <Route path="/dependencia" element={<PantallaExpediente perfil={perfil} />} />
                 )}
                 {textos.has('actividad') && <Route path="/actividad" element={<PantallaActividad />} />}
                 {textos.has('entes') && (

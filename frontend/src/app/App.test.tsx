@@ -51,7 +51,11 @@ describe('3.0 · ingreso y menú (demo)', () => {
     ]);
     expect(pestanas.getByRole('button', { name: 'Menú administrativo' })).toBeTruthy();
     // abre en su pantalla inicial (igual que la 2.x)
-    expect(await screen.findByRole('heading', { name: 'Mi dependencia', level: 3 })).toBeTruthy();
+    // su expediente, sin la lista para elegir otra dependencia (scopeOrg de la 2.x)
+    expect(
+      await screen.findByRole('heading', { name: 'Pendientes y vencidos de esta dependencia', level: 3 })
+    ).toBeTruthy();
+    expect(screen.queryByRole('combobox', { name: 'Dependencia' })).toBeNull();
     expect(window.location.hash).toBe('#/dependencia');
   });
 
