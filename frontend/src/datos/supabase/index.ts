@@ -271,7 +271,7 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
       async notificaciones() {
         const { data, error } = await sb
           .from('notificaciones')
-          .select('created_at, organismo, enviado_por, n_items')
+          .select('created_at, organismo, enviado_por, n_items, destinatario, plantilla')
           .order('created_at', { ascending: false })
           .limit(300);
         if (error) return [];
@@ -279,7 +279,9 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           ts: x.created_at,
           org: x.organismo,
           usuario: x.enviado_por,
-          n: x.n_items
+          n: x.n_items,
+          nombre: x.destinatario,
+          tpl: x.plantilla
         }));
       },
       async informes() {
@@ -297,6 +299,16 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           n: x.n_registros,
           huella: x.huella
         }));
+      },
+      async registrarInforme(e) {
+        const { error } = await sb.from('informes').insert({
+          alcance: e.alcance,
+          vigencias: e.vigencias,
+          corte: e.corte || null,
+          n_registros: e.n,
+          huella: e.huella
+        });
+        if (error) throw errorGuardar(error, 'los informes');
       }
     },
     auditoria: {

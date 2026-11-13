@@ -142,6 +142,14 @@ export interface RepositorioActividad {
   notificaciones(): Promise<Notificacion[]>;
   /** Los 100 informes ejecutivos más recientes. */
   informes(): Promise<InformeGenerado[]>;
+  /** Registra un informe generado con su huella (logInforme de la 2.x; tabla informes). */
+  registrarInforme(e: {
+    alcance: string;
+    vigencias: string;
+    corte: string;
+    n: number;
+    huella: string;
+  }): Promise<void>;
 }
 
 // ---------- cruces (hoy: tema_manual y cruce_revision; scripts 08) ----------
