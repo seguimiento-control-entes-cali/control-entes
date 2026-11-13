@@ -3,6 +3,7 @@
 // por RLS. Mismo HTML y clases de la 2.x (card, field, pill, g-kpi, g-2, list-row, bar, tbl-wrap/tbl).
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { Perfil } from '../../datos/contratos';
 import { porcentaje1, semaforoHistorico, UMBRALES } from '../../dominio/cumplimiento';
 import { claveOrganismo, formatoCelular, normalizarCelular } from '../../dominio/directorio';
@@ -171,7 +172,9 @@ export function PantallaExpediente({ perfil }: { perfil: Perfil }) {
   });
   const deps = useQuery({ queryKey: ['dependencias'], queryFn: () => catalogos.dependencias() });
   const responsables = useQuery({ queryKey: ['directorio'], queryFn: () => directorio.responsables() });
-  const [elegida, setElegida] = useState<string | null>(null);
+  // Desde el Centro de mando ("Abrir expediente") llega la dependencia elegida, como X.org en la 2.x
+  const llegada = (useLocation().state as { org?: string } | null)?.org ?? null;
+  const [elegida, setElegida] = useState<string | null>(llegada);
   const [detalle, setDetalle] = useState<RadicadoHistorico | null>(null);
 
   const todas = useMemo(() => datos.data?.filas ?? [], [datos.data]);
