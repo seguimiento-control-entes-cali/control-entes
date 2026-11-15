@@ -61,6 +61,8 @@ export interface Plan {
   estado: string;
   observaciones?: string;
   resolucion?: string;
+  fecha_radicacion_informe?: string | null;
+  requerimiento_id?: string | null;
   /** Dirección técnica responsable (columna del PM_01 que se importa del archivo). */
   direccion_tecnica?: string;
 }
@@ -134,6 +136,51 @@ export interface DatosPlanes {
   avances: Avance[];
   /** Traslados de los hallazgos (script 18): null si no están instalados; vacío para secretario y enlace. */
   traslados?: Traslado[] | null;
+  /** Script 19 instalado (calificación CGSC, observaciones de Control Interno, oficio): PM.v19 de la 2.x. */
+  v19?: boolean;
+  /** Script 20 instalado (prórrogas, informes semestrales y archivo documental): PM.v20 de la 2.x. */
+  v20?: boolean;
+  prorrogas?: Prorroga[];
+  informes?: InformeAvance[];
+  documentos?: DocumentoArchivo[];
+}
+/** Prórroga de presentación del plan, de un informe semestral o de una acción (arts. 15 y 16; script 20). */
+export interface Prorroga {
+  id: string;
+  plan_id: string;
+  accion_id?: string | null;
+  tipo: string;
+  corte?: string | null;
+  estado: string;
+  fecha_nueva?: string | null;
+  [k: string]: unknown;
+}
+/** Informe semestral de avance enviado (art. 11; script 20). */
+export interface InformeAvance {
+  id: string;
+  plan_id: string;
+  corte: string;
+  fecha_envio: string;
+  radicado_orfeo?: string;
+  documento_id?: string | null;
+  observaciones?: string;
+}
+/** Documento del archivo documental (depósito «archivo», con su huella SHA-256; script 20). */
+export interface DocumentoArchivo {
+  id: string;
+  plan_id: string | null;
+  requerimiento_id?: string | null;
+  tipo: string;
+  nombre: string;
+  path: string;
+  mime: string;
+  tamano: number;
+  sha256: string;
+  radicado_orfeo?: string;
+  observaciones?: string;
+  subido_email?: string;
+  created_at: string;
+  eliminado_at?: string | null;
 }
 
 // ---------- utilidades de texto ----------
@@ -626,3 +673,17 @@ export const TIPOS_EJERCICIO = [
   'Actuación especial de fiscalización',
   'Otra'
 ];
+
+/** pmSavePlan: las columnas de los scripts 19 y 20 solo se envían si están instalados (si no, guardar fallaría). */
+export function columnasInstaladas(o: Record<string, unknown>, v: Pick<DatosPlanes, 'v19' | 'v20'>) {
+  if (!v.v19) {
+    delete o.direccion_tecnica;
+    delete o.requerimiento_id;
+  }
+  if (v.v20) o.fecha_radicacion_informe = o.fecha_radicacion_informe || null;
+  else {
+    delete o.resolucion;
+    delete o.fecha_radicacion_informe;
+  }
+  return o;
+}

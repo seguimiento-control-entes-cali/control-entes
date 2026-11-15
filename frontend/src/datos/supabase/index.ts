@@ -12,7 +12,16 @@ import type { Requerimiento } from '../../dominio/requerimientos';
 import type { Database, Json } from './tipos.generados';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { rutaSoporte } from '../../dominio/requerimientos';
-import type { Accion, Avance, Hallazgo, Plan, Traslado } from '../../dominio/planes';
+import type {
+  Accion,
+  Avance,
+  DocumentoArchivo,
+  Hallazgo,
+  InformeAvance,
+  Plan,
+  Prorroga,
+  Traslado
+} from '../../dominio/planes';
 import {
   esRespaldo,
   type CargaExcel,
@@ -469,7 +478,23 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         } catch {
           traslados = null;
         }
-        return { planes, hallazgos, acciones, avances, traslados };
+        // ¿Script 19 instalado? (pmLoad de la 2.x: la columna direccion_tecnica)
+        const v19 = !(await sb.from('pm_planes').select('direccion_tecnica').limit(1)).error;
+        // Script 20: prórrogas, informes semestrales y archivo documental; si falta, se ocultan esas funciones
+        let v20 = true,
+          prorrogas: Prorroga[] = [],
+          informes: InformeAvance[] = [],
+          documentos: DocumentoArchivo[] = [];
+        try {
+          [prorrogas, informes, documentos] = await Promise.all([
+            todo<Prorroga>('pm_prorrogas', 'created_at'),
+            todo<InformeAvance>('pm_informes_avance', 'created_at'),
+            todo<DocumentoArchivo>('archivo_documentos', 'created_at')
+          ]);
+        } catch {
+          v20 = false;
+        }
+        return { planes, hallazgos, acciones, avances, traslados, v19, v20, prorrogas, informes, documentos };
       },
       async guardar(tipo, o, id) {
         const tabla = TABLA_PLANES[tipo];

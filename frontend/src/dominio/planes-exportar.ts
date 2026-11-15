@@ -29,6 +29,8 @@ export interface ContextoExport {
   d: DatosPlanes;
   dep: (id: number | null | undefined) => string;
   usuario: string;
+  /** Script 19 instalado: sin él no hay calificación CGSC (PM.v19 de la 2.x). */
+  v19?: boolean;
 }
 
 /** pmXDate: fecha AAAA-MM-DD → número de serie de Excel; vacío si falta o no es válida (nunca NaN). */
@@ -193,7 +195,7 @@ export function hojaPM01(X: SheetJS, p: Plan, corte: string, ctx: ContextoExport
     const r0 = r;
     (acc.length ? acc : [null]).forEach(a => {
       const av = a ? avanceAl(a, corte, ctx.d.avances) : null;
-      const cal = a ? calificacionAccion(a, corte, ctx.d.avances) : null;
+      const cal = a && ctx.v19 !== false ? calificacionAccion(a, corte, ctx.d.avances) : null;
       if (cal && typeof cal.c === 'number') cumpl.push(cal.c);
       if (cal && typeof cal.e === 'number') efect.push(cal.e);
       const fila: Valor[] = [
@@ -266,7 +268,7 @@ export function hojaPM02(X: SheetJS, p: Plan, corte: string, ctx: ContextoExport
   const put = escritor(ws);
   const M = (x: string) => merges.push(X.utils.decode_range(x));
   const acc = ctx.d.acciones.filter(a => a.plan_id === p.id);
-  const k = calificacionCgsc(acc, corte, ctx.d.avances);
+  const k = ctx.v19 !== false ? calificacionCgsc(acc, corte, ctx.d.avances) : { C: 0 };
   put('A1', 'CONTRALORÍA GENERAL DE SANTIAGO DE CALI');
   M('A1:F1');
   put('A2', 'PAPEL DE TRABAJO PT 03-PF EVALUACIÓN PLAN DE MEJORAMIENTO - Versión 2.1');
@@ -332,8 +334,8 @@ export function hojaPM02(X: SheetJS, p: Plan, corte: string, ctx: ContextoExport
             reportado_email?: string;
           })
         | null;
-      const cal = calificacionAccion(a, corte, ctx.d.avances);
-      if (typeof cal.e === 'number') efect.push(cal.e);
+      const cal = ctx.v19 !== false ? calificacionAccion(a, corte, ctx.d.avances) : null;
+      if (cal && typeof cal.e === 'number') efect.push(cal.e);
       (
         [
           h.numero,
@@ -347,8 +349,8 @@ export function hojaPM02(X: SheetJS, p: Plan, corte: string, ctx: ContextoExport
           fechaPlan(a.fecha_fin) ? serieExcel(a.fecha_fin) : '',
           responsableTxt(a, ctx),
           av ? pct(a, av.cantidad) : 0,
-          cal.e != null ? cal.e : '',
-          cal.c != null || cal.e != null ? cal.estado : '',
+          cal && cal.e != null ? cal.e : '',
+          cal && (cal.c != null || cal.e != null) ? cal.estado : '',
           av ? av.reportado_email || '' : '',
           av
             ? [av.descripcion || '', 'Corte ' + formatoCorto(av.fecha_corte)].filter(Boolean).join(' · ')
