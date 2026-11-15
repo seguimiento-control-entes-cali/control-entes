@@ -1,8 +1,9 @@
 // Exportar el plan en el formato de la contraloría (2.x: pmExportModal, pmAvisoFaltantes y pmDoExport de
-// src/js/19-planes-de-mejoramiento.js). Mismo HTML y clases (field, warn-card, hint). Pendiente para la entrega 4:
-// guardar una copia en el archivo documental del plan (en la 2.x, solo con el script 20).
+// src/js/19-planes-de-mejoramiento.js). Mismo HTML y clases (field, warn-card, hint). La copia en el
+// archivo documental se guarda solo con el script 20 y para quien edita (igual que la 2.x).
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { fechaColombia } from '../../dominio/fechas';
+import { fechaColombia, formatoCorto } from '../../dominio/fechas';
 import { fechaPlan, type Accion, type DatosPlanes, type Plan } from '../../dominio/planes';
 import {
   faltantesExport,
@@ -15,6 +16,7 @@ import {
 } from '../../dominio/planes-exportar';
 import { Icono, Modal, useAvisos } from '../../shared/ui';
 import { cargarSheetJS } from '../configuracion/leer-excel';
+import { useCopiaDocumento } from './Memoria';
 
 const corto = (t: string) => (t.length > 70 ? t.slice(0, 70) + '…' : t);
 
@@ -41,6 +43,9 @@ export function VentanaExportar({
   const [fmt, setFmt] = useState(p.formato === 'F14_CGR' ? 'F14_CGR' : 'PM_01_CGSC');
   const [corte, setCorte] = useState(corteInicial);
   const [ocupado, setOcupado] = useState(false);
+  const [archivar, setArchivar] = useState(true);
+  const copia = useCopiaDocumento();
+  const cliente = useQueryClient();
   const f = faltantesExport(p, d);
   const descargar = async () => {
     if (!fechaPlan(corte)) return avisar('Indica la fecha de corte', 'error');
@@ -69,6 +74,19 @@ export function VentanaExportar({
               corte: fmt === 'PM_01_AVANCE' ? corte : null
             });
       X.writeFile(wb, nom, { compression: true });
+      if (d.v20 && edita && archivar) {
+        const bin = X.write(wb, { type: 'array', bookType: 'xlsx', compression: true }) as ArrayBuffer;
+        await copia(
+          { name: nom, size: bin.byteLength, arrayBuffer: () => Promise.resolve(bin) },
+          {
+            plan_id: p.id,
+            tipo: fmt === 'PM_01_AVANCE' ? 'informe_avance' : 'formato_exportado',
+            observaciones: 'Exportado con corte ' + formatoCorto(corte)
+          },
+          d.v20
+        );
+        await cliente.invalidateQueries({ queryKey: ['planes'] });
+      }
       alCerrar();
       avisar('Formato descargado: ' + nom, 'ok');
     } catch (e) {
@@ -112,6 +130,12 @@ export function VentanaExportar({
           Se toma el último avance VALIDADO hasta esta fecha. Los avances por validar no se incluyen.
         </div>
       </div>
+      {d.v20 && edita && (
+        <label className="chk" style={{ margin: '6px 0' }}>
+          <input type="checkbox" checked={archivar} onChange={e => setArchivar(e.target.checked)} /> Guardar
+          una copia en el archivo documental del plan
+        </label>
+      )}
       {(f.plan.length > 0 || f.acciones.length > 0) && (
         <div className="card warn-card" id="pmEAviso" style={{ margin: '8px 0', padding: '10px 12px' }}>
           <b>

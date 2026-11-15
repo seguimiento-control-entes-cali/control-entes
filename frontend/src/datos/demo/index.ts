@@ -19,11 +19,14 @@ import {
   txt,
   type Accion,
   type Avance,
+  type DocumentoArchivo,
   type Hallazgo,
   type Plan
 } from '../../dominio/planes';
+import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
+import { textoCorto } from '../../dominio/actividad';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import { desdeBaseDeDatos, fechaDeCorte, type RadicadoHistorico } from '../../dominio/historico';
 import type { Cuenta } from '../../dominio/cuentas';
@@ -117,6 +120,58 @@ export function datosDemo(): Datos {
   const alertasLog: { requerimiento_id: string; canal: string }[] = [];
   // Planes de mejoramiento de la demostración (los mismos de la 2.x, ficticios)
   const planes = semillaPlanes(fechaColombia(new Date()));
+  // Archivo documental y papelera de la demostración (en memoria: el contenido solo existe durante la sesión)
+  let documentos: DocumentoArchivo[] = [];
+  const archivos = new Map<string, ArrayBuffer>();
+  type Lista = 'planes' | 'hallazgos' | 'acciones' | 'avances';
+  const papelera: (ElementoPapelera & { plan_id: string; filas: [Lista, object][]; restaurado?: boolean })[] =
+    [];
+  /** pmDemoPapelera: cada eliminación guarda lo que se borró para poder restaurarlo. */
+  function aPapelera(tipo: 'plan' | 'hall' | 'acc', id: string) {
+    const filas: [Lista, object][] = [];
+    const add = (l: Lista, f: object) => filas.push([l, { ...f }]);
+    let tabla: string, desc: string, planId: string;
+    if (tipo === 'plan') {
+      const f = planes.planes.find(x => x.id === id);
+      if (!f) return;
+      [tabla, desc, planId] = ['pm_planes', f.ejercicio, id];
+      add('planes', f);
+      planes.hallazgos.filter(x => x.plan_id === id).forEach(x => add('hallazgos', x));
+      planes.acciones.filter(x => x.plan_id === id).forEach(x => add('acciones', x));
+      planes.avances.filter(x => x.plan_id === id).forEach(x => add('avances', x));
+    } else if (tipo === 'hall') {
+      const f = planes.hallazgos.find(x => x.id === id);
+      if (!f) return;
+      [tabla, desc, planId] = [
+        'pm_hallazgos',
+        'Hallazgo ' + f.numero + ': ' + textoCorto(f.descripcion, 140),
+        f.plan_id
+      ];
+      add('hallazgos', f);
+      planes.acciones
+        .filter(x => x.hallazgo_id === id)
+        .forEach(a => {
+          add('acciones', a);
+          planes.avances.filter(v => v.accion_id === a.id).forEach(v => add('avances', v));
+        });
+    } else {
+      const f = planes.acciones.find(x => x.id === id);
+      if (!f) return;
+      [tabla, desc, planId] = ['pm_acciones', textoCorto(f.accion, 160), f.plan_id];
+      add('acciones', f);
+      planes.avances.filter(v => v.accion_id === id).forEach(v => add('avances', v));
+    }
+    papelera.push({
+      audit_id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      tabla,
+      registro_id: id,
+      plan_id: planId,
+      descripcion: desc,
+      eliminado_at: new Date().toISOString(),
+      dependientes: filas.length - 1,
+      filas
+    });
+  }
   /** Correo de quien edita planes (Super administrador o Control Interno); si no, el error indicado. */
   const editorPlanes = (mensaje: string) => {
     const p = actual?.perfil;
@@ -435,7 +490,7 @@ export function datosDemo(): Datos {
           v20: true,
           prorrogas: [],
           informes: [],
-          documentos: []
+          documentos: JSON.parse(JSON.stringify(documentos)) as DocumentoArchivo[]
         };
       },
       // pmSave de la 2.x en la demostración
@@ -483,6 +538,7 @@ export function datosDemo(): Datos {
               ? 'La acción tiene avances reportados: no se puede eliminar'
               : 'El hallazgo tiene acciones con avances reportados: no se puede eliminar'
           );
+        aPapelera(tipo, id);
         if (tipo === 'hall') {
           planes.acciones = planes.acciones.filter(a => a.hallazgo_id !== id);
           planes.hallazgos = planes.hallazgos.filter(h => h.id !== id);
@@ -496,6 +552,7 @@ export function datosDemo(): Datos {
             'otro',
             'El plan tiene avances reportados por las dependencias: no se puede eliminar'
           );
+        aPapelera('plan', id);
         planes.avances = planes.avances.filter(v => v.plan_id !== id);
         planes.acciones = planes.acciones.filter(a => a.plan_id !== id);
         planes.hallazgos = planes.hallazgos.filter(h => h.plan_id !== id);
@@ -540,6 +597,84 @@ export function datosDemo(): Datos {
       },
       async revisar(id, estado, obs) {
         await revisarDemo(id, estado, obs);
+      },
+      async subirDocumento(archivo, meta) {
+        const usuario = editorPlanes('Tu rol no puede modificar planes de mejoramiento');
+        const nombre = meta.nombre || archivo.name || 'documento';
+        const r = revisarDocumento(nombre, archivo.size);
+        if ('error' in r) throw new ErrorDatos('otro', r.error);
+        const buf = await archivo.arrayBuffer();
+        const sha256 = await huellaArchivo({ arrayBuffer: () => Promise.resolve(buf) });
+        const path = rutaDocumento(meta.plan_id, fechaColombia(new Date()), Date.now(), nombre);
+        archivos.set(path, buf);
+        const doc: DocumentoArchivo = {
+          id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          plan_id: meta.plan_id || null,
+          requerimiento_id: meta.requerimiento_id || null,
+          tipo: meta.tipo || 'otro',
+          nombre,
+          path,
+          mime: r.mime,
+          tamano: archivo.size,
+          sha256,
+          radicado_orfeo: meta.radicado_orfeo || '',
+          observaciones: meta.observaciones || '',
+          subido_email: usuario,
+          created_at: new Date().toISOString(),
+          eliminado_at: null
+        };
+        documentos.push(doc);
+        auditar('archivo_documentos', 'INSERT', doc.id, doc, usuario);
+        return doc.id;
+      },
+      async contenidoDocumento(d) {
+        const b = archivos.get(d.path);
+        if (!b)
+          throw new ErrorDatos('otro', 'En la demostración, el contenido solo existe durante la sesión');
+        return b.slice(0);
+      },
+      async moverDocumento(id, aPap) {
+        const usuario = editorPlanes('Tu rol no puede modificar planes de mejoramiento');
+        const d = documentos.find(x => x.id === id);
+        if (!d) throw new ErrorDatos('otro', 'El documento no existe');
+        const antes = { ...d };
+        d.eliminado_at = aPap ? new Date().toISOString() : null;
+        auditar('archivo_documentos', 'UPDATE', id, d, usuario, diferencias(antes, { ...d }));
+      },
+      async purgarDocumento(d) {
+        const p = actual?.perfil;
+        if (!p || p.rol !== 'admin')
+          throw new ErrorDatos(
+            'sin_permiso',
+            'Solo el Super administrador elimina documentos definitivamente'
+          );
+        documentos = documentos.filter(x => x.id !== d.id);
+        archivos.delete(d.path);
+        auditar('archivo_documentos', 'DELETE', d.id, d, p.correo);
+      },
+      async papelera() {
+        editorPlanes('Tu rol no puede modificar planes de mejoramiento');
+        return papelera
+          .filter(x => !x.restaurado)
+          .map(x => ({
+            audit_id: x.audit_id,
+            tabla: x.tabla,
+            registro_id: x.registro_id,
+            descripcion: x.descripcion,
+            eliminado_at: x.eliminado_at,
+            dependientes: x.dependientes
+          }));
+      },
+      async restaurar(auditId) {
+        const usuario = editorPlanes('Tu rol no puede modificar planes de mejoramiento');
+        const x = papelera.find(r => r.audit_id === auditId);
+        if (!x || x.restaurado) throw new ErrorDatos('otro', 'Este elemento ya fue restaurado');
+        if (x.tabla !== 'pm_planes' && !planes.planes.some(p => p.id === x.plan_id))
+          throw new ErrorDatos('otro', 'Primero restaure el plan al que pertenece');
+        x.filas.forEach(([l, f]) => (planes[l] as object[]).push({ ...f }));
+        x.restaurado = true;
+        auditar(x.tabla, 'INSERT', x.registro_id, { restaurado: true }, usuario);
+        return x.filas.length + ' registro(s) restaurado(s)';
       },
       // pmImportar de la 2.x en la demostración: los avances con corte entran como validados
       async importar(carga) {
