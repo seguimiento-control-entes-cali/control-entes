@@ -1,10 +1,10 @@
 // Planes de mejoramiento · consulta (2.x: vPlanes, pmOverview, pmDepView, pmPlanView, pmAccRow, pmCalLinea,
 // pmCgscHtml, pmTabValidar, pmTabHistorial, pmTabCalidad, pmSoporte y pmHistModal de src/js/19-planes-de-mejoramiento.js).
 // Mismo HTML y clases (pm-hero, pm-plans, pm-plan, pm-meter, pm-chips, pm-h, pm-a, pm-cgsc, pm-tabs, pm-tl).
-// Entregas 1 y 2 de la F3 para Planes: consulta, formulación y edición, reporte y validación de avances, calificación
-// CGSC y observaciones de Control Interno (formularios en Formularios.tsx). La importación y exportación, las
-// sugerencias de acciones, los traslados, la aprobación del plan, las prórrogas, los informes semestrales y el archivo
-// documental llegan en las entregas 3 y 4 (mientras tanto se hacen en la versión 2.x).
+// Entregas 1 a 3a de la F3 para Planes: consulta, formulación y edición, reporte y validación de avances, calificación
+// CGSC, observaciones de Control Interno (Formularios.tsx) e importación desde Excel o desde el informe final en PDF
+// (Importar.tsx). La exportación, las sugerencias de acciones, los traslados, la aprobación del plan, las prórrogas, los
+// informes semestrales y el archivo documental llegan en las entregas 3b y 4 (mientras tanto se hacen en la 2.x).
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import type { Perfil } from '../../datos/contratos';
@@ -54,6 +54,7 @@ import {
   VentanaPlan,
   VentanaRevision
 } from './Formularios';
+import { VentanaImportar } from './Importar';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
 const SUPERVISION = ['admin', 'alcalde', 'control_interno'];
@@ -103,7 +104,8 @@ type VentanaPlanes =
   | { t: 'avance'; a: Accion }
   | { t: 'revision'; v: Avance }
   | { t: 'cal'; a: Accion; fev: string }
-  | { t: 'obs'; a: Accion };
+  | { t: 'obs'; a: Accion }
+  | { t: 'importar' };
 interface Ctx {
   d: DatosPlanes;
   hoy: string;
@@ -449,6 +451,9 @@ function Resumen({
         </div>
         {ctx.edita && (
           <div className="pm-hero-b">
+            <button type="button" className="btn primary" onClick={() => ctx.abrir({ t: 'importar' })}>
+              <Icono nombre="fa-file-import" /> Importar Excel
+            </button>
             <button type="button" className="btn" onClick={() => ctx.abrir({ t: 'plan', p: null })}>
               <Icono nombre="fa-plus" /> Nuevo plan
             </button>
@@ -1337,6 +1342,7 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
   const datos = useQuery({ queryKey: ['planes'], queryFn: () => planes.datos() });
   // (los formularios de la entrega 2 se abren con ctx.abrir)
   const deps = useQuery({ queryKey: ['dependencias'], queryFn: () => catalogos.dependencias() });
+  const entes = useQuery({ queryKey: ['entes'], queryFn: () => catalogos.entes() });
   const [plan, setPlan] = useState<string | null>(null);
   const [historial, setHistorial] = useState<Accion | null>(null);
   const [ventana, setVentana] = useState<VentanaPlanes | null>(null);
@@ -1454,6 +1460,17 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
       />
     ) : w?.t === 'obs' ? (
       <VentanaObservacion a={w.a} alCerrar={cerrarVentana} />
+    ) : w?.t === 'importar' ? (
+      <VentanaImportar
+        d={datos.data}
+        deps={deps.data ?? []}
+        entes={entes.data ?? []}
+        alCerrar={cerrarVentana}
+        alImportar={id => {
+          cerrarVentana();
+          setPlan(id);
+        }}
+      />
     ) : null;
   const propio = !SUPERVISION.includes(perfil.rol);
   const p = plan ? datos.data.planes.find(x => x.id === plan) : undefined;

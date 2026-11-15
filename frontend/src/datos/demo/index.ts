@@ -13,7 +13,15 @@ import {
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { semillaRequerimientos } from './requerimientos-semilla';
 import { semillaPlanes, vistaPorDependencia } from './planes-semilla';
-import { puedeEditarPlanes, puedeReportar, txt, type Avance } from '../../dominio/planes';
+import {
+  puedeEditarPlanes,
+  puedeReportar,
+  txt,
+  type Accion,
+  type Avance,
+  type Hallazgo,
+  type Plan
+} from '../../dominio/planes';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import type { Requerimiento } from '../../dominio/requerimientos';
@@ -519,6 +527,78 @@ export function datosDemo(): Datos {
       },
       async revisar(id, estado, obs) {
         await revisarDemo(id, estado, obs);
+      },
+      // pmImportar de la 2.x en la demostración: los avances con corte entran como validados
+      async importar(carga) {
+        const usuario = editorPlanes('Solo el Super administrador o Control Interno importan planes');
+        const now = new Date().toISOString();
+        const uid = (p: string) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        const plan = { ...carga.plan, id: uid('p'), created_at: now, updated_at: now } as unknown as Plan;
+        const hall: Hallazgo[] = [],
+          acc: Accion[] = [],
+          av: Avance[] = [];
+        carga.hallazgos.forEach((h, i) => {
+          const { acciones, ...resto } = h;
+          const hh = {
+            ...resto,
+            id: uid('h'),
+            plan_id: plan.id,
+            orden: i + 1,
+            created_at: now,
+            updated_at: now
+          };
+          hall.push(hh as unknown as Hallazgo);
+          acciones.forEach(a => {
+            const { descripcion_avance, ...ra } = a;
+            const aa = {
+              ...ra,
+              id: uid('a'),
+              plan_id: plan.id,
+              hallazgo_id: hh.id,
+              orden: acc.length + 1,
+              avance: 0,
+              fecha_corte: null as string | null,
+              obs_ci_estado: a.obs_ci ? 'pendiente' : '',
+              created_at: now,
+              updated_at: now
+            };
+            if (a.avance != null && a.fecha_corte) {
+              aa.avance = a.avance;
+              aa.fecha_corte = a.fecha_corte;
+              av.push({
+                id: uid('v'),
+                accion_id: aa.id,
+                plan_id: plan.id,
+                dependencia_id: aa.dependencia_id,
+                fecha_corte: a.fecha_corte,
+                cantidad: a.avance,
+                descripcion: descripcion_avance || 'Avance importado del archivo ' + carga.archivo,
+                radicado_orfeo: '',
+                soporte_path: null,
+                soporte_hash: null,
+                estado: 'validado',
+                observacion: 'Importado del archivo ' + carga.archivo,
+                reportado_email: usuario,
+                revisado_email: usuario,
+                revisado_at: now,
+                created_at: now
+              });
+            }
+            acc.push(aa as unknown as Accion);
+          });
+        });
+        planes.planes.push(plan);
+        planes.hallazgos.push(...hall);
+        planes.acciones.push(...acc);
+        planes.avances.push(...av);
+        auditar(
+          'pm_planes',
+          'INSERT',
+          plan.id,
+          { ...plan, hallazgos: hall.length, acciones: acc.length, archivo: carga.archivo },
+          usuario
+        );
+        return plan.id;
       }
     },
     sistema: {

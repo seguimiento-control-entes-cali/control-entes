@@ -10,6 +10,7 @@ import type { Requerimiento } from '../../dominio/requerimientos';
 import type { ArchivoSoporte } from '../../dominio/huella-archivo';
 import type { AccionCuenta, Cuenta } from '../../dominio/cuentas';
 import type { DatosPlanes } from '../../dominio/planes';
+import type { CargaPlan } from '../../dominio/planes-importar';
 import type { FilaHistorico } from '../../dominio/excel-control/lectura';
 import type {
   ArchivoRespaldo,
@@ -286,6 +287,8 @@ export interface RepositorioPlanes {
   ): Promise<{ hash: string | null }>;
   /** Valida o devuelve un avance reportado (pm_revisar_avance). */
   revisar(id: string, estado: 'validado' | 'devuelto', observacion: string): Promise<void>;
+  /** Crea el plan con sus hallazgos, acciones y avances importados (pm_importar); devuelve el id del plan. */
+  importar(carga: CargaPlan): Promise<string>;
 }
 
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
