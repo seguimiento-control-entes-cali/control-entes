@@ -266,6 +266,26 @@ export interface RepositorioSistema {
 export interface RepositorioPlanes {
   /** Planes, hallazgos, acciones y avances que el usuario puede ver (RLS); traslados solo para supervisión. */
   datos(): Promise<DatosPlanes>;
+  /** Crea (sin id) o actualiza un plan, hallazgo o acción (Super administrador y Control Interno). Devuelve el id. */
+  guardar(tipo: 'plan' | 'hall' | 'acc', datos: Record<string, unknown>, id?: string | null): Promise<string>;
+  /** Elimina un hallazgo (con sus acciones) o una acción; no se puede si tienen avances reportados. */
+  eliminar(tipo: 'hall' | 'acc', id: string): Promise<void>;
+  /** Elimina un plan completo (pm_eliminar_plan); no se puede si las dependencias ya reportaron avances. */
+  eliminarPlan(id: string): Promise<void>;
+  /** Reporta un avance con soporte (PDF o radicado ORFEO); quien edita planes puede validarlo de inmediato. */
+  reportar(
+    a: { id: string; plan_id: string },
+    o: {
+      fecha_corte: string;
+      cantidad: number;
+      descripcion: string;
+      radicado_orfeo: string;
+      validar: boolean;
+    },
+    archivo: ArchivoSoporte | null
+  ): Promise<{ hash: string | null }>;
+  /** Valida o devuelve un avance reportado (pm_revisar_avance). */
+  revisar(id: string, estado: 'validado' | 'devuelto', observacion: string): Promise<void>;
 }
 
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */

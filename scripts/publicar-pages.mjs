@@ -2,7 +2,9 @@
 // Siempre con la 2.x institucional y la 3.0 institucional en /v3/ (la misma base que la 2.x). Solo hace eso:
 //   1. revisa que main local esté igual a origin/main y sin cambios pendientes (publica lo que ya pasó por PR);
 //   2. lanza la tarea y espera a que termine;
-//   3. comprueba en el sitio en línea la versión (package.json), la caché del service worker (public/sw.js) y /v3/.
+//   3. comprueba en el sitio en línea la versión (package.json), la caché del service worker (public/sw.js) y /v3/;
+//   4. pide cada archivo que citan las páginas publicadas (2.x y 3.0) y revisa que ninguno falte (404) y que la 3.0
+//      declare su ícono (sin él el navegador pide /favicon.ico en la raíz del dominio y da 404).
 // La llave de GitHub se toma de Git Credential Manager en el momento; nunca se escribe ni se muestra.
 //   node scripts/publicar-pages.mjs
 import { execFileSync } from 'node:child_process';
@@ -81,4 +83,24 @@ for (let i = 0; i < 18 && !ok; i++) {
 }
 if (!ok)
   falla(`la tarea terminó bien, pero el sitio aún no muestra la versión ${version} con la caché ${cache}.`);
+// 4. Ningún archivo citado por las páginas publicadas puede faltar (solo los del propio sitio)
+async function archivosDe(base) {
+  const html = await fetch(base + '?t=' + Date.now()).then(r => r.text());
+  // Las plantillas del código (href="${...}") no son archivos: se ignoran
+  const refs = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m => m[1]).filter(u => !u.includes('${'));
+  const urls = refs.map(u => new URL(u, base).href).filter(u => u.startsWith(SITIO));
+  return { html, urls: [...new Set(urls)] };
+}
+const faltan = [];
+for (const base of [SITIO, SITIO + 'v3/']) {
+  const { html, urls } = await archivosDe(base);
+  if (base.endsWith('v3/') && !/<link rel="icon"/.test(html))
+    faltan.push(base + ' no declara su ícono (rel="icon"): el navegador pediría /favicon.ico y daría 404');
+  for (const u of urls) {
+    const r = await fetch(u);
+    if (r.status !== 200) faltan.push(r.status + ' ' + u);
+  }
+  console.log(`Archivos citados por ${base.slice(SITIO.length - 1)}: ${urls.length} revisados`);
+}
+if (faltan.length) falla('el sitio quedó publicado, pero hay problemas:\n' + faltan.join('\n'));
 console.log('PUBLICADO Y VERIFICADO.');

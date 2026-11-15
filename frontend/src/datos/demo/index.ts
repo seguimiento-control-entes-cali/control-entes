@@ -13,6 +13,7 @@ import {
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { semillaRequerimientos } from './requerimientos-semilla';
 import { semillaPlanes, vistaPorDependencia } from './planes-semilla';
+import { puedeEditarPlanes, puedeReportar, txt, type Avance } from '../../dominio/planes';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import type { Requerimiento } from '../../dominio/requerimientos';
@@ -108,6 +109,45 @@ export function datosDemo(): Datos {
   const alertasLog: { requerimiento_id: string; canal: string }[] = [];
   // Planes de mejoramiento de la demostración (los mismos de la 2.x, ficticios)
   const planes = semillaPlanes(fechaColombia(new Date()));
+  /** Correo de quien edita planes (Super administrador o Control Interno); si no, el error indicado. */
+  const editorPlanes = (mensaje: string) => {
+    const p = actual?.perfil;
+    if (!p || !puedeEditarPlanes(p.rol)) throw new ErrorDatos('sin_permiso', mensaje);
+    return p.correo;
+  };
+  // pmRevisar de la 2.x: al validar, la acción toma el último avance validado (por corte y por revisión)
+  async function revisarDemo(id: string, estado: 'validado' | 'devuelto', obs: string) {
+    const usuario = editorPlanes('Solo el Super administrador o Control Interno validan avances');
+    const v = planes.avances.find(x => x.id === id);
+    if (!v) throw new ErrorDatos('otro', 'El avance no existe');
+    if (v.estado !== 'reportado') throw new ErrorDatos('otro', 'Este avance ya fue revisado');
+    if (estado === 'devuelto' && txt(obs).length < 5)
+      throw new ErrorDatos('otro', 'Indica a la dependencia por qué se devuelve el avance');
+    const antes = { ...v };
+    Object.assign(v, {
+      estado,
+      observacion: txt(obs),
+      revisado_email: usuario,
+      revisado_at: new Date().toISOString()
+    });
+    auditar('pm_avances', 'UPDATE', id, v, usuario, diferencias(antes, { ...v }));
+    if (estado === 'validado') {
+      const a = planes.acciones.find(x => x.id === v.accion_id);
+      const ultimoValidado = planes.avances
+        .filter(x => x.accion_id === v.accion_id && x.estado === 'validado')
+        .sort(
+          (x, y) =>
+            String(y.fecha_corte).localeCompare(String(x.fecha_corte)) ||
+            String(y.revisado_at).localeCompare(String(x.revisado_at))
+        )[0];
+      if (a && ultimoValidado) {
+        const ant = { ...a };
+        a.avance = ultimoValidado.cantidad;
+        a.fecha_corte = ultimoValidado.fecha_corte;
+        auditar('pm_acciones', 'UPDATE', a.id, a, usuario, diferencias(ant, { ...a }));
+      }
+    }
+  }
   // Histórico después de cargar un Excel en la demostración (si no, el de ejemplo)
   let historicoCargado: { filas: RadicadoHistorico[]; corte: string } | null = null;
   // Configuración de la demostración (en memoria; el semáforo la usa al momento)
@@ -376,6 +416,109 @@ export function datosDemo(): Datos {
             traslados: []
           };
         return { ...JSON.parse(JSON.stringify(planes)), traslados: [] };
+      },
+      // pmSave de la 2.x en la demostración
+      async guardar(tipo, o, id) {
+        const usuario = editorPlanes('Tu rol no puede modificar planes de mejoramiento');
+        const lista = (tipo === 'plan'
+          ? planes.planes
+          : tipo === 'hall'
+            ? planes.hallazgos
+            : planes.acciones) as unknown as Record<string, unknown>[];
+        if (
+          tipo === 'hall' &&
+          planes.hallazgos.some(h => h.plan_id === o.plan_id && h.numero === o.numero && h.id !== id)
+        )
+          throw new ErrorDatos(
+            'otro',
+            'Ya existe un hallazgo con el número ' + String(o.numero) + ' en este plan'
+          );
+        const tabla = tipo === 'plan' ? 'pm_planes' : tipo === 'hall' ? 'pm_hallazgos' : 'pm_acciones';
+        if (id) {
+          const t = lista.find(x => x.id === id);
+          if (!t) throw new ErrorDatos('otro', 'El registro no existe');
+          const antes = { ...t };
+          Object.assign(t, o);
+          auditar(tabla, 'UPDATE', id, t, usuario, diferencias(antes, { ...t }));
+          return id;
+        }
+        const nuevo: Record<string, unknown> = {
+          ...o,
+          id: tipo[0] + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+        };
+        if (tipo === 'acc') Object.assign(nuevo, { avance: 0, fecha_corte: null });
+        lista.push(nuevo);
+        auditar(tabla, 'INSERT', String(nuevo.id), nuevo, usuario);
+        return String(nuevo.id);
+      },
+      async eliminar(tipo, id) {
+        const usuario = editorPlanes('Tu rol no puede eliminar');
+        const accIds =
+          tipo === 'acc' ? [id] : planes.acciones.filter(a => a.hallazgo_id === id).map(a => a.id);
+        if (planes.avances.some(v => accIds.includes(v.accion_id)))
+          throw new ErrorDatos(
+            'otro',
+            tipo === 'acc'
+              ? 'La acción tiene avances reportados: no se puede eliminar'
+              : 'El hallazgo tiene acciones con avances reportados: no se puede eliminar'
+          );
+        if (tipo === 'hall') {
+          planes.acciones = planes.acciones.filter(a => a.hallazgo_id !== id);
+          planes.hallazgos = planes.hallazgos.filter(h => h.id !== id);
+        } else planes.acciones = planes.acciones.filter(a => a.id !== id);
+        auditar(tipo === 'acc' ? 'pm_acciones' : 'pm_hallazgos', 'DELETE', id, { id }, usuario);
+      },
+      async eliminarPlan(id) {
+        const usuario = editorPlanes('Solo el Super administrador o Control Interno eliminan planes');
+        if (planes.avances.some(v => v.plan_id === id && !/^Importado del archivo/.test(v.observacion || '')))
+          throw new ErrorDatos(
+            'otro',
+            'El plan tiene avances reportados por las dependencias: no se puede eliminar'
+          );
+        planes.avances = planes.avances.filter(v => v.plan_id !== id);
+        planes.acciones = planes.acciones.filter(a => a.plan_id !== id);
+        planes.hallazgos = planes.hallazgos.filter(h => h.plan_id !== id);
+        planes.planes = planes.planes.filter(p => p.id !== id);
+        auditar('pm_planes', 'DELETE', id, { id }, usuario);
+      },
+      // pmReportar de la 2.x en la demostración
+      async reportar(a0, o, archivo) {
+        const p = actual?.perfil;
+        const a = planes.acciones.find(x => x.id === a0.id);
+        if (!p || !a || !puedeReportar(a, p.rol, p.dependenciaId))
+          throw new ErrorDatos(
+            'sin_permiso',
+            'Solo puedes reportar avances de las acciones de tu dependencia'
+          );
+        if (planes.avances.some(v => v.accion_id === a.id && v.estado === 'reportado'))
+          throw new ErrorDatos('otro', 'Esta acción ya tiene un avance pendiente de validar');
+        const hash = archivo ? await huellaArchivo(archivo) : null;
+        const v: Avance = {
+          id: 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+          accion_id: a.id,
+          plan_id: a.plan_id,
+          dependencia_id: a.dependencia_id,
+          fecha_corte: o.fecha_corte,
+          cantidad: o.cantidad,
+          descripcion: o.descripcion,
+          radicado_orfeo: o.radicado_orfeo || '',
+          soporte_path: archivo ? (archivo.name ?? 'soporte.pdf') : null,
+          soporte_hash: hash,
+          estado: 'reportado',
+          observacion: '',
+          reportado_email: p.correo,
+          revisado_email: '',
+          revisado_at: null,
+          created_at: new Date().toISOString()
+        };
+        planes.avances.push(v);
+        auditar('pm_avances', 'INSERT', v.id, v, p.correo);
+        if (o.validar && puedeEditarPlanes(p.rol))
+          await revisarDemo(v.id, 'validado', 'Registrado y validado por ' + p.correo);
+        return { hash };
+      },
+      async revisar(id, estado, obs) {
+        await revisarDemo(id, estado, obs);
       }
     },
     sistema: {

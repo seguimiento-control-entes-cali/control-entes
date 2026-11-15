@@ -87,6 +87,16 @@ export function errorRequerimiento(error: { message: string }): ErrorDatos {
   return new ErrorDatos('otro', m);
 }
 
+const TABLA_PLANES = { plan: 'pm_planes', hall: 'pm_hallazgos', acc: 'pm_acciones' } as const;
+/** pmErr de la 2.x: mensajes claros para las restricciones de los planes; el resto, como los requerimientos. */
+export function errorPlanes(error: { message: string }): ErrorDatos {
+  if (/pm_hallazgos_numero_unq/.test(error.message))
+    return new ErrorDatos('otro', 'Ya existe un hallazgo con ese número en el plan');
+  if (/pm_acciones_fechas_ok/.test(error.message))
+    return new ErrorDatos('otro', 'La fecha de terminación no puede ser anterior a la de inicio');
+  return errorRequerimiento(error);
+}
+
 const red = () =>
   new ErrorDatos('red', 'No hay conexión con el servidor. Revise su internet e intente de nuevo.');
 
@@ -460,6 +470,68 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           traslados = null;
         }
         return { planes, hallazgos, acciones, avances, traslados };
+      },
+      async guardar(tipo, o, id) {
+        const tabla = TABLA_PLANES[tipo];
+        if (id) {
+          const { error } = await sb
+            .from(tabla)
+            .update(o as never)
+            .eq('id', id);
+          if (error) throw errorPlanes(error);
+          return id;
+        }
+        const { data, error } = await sb
+          .from(tabla)
+          .insert(o as never)
+          .select('id')
+          .single();
+        if (error) throw errorPlanes(error);
+        return String((data as { id: string }).id);
+      },
+      async eliminar(tipo, id) {
+        const { error } = await sb.from(TABLA_PLANES[tipo]).delete().eq('id', id);
+        if (error) throw errorPlanes(error);
+      },
+      async eliminarPlan(id) {
+        const { error } = await sb.rpc('pm_eliminar_plan', { p_id: id });
+        if (error) throw errorPlanes(error);
+      },
+      // pmReportar de la 2.x: el PDF va a soportes/pm/<plan>/<acción>_<hora>.pdf; si el registro falla, se borra
+      async reportar(a, o, archivo) {
+        let path: string | null = null;
+        const hash = archivo ? await huellaArchivo(archivo) : null;
+        if (archivo) {
+          path = `pm/${a.plan_id}/${a.id}_${Date.now()}.pdf`;
+          const up = await sb.storage.from('soportes').upload(path, archivo as unknown as ArrayBuffer, {
+            contentType: 'application/pdf',
+            upsert: false
+          });
+          if (up.error) throw new ErrorDatos('otro', 'No se pudo subir el PDF: ' + up.error.message);
+        }
+        const { error } = await sb.rpc('pm_reportar_avance', {
+          p_accion: a.id,
+          p_fecha: o.fecha_corte,
+          p_cantidad: o.cantidad,
+          p_descripcion: o.descripcion,
+          p_orfeo: o.radicado_orfeo || '',
+          p_path: path as string,
+          p_hash: hash as string,
+          p_validar: o.validar
+        } as never);
+        if (error) {
+          if (path) await sb.storage.from('soportes').remove([path]);
+          throw errorPlanes(error);
+        }
+        return { hash };
+      },
+      async revisar(id, estado, observacion) {
+        const { error } = await sb.rpc('pm_revisar_avance', {
+          p_id: id,
+          p_estado: estado,
+          p_observacion: observacion || ''
+        });
+        if (error) throw errorPlanes(error);
       }
     },
     sistema: {
