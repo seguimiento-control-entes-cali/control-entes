@@ -11,6 +11,13 @@ import type { ArchivoSoporte } from '../../dominio/huella-archivo';
 import type { AccionCuenta, Cuenta } from '../../dominio/cuentas';
 import type { DatosPlanes } from '../../dominio/planes';
 import type { CargaPlan } from '../../dominio/planes-importar';
+import type { ElementoPapelera, MetaDocumento } from '../../dominio/planes-memoria';
+import type { DocumentoArchivo } from '../../dominio/planes';
+/** Archivo elegido para el archivo documental (File del navegador). */
+export interface ArchivoDocumento extends ArchivoSoporte {
+  name: string;
+  size: number;
+}
 import type { FilaHistorico } from '../../dominio/excel-control/lectura';
 import type {
   ArchivoRespaldo,
@@ -289,6 +296,18 @@ export interface RepositorioPlanes {
   revisar(id: string, estado: 'validado' | 'devuelto', observacion: string): Promise<void>;
   /** Crea el plan con sus hallazgos, acciones y avances importados (pm_importar); devuelve el id del plan. */
   importar(carga: CargaPlan): Promise<string>;
+  /** Sube un archivo al depósito «archivo» y lo registra con su huella (pmDocSubir; script 20). */
+  subirDocumento(archivo: ArchivoDocumento, meta: MetaDocumento): Promise<string>;
+  /** Contenido de un documento del archivo (pmDocBlob). */
+  contenidoDocumento(d: DocumentoArchivo): Promise<ArrayBuffer>;
+  /** Envía un documento a la papelera o lo restaura (pmDocMover). */
+  moverDocumento(id: string, aPapelera: boolean): Promise<void>;
+  /** Borra un documento definitivamente: solo el Super administrador y solo desde la papelera (pmDocPurgar). */
+  purgarDocumento(d: DocumentoArchivo): Promise<void>;
+  /** Planes, hallazgos, acciones y traslados eliminados que se pueden restaurar (pm_papelera). */
+  papelera(): Promise<ElementoPapelera[]>;
+  /** Restaura un elemento con lo que se eliminó junto con él (pm_restaurar); devuelve el resumen. */
+  restaurar(auditId: string): Promise<string>;
 }
 
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */

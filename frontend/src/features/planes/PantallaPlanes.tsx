@@ -56,6 +56,7 @@ import {
 } from './Formularios';
 import { VentanaExportar } from './Exportar';
 import { VentanaImportar } from './Importar';
+import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
 const SUPERVISION = ['admin', 'alcalde', 'control_interno'];
@@ -107,6 +108,8 @@ type VentanaPlanes =
   | { t: 'cal'; a: Accion; fev: string }
   | { t: 'obs'; a: Accion }
   | { t: 'importar' }
+  | { t: 'doc'; planId: string }
+  | { t: 'papelera' }
   | { t: 'exportar'; p: Plan; fev: string };
 interface Ctx {
   d: DatosPlanes;
@@ -459,6 +462,11 @@ function Resumen({
             <button type="button" className="btn" onClick={() => ctx.abrir({ t: 'plan', p: null })}>
               <Icono nombre="fa-plus" /> Nuevo plan
             </button>
+            {ctx.d.v20 && (
+              <button type="button" className="btn" onClick={() => ctx.abrir({ t: 'papelera' })}>
+                <Icono nombre="fa-trash-can-arrow-up" /> Papelera
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -819,7 +827,7 @@ function CalificacionCgsc({ p, acc, ctx, fev }: { p: Plan; acc: Accion[]; ctx: C
   );
 }
 
-type Pestana = 'acciones' | 'validar' | 'calidad' | 'historial';
+type Pestana = 'acciones' | 'validar' | 'calidad' | 'historial' | 'documentos';
 
 function DetallePlan({
   p,
@@ -898,6 +906,13 @@ function DetallePlan({
     ['calidad', 'Calidad de datos', issues.length],
     ['historial', 'Historial de avances', d.avances.filter(v => v.plan_id === p.id).length]
   ];
+  // pmPlanView: el archivo documental no lo ven secretario ni enlace
+  if (!['secretario', 'enlace'].includes(ctx.rol))
+    tabs.push([
+      'documentos',
+      'Documentos',
+      (d.documentos ?? []).filter(x => x.plan_id === p.id && !x.eliminado_at).length
+    ]);
   const accDe = (id: string | undefined) => d.acciones.find(a => a.id === id);
 
   let cuerpo: ReactNode;
@@ -1048,6 +1063,10 @@ function DetallePlan({
       <div className="card">
         <Vacio icono="fa-inbox">Aún no se han reportado avances</Vacio>
       </div>
+    );
+  } else if (tab === 'documentos') {
+    cuerpo = (
+      <TabDocumentos p={p} d={d} edita={ctx.edita} subir={() => ctx.abrir({ t: 'doc', planId: p.id })} />
     );
   } else {
     const secciones = hall
@@ -1479,6 +1498,10 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
         }}
         alCerrar={cerrarVentana}
       />
+    ) : w?.t === 'doc' ? (
+      <VentanaDocumento planId={w.planId} alCerrar={cerrarVentana} />
+    ) : w?.t === 'papelera' ? (
+      <VentanaPapelera d={datos.data} admin={perfil.rol === 'admin'} alCerrar={cerrarVentana} />
     ) : w?.t === 'importar' ? (
       <VentanaImportar
         d={datos.data}

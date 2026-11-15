@@ -1,6 +1,6 @@
 // Importar un plan desde Excel o desde el informe final en PDF (2.x: pmImportModal, pmImpRender y pmDoImport de
 // src/js/19-planes-de-mejoramiento.js). Mismo HTML y clases (pm-drop, pm-imp-sum, pm-imp-all, pm-imp-tbl, pm-imp-k).
-// Pendiente para la entrega 4: guardar el archivo original en el archivo documental del plan y sugerir el oficio de
+// El archivo original queda en el archivo documental (script 20). Pendiente para la entrega 4c: sugerir el oficio de
 // remisión (en la 2.x solo cuando están instalados los scripts 19 y 20).
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -19,6 +19,7 @@ import {
 import { Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
 import { leerLibroExcel, leerPdf } from './leer-plan';
+import { useCopiaDocumento } from './Memoria';
 
 type Dep = { id: number; nombre: string };
 
@@ -43,6 +44,8 @@ export function VentanaImportar({
   const [leyendo, setLeyendo] = useState(false);
   const [fallo, setFallo] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  const [original, setOriginal] = useState<File | null>(null);
+  const copia = useCopiaDocumento();
   const [, setVersion] = useState(0);
   const cambio = () => setVersion(v => v + 1);
   const previos = { planes: d.planes, hallazgos: d.hallazgos };
@@ -50,6 +53,7 @@ export function VentanaImportar({
 
   const elegir = async (f: File | undefined) => {
     setImp(null);
+    setOriginal(f ?? null);
     setFallo('');
     if (!f) return;
     setLeyendo(true);
@@ -91,6 +95,17 @@ export function VentanaImportar({
         cliente.invalidateQueries({ queryKey: ['planes'] }),
         cliente.invalidateQueries({ queryKey: ['auditoria'] })
       ]);
+      // memoria: el archivo original queda en el archivo documental del plan
+      await copia(
+        original,
+        {
+          plan_id: id,
+          tipo: imp.desdePdf ? 'informe_final' : 'plan_excel',
+          observaciones: 'Archivo original importado'
+        },
+        d.v20
+      );
+      await cliente.invalidateQueries({ queryKey: ['planes'] });
       alImportar(id);
     } catch (e) {
       avisar((e as Error).message, 'error');

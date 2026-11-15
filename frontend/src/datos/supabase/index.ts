@@ -11,6 +11,8 @@ import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import type { Database, Json } from './tipos.generados';
 import { huellaArchivo } from '../../dominio/huella-archivo';
+import { fechaColombia } from '../../dominio/fechas';
+import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
 import { rutaSoporte } from '../../dominio/requerimientos';
 import type {
   Accion,
@@ -557,6 +559,73 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           p_observacion: observacion || ''
         });
         if (error) throw errorPlanes(error);
+      },
+      // pmDocSubir: el archivo va al depósito privado «archivo»; si el registro falla, se borra
+      async subirDocumento(archivo, meta) {
+        const nombre = meta.nombre || archivo.name || 'documento';
+        const r = revisarDocumento(nombre, archivo.size);
+        if ('error' in r) throw new ErrorDatos('otro', r.error);
+        const buf = await archivo.arrayBuffer();
+        const sha = await huellaArchivo({ arrayBuffer: () => Promise.resolve(buf) });
+        const path = rutaDocumento(meta.plan_id, fechaColombia(new Date()), Date.now(), nombre);
+        const up = await sb.storage.from('archivo').upload(path, buf, { contentType: r.mime, upsert: false });
+        if (up.error) throw new ErrorDatos('otro', 'No se pudo guardar el archivo: ' + up.error.message);
+        const { data: u } = await sb.auth.getUser();
+        const { data, error } = await sb
+          .from('archivo_documentos')
+          .insert({
+            plan_id: meta.plan_id || null,
+            requerimiento_id: meta.requerimiento_id || null,
+            tipo: meta.tipo || 'otro',
+            nombre,
+            path,
+            mime: r.mime,
+            tamano: archivo.size,
+            sha256: sha,
+            radicado_orfeo: meta.radicado_orfeo || '',
+            observaciones: meta.observaciones || '',
+            subido_email: u.user?.email ?? ''
+          } as never)
+          .select('id')
+          .single();
+        if (error) {
+          await sb.storage.from('archivo').remove([path]);
+          throw errorPlanes(error);
+        }
+        return String((data as { id: string }).id);
+      },
+      async contenidoDocumento(d) {
+        const { data, error } = await sb.storage.from('archivo').download(d.path);
+        if (error || !data) throw new ErrorDatos('otro', 'No se pudo descargar: ' + (error?.message ?? ''));
+        return data.arrayBuffer();
+      },
+      async moverDocumento(id, aPapelera) {
+        const { error } = await sb
+          .from('archivo_documentos')
+          .update({ eliminado_at: aPapelera ? new Date().toISOString() : null } as never)
+          .eq('id', id);
+        if (error) throw errorPlanes(error);
+      },
+      async purgarDocumento(d) {
+        const { error } = await sb.from('archivo_documentos').delete().eq('id', d.id);
+        if (error) throw errorPlanes(error);
+        await sb.storage.from('archivo').remove([d.path]);
+      },
+      async papelera() {
+        const { data, error } = await sb.rpc('pm_papelera' as never);
+        if (error) throw errorPlanes(error);
+        return ((data as unknown as ElementoPapelera[]) ?? []).map(x => ({
+          ...x,
+          audit_id: String(x.audit_id)
+        }));
+      },
+      async restaurar(auditId) {
+        const { data, error } = await sb.rpc(
+          'pm_restaurar' as never,
+          { p_audit_id: Number(auditId) } as never
+        );
+        if (error) throw errorPlanes(error);
+        return String(data);
       },
       // pmImportar de la 2.x: todo en una transacción en la base (pm_importar)
       async importar(carga) {
