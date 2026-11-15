@@ -15,6 +15,7 @@ import { semillaRequerimientos } from './requerimientos-semilla';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import type { Requerimiento } from '../../dominio/requerimientos';
+import { desdeBaseDeDatos, fechaDeCorte, type RadicadoHistorico } from '../../dominio/historico';
 import type { Cuenta } from '../../dominio/cuentas';
 import type { ConfiguracionGeneral } from '../../dominio/configuracion';
 import { ORGANISMOS_DEMO, RESPONSABLES_DEMO } from './directorio-semilla';
@@ -104,6 +105,8 @@ export function datosDemo(): Datos {
   // Requerimientos del módulo operativo (los mismos 15 de la 2.x, con fechas relativas a hoy)
   const reqs: Requerimiento[] = semillaRequerimientos(fechaColombia(new Date()));
   const alertasLog: { requerimiento_id: string; canal: string }[] = [];
+  // Histórico después de cargar un Excel en la demostración (si no, el de ejemplo)
+  let historicoCargado: { filas: RadicadoHistorico[]; corte: string } | null = null;
   // Configuración de la demostración (en memoria; el semáforo la usa al momento)
   const config: ConfiguracionGeneral = {
     dias_rojo: 5,
@@ -334,8 +337,30 @@ export function datosDemo(): Datos {
     historico: {
       async radicados() {
         // El histórico de ejemplo (datos/demo/historico.json, ficticio) se carga aparte, solo cuando se abre
+        if (historicoCargado)
+          return { filas: historicoCargado.filas.map(r => ({ ...r })), corte: historicoCargado.corte };
         const { radicadosDemo } = await import('./historico-demo');
         return radicadosDemo();
+      },
+      // ceAplicarEnMemoria de la 2.x: en la demostración la carga solo cambia los datos de este navegador
+      async cargarVigencias(c) {
+        const p = actual?.perfil;
+        if (!p || p.rol !== 'admin')
+          throw new ErrorDatos('sin_permiso', 'Solo el Super administrador carga el Excel de control');
+        const { radicadosDemo } = await import('./historico-demo');
+        const actualH = historicoCargado ?? (await radicadosDemo());
+        const otras = actualH.filas.filter(r => !c.vigencias.includes(r.v));
+        const nuevas = desdeBaseDeDatos(c.filas).filas;
+        const filas = otras.concat(nuevas).map((r, i) => ({ ...r, i }));
+        historicoCargado = { filas, corte: fechaDeCorte(filas) };
+        auditar(
+          'historico_cargas',
+          'INSERT',
+          String(Date.now()),
+          { vigencias: c.vigencias, archivos: c.archivos, registros: c.filas.length },
+          p.correo
+        );
+        return { registros: c.filas.length, demo: true };
       }
     },
     sistema: {

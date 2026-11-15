@@ -5,11 +5,11 @@
 //  · cada ingreso registra una fila en public.accesos (si falla, no impide entrar).
 // La seguridad la ponen las políticas RLS de la base; aquí solo se traduce.
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { ErrorDatos, type Datos, type Perfil, type Sesion } from '../contratos';
+import { ErrorDatos, type Datos, type Perfil, type ResultadoCargaExcel, type Sesion } from '../contratos';
 import { esRol } from '../../dominio/roles';
 import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Requerimiento } from '../../dominio/requerimientos';
-import type { Database } from './tipos.generados';
+import type { Database, Json } from './tipos.generados';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { rutaSoporte } from '../../dominio/requerimientos';
 import {
@@ -380,6 +380,18 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
       }
     },
     historico: {
+      async cargarVigencias(c) {
+        const { data, error } = await sb.rpc('cargar_historico', { p: c as unknown as Json });
+        if (error) {
+          if (
+            /cargar_historico/.test(error.message || '') &&
+            /function|exist|schema cache/i.test(error.message || '')
+          )
+            throw new ErrorDatos('otro', 'Falta ejecutar en Supabase el script supabase/16_carga_excel.sql');
+          throw errorRequerimiento(error);
+        }
+        return (data ?? { registros: c.filas.length }) as unknown as ResultadoCargaExcel;
+      },
       async radicados() {
         // Igual que la 2.x (loadHist + aplicarCierresApp): por páginas de 1000 y luego los cierres hechos en la app
         let todas: FilaHistoricoBD[] = [];

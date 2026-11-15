@@ -4,7 +4,7 @@
 // Diferencias a propósito con la 2.x:
 // - "Conexión a Supabase" solo informa: en la 3.0 el proyecto se fija al construir (configuracion.json) y no se
 //   puede cambiar desde el navegador.
-// - "Cargar Excel de control" y la verificación y descarga de archivos llegan en la siguiente entrega de la F3.
+// - La verificación y descarga de archivos llegan con Planes de mejoramiento.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { formatoFechaHora } from '../../dominio/auditoria';
@@ -26,6 +26,7 @@ import { textoVersion } from '../../dominio/version';
 import { FECHA_CONSTRUCCION, VERSION_APP } from '../../shared/lib';
 import { Aviso, Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
+import { VentanaExcel } from './VentanaExcel';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
 const Mono = ({ children }: { children: ReactNode }) => <span className="mono">{children}</span>;
@@ -291,6 +292,7 @@ function ExcelControl({ demo }: { demo: boolean }) {
     enabled: !demo
   });
   const l = cargas.data;
+  const [abierta, setAbierta] = useState(false);
   return (
     <div className="card">
       <h3>Datos desde el Excel de control</h3>
@@ -298,13 +300,10 @@ function ExcelControl({ demo }: { demo: boolean }) {
         Actualice el histórico cargando el Excel de control de la vigencia. Antes de guardar se muestra qué
         cambia y qué filas revisar.
       </div>
-      <button type="button" className="btn primary" disabled title="Llega en la siguiente entrega de la 3.0">
+      <button type="button" className="btn primary" onClick={() => setAbierta(true)}>
         <Icono nombre="fa-file-arrow-up" /> Cargar Excel de control
       </button>
-      <div className="hint" style={{ marginTop: 8 }}>
-        En la versión 3.0 la carga del Excel llega en la siguiente entrega; mientras tanto se hace en la
-        versión 2.x.
-      </div>
+      {abierta && <VentanaExcel alCerrar={() => setAbierta(false)} />}
       <div id="ceUltimas" className="hint" style={{ marginTop: 12 }}>
         {l === null ? (
           <>
