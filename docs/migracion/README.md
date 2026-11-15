@@ -679,16 +679,16 @@ Fecha: AAAA-MM-DD
 
 | Etapa | Fase | Estado | Inicio | Fin | Fechas anteriores (rev. 3) |
 |---|---|---|---|---|---|
-| 1 | Trabajo previo: bloqueos 2.6.1 y aviso diario | 🔵 en curso | 2026-10-29 | (2026-11-18) | — |
-| 1 | F0 Preparación | 🔵 en curso (adelantada) | 2026-11-08 | (2026-11-10) | 2026-10-28 → 10-30; rev. 4: 2026-11-19 → 11-23 |
-| 1 | F1 Cimientos del frontend | ⬜ | (2026-11-24) | (2026-12-02) | 2026-11-03 → 11-06 |
-| 1 | F2 Primeras pantallas | ⬜ | (2026-12-03) | (2026-12-11) | 2026-11-09 → 11-13 |
-| 2 | F3 Pantallas restantes | ⬜ | (2026-12-14) | | 2026-11-17 |
-| 2 | F4 Base de datos bajo control | ⬜ | (2026-12-14) | | 2026-11-17 |
-| 2 | F5 Esqueleto del backend | ⬜ | | | |
-| 2 | F6 Módulos del backend | ⬜ | | | |
-| 2 | F7 Cierre del acceso directo | ⬜ | | | |
-| 2 | F8 Retiro del legado | ⬜ | | | |
+| 1 | Trabajo previo: bloqueos 2.6.1 y aviso diario | ✅ terminada | 2026-10-29 | 2026-11-10 | — |
+| 1 | F0 Preparación | ✅ terminada | 2026-11-08 | 2026-11-08 | 2026-10-28 → 10-30; rev. 4: 2026-11-19 → 11-23 |
+| 1 | F1 Cimientos del frontend | ✅ terminada | 2026-11-08 | 2026-11-10 | 2026-11-03 → 11-06; rev. 4: 2026-11-24 → 12-02 |
+| 1 | F2 Primeras pantallas | ✅ terminada | 2026-11-10 | 2026-11-11 | 2026-11-09 → 11-13; rev. 4: 2026-12-03 → 12-11 |
+| 1 | F3 Pantallas restantes | 🔵 en curso (adelantada) | 2026-11-12 | | rev. 4: desde 2026-12-14 |
+| 1 | F4 Base de datos bajo control | ⬜ | | | rev. 4: desde 2026-12-14 |
+| 2 | F5 Esqueleto del backend | ⬜ hoja de ruta para DATIC | | | |
+| 2 | F6 Módulos del backend | ⬜ hoja de ruta para DATIC | | | |
+| 2 | F7 Cierre del acceso directo | ⬜ hoja de ruta para DATIC | | | |
+| 2 | F8 Retiro del legado | ⬜ hoja de ruta para DATIC | | | |
 
 Leyenda: ⬜ no iniciada · 🔵 en curso · ✅ terminada · ⛔ bloqueada. Fechas entre paréntesis = planeadas.
 Pausa: 2026-12-23 → 2027-01-07. Sin cambios en producción del 2026-12-19 al 2027-01-06.
@@ -702,3 +702,11 @@ Pausa: 2026-12-23 → 2027-01-07. Sin cambios en producción del 2026-12-19 al 2
 | 2026-10-27 | — | Revisión 3: **cambio de prioridad**. Etapa 1 = solo frontend, conectado directo a Supabase mediante una capa de datos delgada (D-23, D-24); el backend se queda como está. La Etapa 2 (FastAPI) empieza el 2026-11-17. D-04 queda reemplazada. |
 | 2026-10-30 | — | **Revisión 4: calendario ajustado** (aprobado por Erika el 2026-10-29). Etapa 1 hasta el 2026-12-11 (antes 2026-11-13); Etapa 2 desde el 2026-12-14 (antes 2026-11-17). Motivo: antes de la F0 se cierran los bloqueos de instalación de la 2.6.1 y el aviso diario de planes; se trabaja una tarea a la vez con aprobación; la F0 no estaba aprobada. Orden: bloqueos 2 a 6, aviso diario de planes, F0. Bloqueo 1 resuelto el 2026-10-29 (53cbca1) y bloqueo 2 el 2026-10-29 (1a1ceee). Condiciones: sin cambios en producción del 2026-12-19 al 2027-01-06 (se retoman desde el 2027-01-07); vacaciones del 2026-12-23 al 2027-01-07, con la Etapa 2 en pausa; festivo 2027-01-11; el resumen semanal y el aviso diario no se encienden hasta que DATIC autorice el piloto; el proyecto de Supabase de prueba se decide antes del bloqueo 4. |
 | 2026-11-08 | F0 | **F0 adelantada** (aprobada por Erika el 2026-11-08): se presenta el 2026-11-10. Se hace en paralelo con el traslado a GitHub; el aviso diario se instala después (queda apagado hasta que DATIC autorice el piloto). Bloqueos 4 y 5 probados en `control-entes-prueba` y 23 + funciones `respaldo` y `resumen-semanal` en producción el 2026-11-07. Hecho en la rama `feat/f0-preparacion`: `frontend/` con React 18.3.1, TypeScript 5.8.3 estricto, Vite 6.3.5, Vitest 3.2.4, ESLint 9.29.0 con `eslint-plugin-boundaries` 5.0.1 (reglas de §7.1 comprobadas por `frontend/pruebas/fronteras.test.ts`), CI `.github/workflows/frontend.yml` en UTC y America/Bogota (frontend y 2.x) y ADR 0001-0003. Falta: `main` protegida, al existir el repositorio en GitHub. |
+| 2026-11-10 | F1 | **F1 terminada** (PR #4, #5 y #6; main f687ed9): ingreso con verificación en dos pasos, menú según el rol, modo sin conexión y publicación en `/v3/` conectada a la base real (publicación #3). Versión 2.6.2 publicada el mismo día (service worker corregido, PR #8). |
+| 2026-11-11 | F2 | **F2 terminada**: Directorio del gabinete, Histórico de radicados, Cumplimiento por secretaría, Auditoría y Actividad y cambios (PR #10, #13, #14 y #15), publicadas en `/v3/`. |
+| 2026-11-11 | — | **Decisión de Erika:** la migración llega hasta la F4 y se entrega a DATIC (repositorio, código, pruebas, base bajo control de versiones y documento con dos opciones: seguir con Supabase o instalar en el servidor de la Alcaldía). F5 a F8 quedan como hoja de ruta para DATIC. |
+| 2026-11-12 | F3 | F3 iniciada (adelantada). Entes y Dependencias (PR #18, publicación #15); Expediente de dependencia (PR #19) y Cruces y temas (PR #20), publicados en la #16. Cada pantalla con prueba de paridad que ejecuta el código real de la 2.x y comparación visual. |
+| 2026-11-13 | F3 | Centro de mando (PR #21) e Informe ejecutivo (PR #22): publicación #17. Notificaciones WhatsApp y correo (PR #23): publicación #18; corrección del remitente de los correos, que `main.tsx` no pasaba a la configuración (PR #24, prueba nueva `arranque-variables`): publicación #19. Tablero y Requerimientos (PR #25): publicación #20. Cargar respuesta ORFEO y Alertas (PR #26): publicación #21. |
+| 2026-11-15 | F3 | Reportes (PR #27), Cuentas y roles (PR #28), Configuración (PR #29) y carga del Excel de control (PR #30: lectura portada a TypeScript desde `src/js/20-carga-excel.js`, las 92 reglas de organismos copiadas por script, SheetJS 0.20.3 desde `vendor/npm` con la misma huella): publicaciones #22 y #23. Planes de mejoramiento, entrega 1 de 4 (consulta: Formulario 14.1, calificación CGSC, calidad de datos; tarjeta en el Centro de mando y sección en el Informe; PR #31): publicación #24. |
+| 2026-11-15 | F3 | **Verificación después de publicar:** `scripts/publicar-pages.mjs` revisa ahora que cada archivo citado por las páginas publicadas de la 2.x y la 3.0 responda 200 y que la 3.0 declare su ícono. La primera revisión encontró que la 3.0 no declaraba el ícono de la pestaña (el navegador pedía `/favicon.ico` y daba 404); se corrige en la entrega 2 de Planes con su prueba en `frontend/pruebas/pwa.test.ts`. |
+| 2026-11-15 | F3 | Planes de mejoramiento, entrega 2 de 4 (edición): formularios de plan, hallazgo y acción con las validaciones y avisos de formulación de la 2.x; reporte de avance con PDF (huella SHA-256, depósito `soportes`) o radicado ORFEO; revisión (validar actualiza la acción, devolver exige el motivo); calificación CGSC; observación de Control Interno y "Marcar atendida"; eliminación con las mismas protecciones. Pruebas nuevas: paridad de `pmNum` y `pmFecha` con el código real de la 2.x, mensajes idénticos a la 2.x, escritura en la demo y con Supabase simulado, y la pantalla de punta a punta. |

@@ -1,10 +1,11 @@
 // Planes de mejoramiento · consulta (2.x: vPlanes, pmOverview, pmDepView, pmPlanView, pmAccRow, pmCalLinea,
 // pmCgscHtml, pmTabValidar, pmTabHistorial, pmTabCalidad, pmSoporte y pmHistModal de src/js/19-planes-de-mejoramiento.js).
 // Mismo HTML y clases (pm-hero, pm-plans, pm-plan, pm-meter, pm-chips, pm-h, pm-a, pm-cgsc, pm-tabs, pm-tl).
-// Entrega 1 de la F3 para Planes: solo consulta. La formulación y edición, el reporte y la validación de avances, la
-// calificación, la importación y exportación, las prórrogas, los informes semestrales, los traslados y el archivo
-// documental llegan en las entregas 2 a 4 (mientras tanto se hacen en la versión 2.x).
-import { useQuery } from '@tanstack/react-query';
+// Entregas 1 y 2 de la F3 para Planes: consulta, formulación y edición, reporte y validación de avances, calificación
+// CGSC y observaciones de Control Interno (formularios en Formularios.tsx). La importación y exportación, las
+// sugerencias de acciones, los traslados, la aprobación del plan, las prórrogas, los informes semestrales y el archivo
+// documental llegan en las entregas 3 y 4 (mientras tanto se hacen en la versión 2.x).
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import type { Perfil } from '../../datos/contratos';
 import { formatoFechaHora } from '../../dominio/auditoria';
@@ -30,6 +31,7 @@ import {
   pct,
   pctTxt,
   pendiente,
+  puedeReportar,
   puntos,
   ultimo,
   UMBRAL_CGSC,
@@ -40,8 +42,18 @@ import {
   type Plan,
   type ProblemaCalidad
 } from '../../dominio/planes';
-import { Icono, Modal } from '../../shared/ui';
+import { Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
+import {
+  useMarcarAtendida,
+  VentanaAccion,
+  VentanaAvance,
+  VentanaCalificacion,
+  VentanaHallazgo,
+  VentanaObservacion,
+  VentanaPlan,
+  VentanaRevision
+} from './Formularios';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
 const SUPERVISION = ['admin', 'alcalde', 'control_interno'];
@@ -84,12 +96,26 @@ const Vacio = ({ icono, children }: { icono: string; children: ReactNode }) => (
 );
 
 /** Contexto de cálculo compartido por las vistas. */
+type VentanaPlanes =
+  | { t: 'plan'; p: Plan | null }
+  | { t: 'hall'; h: Hallazgo | null; planId: string }
+  | { t: 'acc'; a: Accion | null; h: Hallazgo }
+  | { t: 'avance'; a: Accion }
+  | { t: 'revision'; v: Avance }
+  | { t: 'cal'; a: Accion; fev: string }
+  | { t: 'obs'; a: Accion };
 interface Ctx {
   d: DatosPlanes;
   hoy: string;
   dep: (id: number | null | undefined) => string;
   edita: boolean;
+  rol: string;
+  depPropia: number | null;
   verHistorial: (a: Accion) => void;
+  abrir: (v: VentanaPlanes) => void;
+  eliminarAccion: (a: Accion) => void;
+  eliminarHallazgo: (h: Hallazgo) => void;
+  marcarAtendida: (a: Accion) => void;
 }
 
 function Soporte({ v, demo }: { v: Avance; demo: boolean }) {
@@ -178,6 +204,14 @@ function FilaAccion({
             <Icono nombre="fa-user-shield" />{' '}
             <b>Control Interno{a.obs_ci_estado === 'atendida' ? ' (atendida)' : ' (pendiente)'}:</b>{' '}
             {a.obs_ci}
+            {ctx.edita && a.obs_ci_estado === 'pendiente' && (
+              <>
+                {' '}
+                <button type="button" className="btn sm" onClick={() => ctx.marcarAtendida(a)}>
+                  Marcar atendida
+                </button>
+              </>
+            )}
           </div>
         )}
         <LineaCalificacion a={a} p={plan} ctx={ctx} fev={fev} />
@@ -214,9 +248,61 @@ function FilaAccion({
           {a.fecha_corte ? 'Validado con corte ' + formatoCorto(a.fecha_corte) : 'Sin avance validado'}
         </div>
         <div className="pm-a-b">
+          {puedeReportar(a, ctx.rol, ctx.depPropia) && !pend && (e.k !== 'cumplida' || ctx.edita) && (
+            <button type="button" className="btn sm primary" onClick={() => ctx.abrir({ t: 'avance', a })}>
+              <Icono nombre="fa-chart-line" /> Reportar avance
+            </button>
+          )}
+          {pend && ctx.edita && (
+            <button
+              type="button"
+              className="btn sm primary"
+              onClick={() => ctx.abrir({ t: 'revision', v: pend })}
+            >
+              <Icono nombre="fa-clipboard-check" /> Revisar avance
+            </button>
+          )}
           <button type="button" className="btn sm" onClick={() => ctx.verHistorial(a)}>
             <Icono nombre="fa-clock-rotate-left" /> Historial
           </button>
+          {ctx.edita && plan?.formato === 'PM_01_CGSC' && plan.estado !== 'formulacion' && (
+            <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'cal', a, fev })}>
+              <Icono nombre="fa-scale-balanced" /> Calificar
+            </button>
+          )}
+          {ctx.edita && !a.obs_ci && (
+            <button
+              type="button"
+              className="icon-btn"
+              title="Observación de Control Interno"
+              aria-label="Observación de Control Interno"
+              onClick={() => ctx.abrir({ t: 'obs', a })}
+            >
+              <Icono nombre="fa-user-shield" />
+            </button>
+          )}
+          {ctx.edita && h && (
+            <>
+              <button
+                type="button"
+                className="icon-btn"
+                title="Editar acción"
+                aria-label="Editar acción"
+                onClick={() => ctx.abrir({ t: 'acc', a, h })}
+              >
+                <Icono nombre="fa-pen" />
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                title="Eliminar acción"
+                aria-label="Eliminar acción"
+                onClick={() => ctx.eliminarAccion(a)}
+              >
+                <Icono nombre="fa-trash" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -228,7 +314,31 @@ function Historial({ a, ctx, demo, alCerrar }: { a: Accion; ctx: Ctx; demo: bool
     .filter(v => v.accion_id === a.id)
     .sort((x, y) => String(y.created_at).localeCompare(String(x.created_at)));
   return (
-    <Modal abierto ancha titulo="Historial de avances" alCerrar={alCerrar}>
+    <Modal
+      abierto
+      ancha
+      titulo="Historial de avances"
+      alCerrar={alCerrar}
+      pie={
+        <>
+          {puedeReportar(a, ctx.rol, ctx.depPropia) && !pendiente(a, ctx.d.avances) && (
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => {
+                alCerrar();
+                ctx.abrir({ t: 'avance', a });
+              }}
+            >
+              <Icono nombre="fa-chart-line" /> Reportar avance
+            </button>
+          )}
+          <button type="button" className="btn" onClick={alCerrar}>
+            Cerrar
+          </button>
+        </>
+      }
+    >
       <div className="pm-ctx">
         <b>{a.accion}</b>
         <div className="muted">
@@ -337,6 +447,13 @@ function Resumen({
             PM_01) y la Contraloría General de la República (Formularios 14 y 14.1).
           </div>
         </div>
+        {ctx.edita && (
+          <div className="pm-hero-b">
+            <button type="button" className="btn" onClick={() => ctx.abrir({ t: 'plan', p: null })}>
+              <Icono nombre="fa-plus" /> Nuevo plan
+            </button>
+          </div>
+        )}
       </div>
       <div className="grid g-kpi" style={{ marginBottom: 14 }}>
         <div className="card kpi">
@@ -702,13 +819,15 @@ function DetallePlan({
   ctx,
   demo,
   volver,
-  resaltar
+  resaltar,
+  quitarPlan
 }: {
   p: Plan;
   ctx: Ctx;
   demo: boolean;
   volver: () => void;
   resaltar: string | null;
+  quitarPlan: (p: Plan) => void;
 }) {
   const { d } = ctx;
   const [fev, setFev] = useState(ctx.hoy);
@@ -788,6 +907,7 @@ function DetallePlan({
                 <th>Corte</th>
                 <th>Avance reportado</th>
                 <th>Soporte</th>
+                {ctx.edita && <th />}
               </tr>
             </thead>
             <tbody>
@@ -809,6 +929,17 @@ function DetallePlan({
                     <td>
                       <Soporte v={v} demo={demo} />
                     </td>
+                    {ctx.edita && (
+                      <td>
+                        <button
+                          type="button"
+                          className="btn sm primary"
+                          onClick={() => ctx.abrir({ t: 'revision', v })}
+                        >
+                          Revisar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -969,6 +1100,15 @@ function DetallePlan({
             onChange={e => setFQ(e.target.value)}
             style={{ maxWidth: 260 }}
           />
+          {ctx.edita && (
+            <button
+              type="button"
+              className="btn sm"
+              onClick={() => ctx.abrir({ t: 'hall', h: null, planId: p.id })}
+            >
+              <Icono nombre="fa-plus" /> Agregar hallazgo
+            </button>
+          )}
         </div>
         {hall.length ? (
           secciones.length ? (
@@ -987,6 +1127,14 @@ function DetallePlan({
     );
   }
   void resaltar;
+  const eliminarPlan = () => {
+    if (
+      window.confirm(
+        `¿Eliminar el plan «${textoCorto(p.ejercicio, 80)}» con sus hallazgos y acciones? Esta acción queda en la auditoría y no se puede deshacer.`
+      )
+    )
+      quitarPlan(p);
+  };
   return (
     <>
       <div className="toolbar pm-top">
@@ -994,6 +1142,16 @@ function DetallePlan({
           <Icono nombre="fa-arrow-left" /> Planes
         </button>
         <span style={{ flex: 1 }} />
+        {ctx.edita && (
+          <>
+            <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'plan', p })}>
+              <Icono nombre="fa-pen" /> Editar plan
+            </button>
+            <button type="button" className="btn sm danger" onClick={eliminarPlan}>
+              <Icono nombre="fa-trash" /> Eliminar
+            </button>
+          </>
+        )}
       </div>
       <div className="card pm-head">
         <div className="pm-plan-h">
@@ -1099,6 +1257,31 @@ function SeccionHallazgo({
         ))}
         {h.cuantia ? <span className="pm-conn c-fiscal">$ {numTxt(h.cuantia)}</span> : null}
         <span style={{ flex: 1 }} />
+        {ctx.edita && (
+          <>
+            <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
+              <Icono nombre="fa-plus" /> Acción
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              title="Editar hallazgo"
+              aria-label="Editar hallazgo"
+              onClick={() => ctx.abrir({ t: 'hall', h, planId: h.plan_id })}
+            >
+              <Icono nombre="fa-pen" />
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              title="Eliminar hallazgo"
+              aria-label="Eliminar hallazgo"
+              onClick={() => ctx.eliminarHallazgo(h)}
+            >
+              <Icono nombre="fa-trash" />
+            </button>
+          </>
+        )}
       </header>
       <div className={'pm-desc' + (abierto ? ' open' : '')}>
         {h.descripcion}
@@ -1134,6 +1317,14 @@ function SeccionHallazgo({
         ) : (
           <div className="muted" style={{ fontSize: '.82rem', padding: '8px 0' }}>
             Este hallazgo aún no tiene acciones.
+            {ctx.edita && (
+              <>
+                {' '}
+                <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
+                  <Icono nombre="fa-plus" /> Agregar acción
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -1144,9 +1335,14 @@ function SeccionHallazgo({
 export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?: boolean }) {
   const { planes, catalogos } = useDatos();
   const datos = useQuery({ queryKey: ['planes'], queryFn: () => planes.datos() });
+  // (los formularios de la entrega 2 se abren con ctx.abrir)
   const deps = useQuery({ queryKey: ['dependencias'], queryFn: () => catalogos.dependencias() });
   const [plan, setPlan] = useState<string | null>(null);
   const [historial, setHistorial] = useState<Accion | null>(null);
+  const [ventana, setVentana] = useState<VentanaPlanes | null>(null);
+  const cliente = useQueryClient();
+  const avisar = useAvisos();
+  const marcarAtendida = useMarcarAtendida();
   const [resaltar, setResaltar] = useState<string | null>(null);
 
   if (datos.isPending || deps.isPending)
@@ -1182,13 +1378,83 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
       </div>
     );
   }
+  const quitar = async (hacer: () => Promise<void>, ok: string) => {
+    try {
+      await hacer();
+      avisar(ok, 'ok');
+      await cliente.invalidateQueries({ queryKey: ['planes'] });
+    } catch (e) {
+      avisar((e as Error).message, 'error');
+    }
+  };
   const ctx: Ctx = {
     d: datos.data,
     hoy: fechaColombia(new Date()),
     dep: id => (id == null ? '' : (deps.data?.find(x => x.id === id)?.nombre ?? '')),
     edita: EDITA.includes(perfil.rol),
-    verHistorial: setHistorial
+    rol: perfil.rol,
+    depPropia: perfil.dependenciaId,
+    verHistorial: setHistorial,
+    abrir: setVentana,
+    eliminarAccion: a => {
+      if (window.confirm('¿Eliminar esta acción?'))
+        void quitar(() => planes.eliminar('acc', a.id), 'Acción eliminada');
+    },
+    eliminarHallazgo: h => {
+      if (window.confirm(`¿Eliminar el hallazgo ${h.numero} y sus acciones?`))
+        void quitar(() => planes.eliminar('hall', h.id), 'Hallazgo eliminado');
+    },
+    marcarAtendida: a => void marcarAtendida(a)
   };
+  const quitarPlan = (x: Plan) =>
+    void quitar(async () => {
+      await planes.eliminarPlan(x.id);
+      setPlan(null);
+    }, 'Plan eliminado');
+  const cerrarVentana = () => setVentana(null);
+  const w = ventana;
+  const formularios =
+    w?.t === 'plan' ? (
+      <VentanaPlan
+        p={w.p}
+        d={datos.data}
+        alCerrar={cerrarVentana}
+        alGuardar={id => {
+          cerrarVentana();
+          setPlan(id);
+        }}
+      />
+    ) : w?.t === 'hall' ? (
+      <VentanaHallazgo h={w.h} planId={w.planId} d={datos.data} alCerrar={cerrarVentana} />
+    ) : w?.t === 'acc' ? (
+      (() => {
+        const pl = datos.data.planes.find(x => x.id === w.h.plan_id);
+        return pl ? (
+          <VentanaAccion
+            a={w.a}
+            h={w.h}
+            p={pl}
+            deps={deps.data ?? []}
+            d={datos.data}
+            alCerrar={cerrarVentana}
+          />
+        ) : null;
+      })()
+    ) : w?.t === 'avance' ? (
+      <VentanaAvance a={w.a} d={datos.data} edita={ctx.edita} alCerrar={cerrarVentana} />
+    ) : w?.t === 'revision' ? (
+      <VentanaRevision v={w.v} d={datos.data} dep={ctx.dep} alCerrar={cerrarVentana} />
+    ) : w?.t === 'cal' ? (
+      <VentanaCalificacion
+        a={w.a}
+        p={datos.data.planes.find(x => x.id === w.a.plan_id)}
+        d={datos.data}
+        fev={w.fev}
+        alCerrar={cerrarVentana}
+      />
+    ) : w?.t === 'obs' ? (
+      <VentanaObservacion a={w.a} alCerrar={cerrarVentana} />
+    ) : null;
   const propio = !SUPERVISION.includes(perfil.rol);
   const p = plan ? datos.data.planes.find(x => x.id === plan) : undefined;
   const abrirAccion = (a: Accion) => {
@@ -1212,12 +1478,14 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
           demo={demo}
           volver={() => setPlan(null)}
           resaltar={resaltar}
+          quitarPlan={quitarPlan}
         />
       ) : propio ? (
         <MisAcciones ctx={ctx} depId={perfil.dependenciaId} />
       ) : (
         <Resumen ctx={ctx} abrir={id => setPlan(id)} abrirAccion={abrirAccion} />
       )}
+      {formularios}
       {historial && <Historial a={historial} ctx={ctx} demo={demo} alCerrar={() => setHistorial(null)} />}
     </>
   );

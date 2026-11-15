@@ -487,3 +487,140 @@ export function calidadPlan(
   }
   return out.sort((a, b) => (a.nivel === 'r' ? 0 : 1) - (b.nivel === 'r' ? 0 : 1));
 }
+
+// ---------- lectura de números y fechas (pmNum y pmFecha de la 2.x) ----------
+/** pmNum: "1.234,5", "1,234.5", "45%", "$ 300" → número; NaN si no se puede. */
+export function numero(v: unknown): number {
+  if (typeof v === 'number') return isFinite(v) ? v : NaN;
+  let s = String(v == null ? '' : v)
+    .replace(/[%\s$]/g, '')
+    .trim();
+  if (!s) return NaN;
+  if (s.includes(',') && s.includes('.'))
+    s =
+      s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+  else if (s.includes(',')) s = s.replace(',', '.');
+  return /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN;
+}
+const MESES_PM: Readonly<Record<string, number>> = {
+  ene: 1,
+  feb: 2,
+  mar: 3,
+  abr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  ago: 8,
+  sep: 9,
+  set: 9,
+  oct: 10,
+  nov: 11,
+  dic: 12,
+  jan: 1,
+  apr: 4,
+  aug: 8,
+  dec: 12
+};
+function isoValida(y: number, m: number, d: number): string | null {
+  if (y < 100) y += 2000;
+  if (y < 1990 || y > 2100 || m < 1 || m > 12 || d < 1) return null;
+  if (d > new Date(Date.UTC(y, m, 0)).getUTCDate()) return null;
+  return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+}
+/**
+ * pmFecha: fecha desde Excel o texto (número de serie, 30/06/2022, 2022-06-30, 30/jun/2022, "30 de junio de 2022",
+ * "junio 30 de 2022"). Devuelve AAAA-MM-DD o null.
+ */
+export function fechaPlan(v: unknown): string | null {
+  if (v == null || v === '') return null;
+  if (v instanceof Date && !isNaN(v.getTime()))
+    return isoValida(v.getFullYear(), v.getMonth() + 1, v.getDate());
+  if (typeof v === 'number') {
+    if (v < 20000 || v > 80000) return null;
+    const d = new Date(Math.round((v - 25569) * 86400000));
+    return isoValida(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
+  }
+  const s = llave(v).replace(/[()]/g, ' ');
+  let m = s.match(/(\d{4}) (\d{1,2}) (\d{1,2})/);
+  if (m) return isoValida(+(m[1] as string), +(m[2] as string), +(m[3] as string));
+  m = s.match(/(\d{1,2}) (\d{1,2}) (\d{2,4})/);
+  if (m) return isoValida(+(m[3] as string), +(m[2] as string), +(m[1] as string));
+  m = s.match(/(\d{1,2}) (?:de )?([a-z]{3,})\.? (?:de |del )?(\d{2,4})/);
+  const mes1 = m ? MESES_PM[(m[2] as string).slice(0, 3)] : undefined;
+  if (m && mes1) return isoValida(+(m[3] as string), mes1, +(m[1] as string));
+  m = s.match(/([a-z]{3,}) (\d{1,2}) (?:de |del )?(\d{4})/);
+  const mes2 = m ? MESES_PM[(m[1] as string).slice(0, 3)] : undefined;
+  if (m && mes2) return isoValida(+(m[3] as string), mes2, +(m[2] as string));
+  return null;
+}
+
+// ---------- validaciones de los formularios (pmSavePlan, pmSaveHall, pmSaveAcc, pmSaveAv, pmDoReview) ----------
+export function validarPlan(
+  o: Pick<Plan, 'contraloria' | 'ejercicio' | 'fecha_suscripcion'> & { fecha_informe?: string | null }
+) {
+  if (!o.contraloria) return 'Indica la contraloría';
+  if (o.ejercicio.length < 4) return 'Escribe el nombre del ejercicio de fiscalización';
+  if (!fechaPlan(o.fecha_suscripcion)) return 'Indica la fecha de suscripción del plan';
+  if (o.fecha_informe && !fechaPlan(o.fecha_informe)) return 'La fecha del informe no es válida';
+  return null;
+}
+export function validarHallazgo(o: {
+  numero: string;
+  descripcion: string;
+  cuantiaTexto: string;
+  cuantia: number | null;
+}) {
+  if (!o.numero) return 'Indica el número del hallazgo';
+  if (o.descripcion.length < 4) return 'Describe el hallazgo';
+  if (o.cuantiaTexto && (o.cuantia == null || isNaN(o.cuantia) || o.cuantia < 0))
+    return 'La cuantía debe ser un número';
+  return null;
+}
+/** Errores que impiden guardar una acción (las advertencias de redacción van aparte: problemasAccion). */
+export function validarAccion(
+  o: Pick<Accion, 'accion' | 'unidad_medida' | 'cantidad' | 'fecha_inicio' | 'fecha_fin' | 'dependencia_id'>
+) {
+  if (o.accion.length < 4) return 'Describe la acción';
+  if (!o.unidad_medida) return 'Indica la unidad de medida';
+  if (!(Number(o.cantidad) > 0)) return 'La cantidad de la meta debe ser mayor que cero';
+  if (!fechaPlan(o.fecha_inicio) || !fechaPlan(o.fecha_fin))
+    return 'Indica las fechas de inicio y de terminación';
+  if ((o.fecha_fin as string) < (o.fecha_inicio as string))
+    return 'La fecha de terminación no puede ser anterior a la de inicio';
+  if (!o.dependencia_id) return 'Asigna la dependencia responsable: sin ella nadie podrá reportar el avance';
+  return null;
+}
+export function validarAvance(
+  o: { fecha_corte: string; cantidad: number; descripcion: string; radicado_orfeo: string },
+  archivo: { nombre: string; tipo: string; tamano: number } | null,
+  hoy: string
+) {
+  if (!fechaPlan(o.fecha_corte)) return 'Indica la fecha de corte';
+  if (o.fecha_corte > hoy) return 'La fecha de corte no puede ser futura';
+  if (isNaN(o.cantidad) || o.cantidad < 0) return 'El avance debe ser un número mayor o igual a cero';
+  if (o.descripcion.length < 10) return 'Describe el avance (mínimo 10 caracteres)';
+  if (o.radicado_orfeo && !/^\d{10,20}$/.test(o.radicado_orfeo))
+    return 'El radicado ORFEO debe tener entre 10 y 20 dígitos';
+  if (!archivo && !o.radicado_orfeo) return 'Adjunta el PDF del soporte o indica el radicado ORFEO';
+  if (archivo && archivo.tipo && archivo.tipo !== 'application/pdf' && !/\.pdf$/i.test(archivo.nombre))
+    return 'El soporte debe ser un archivo PDF';
+  if (archivo && archivo.tamano > 10 * 1024 * 1024) return 'El PDF supera 10 MB';
+  return null;
+}
+export const validarDevolucion = (estado: string, obs: string) =>
+  estado === 'devuelto' && txt(obs).length < 5
+    ? 'Indica a la dependencia por qué se devuelve el avance'
+    : null;
+/** ¿Puede reportar avance? (pmCanReport): quien edita planes, o secretaría y enlace en su dependencia. */
+export const puedeReportar = (a: Pick<Accion, 'dependencia_id'> | null, rol: string, dep: number | null) =>
+  !!a &&
+  (['admin', 'control_interno'].includes(rol) ||
+    (['secretario', 'enlace'].includes(rol) && !!dep && String(a.dependencia_id) === String(dep)));
+export const puedeEditarPlanes = (rol: string) => ['admin', 'control_interno'].includes(rol);
+export const TIPOS_EJERCICIO = [
+  'Auditoría financiera y de gestión',
+  'Auditoría de cumplimiento',
+  'Auditoría de desempeño',
+  'Actuación especial de fiscalización',
+  'Otra'
+];
