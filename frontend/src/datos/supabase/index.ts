@@ -12,6 +12,7 @@ import type { Requerimiento } from '../../dominio/requerimientos';
 import type { Database, Json } from './tipos.generados';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { rutaSoporte } from '../../dominio/requerimientos';
+import type { Accion, Avance, Hallazgo, Plan, Traslado } from '../../dominio/planes';
 import {
   esRespaldo,
   type CargaExcel,
@@ -423,6 +424,42 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           }))
         );
         return { filas, corte: fechaDeCorte(filas) };
+      }
+    },
+    planes: {
+      async datos() {
+        // pmAll de la 2.x: cada tabla por páginas de 1000, en orden y por id
+        const todo = async <T>(tabla: string, orden: string): Promise<T[]> => {
+          let desde = 0,
+            out: T[] = [];
+          for (;;) {
+            const { data, error } = await sb
+              .from(tabla as 'pm_planes')
+              .select('*')
+              .order(orden as 'id')
+              .order('id')
+              .range(desde, desde + 999);
+            if (error) throw new ErrorDatos('otro', error.message);
+            out = out.concat((data ?? []) as unknown as T[]);
+            if ((data ?? []).length < 1000) break;
+            desde += 1000;
+          }
+          return out;
+        };
+        const [planes, hallazgos, acciones, avances] = await Promise.all([
+          todo<Plan>('pm_planes', 'fecha_suscripcion'),
+          todo<Hallazgo>('pm_hallazgos', 'orden'),
+          todo<Accion>('pm_acciones', 'orden'),
+          todo<Avance>('pm_avances', 'created_at')
+        ]);
+        // Traslados (script 18): si la tabla no está o el rol no la ve, se sigue sin ellos (igual que la 2.x)
+        let traslados: Traslado[] | null;
+        try {
+          traslados = await todo<Traslado>('pm_traslados', 'created_at');
+        } catch {
+          traslados = null;
+        }
+        return { planes, hallazgos, acciones, avances, traslados };
       }
     },
     sistema: {

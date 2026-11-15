@@ -9,6 +9,7 @@ import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import type { ArchivoSoporte } from '../../dominio/huella-archivo';
 import type { AccionCuenta, Cuenta } from '../../dominio/cuentas';
+import type { DatosPlanes } from '../../dominio/planes';
 import type { FilaHistorico } from '../../dominio/excel-control/lectura';
 import type {
   ArchivoRespaldo,
@@ -260,6 +261,13 @@ export interface RepositorioSistema {
   ultimasCargas(): Promise<CargaExcel[] | null>;
 }
 
+// ---------- planes de mejoramiento (hoy: pm_planes, pm_hallazgos, pm_acciones, pm_avances, pm_traslados; scripts 13
+// y 18) ----------
+export interface RepositorioPlanes {
+  /** Planes, hallazgos, acciones y avances que el usuario puede ver (RLS); traslados solo para supervisión. */
+  datos(): Promise<DatosPlanes>;
+}
+
 /** Todo lo que la aplicación puede pedir a los datos. Crece módulo por módulo (plan §7.2, tabla de contratos). */
 export interface Datos {
   auth: RepositorioAuth;
@@ -273,6 +281,7 @@ export interface Datos {
   requerimientos: RepositorioRequerimientos;
   cuentas: RepositorioCuentas;
   sistema: RepositorioSistema;
+  planes: RepositorioPlanes;
   /** Cuenta institucional desde la que se redactan los correos (remitente de configuracion.json). */
   remitente?: string;
 }
