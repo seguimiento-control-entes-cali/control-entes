@@ -61,6 +61,8 @@ export interface Plan {
   estado: string;
   observaciones?: string;
   resolucion?: string;
+  /** Dirección técnica responsable (columna del PM_01 que se importa del archivo). */
+  direccion_tecnica?: string;
 }
 export interface Hallazgo {
   id: string;
