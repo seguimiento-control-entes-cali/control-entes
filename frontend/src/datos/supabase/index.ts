@@ -532,6 +532,12 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           p_observacion: observacion || ''
         });
         if (error) throw errorPlanes(error);
+      },
+      // pmImportar de la 2.x: todo en una transacción en la base (pm_importar)
+      async importar(carga) {
+        const { data, error } = await sb.rpc('pm_importar', { p: carga } as never);
+        if (error) throw errorPlanes(error);
+        return String(data);
       }
     },
     sistema: {
