@@ -1,0 +1,489 @@
+// Planes de mejoramiento · reglas centrales. Copia de la 2.x (src/js/19-planes-de-mejoramiento.js y
+// 19-planes-norma-y-memoria.js): cálculo del Formulario 14.1 de la CGR (pmSemanas, pmPct, pmAvAl, pmIndic), estado de
+// cada acción (pmEstado, pmCounts), calificación de la Contraloría General de Santiago de Cali (pmCumpSug, pmCalAcc,
+// pmCalCgsc), resolución aplicable (pmRes) y revisión de calidad de datos (pmCalidad, pmAccIssues). `hoy` se recibe
+// como dato. Paridad comprobada en pruebas/paridad-planes.test.ts.
+import { textoCorto } from './actividad';
+import { diasEntre } from './fechas';
+
+export const ALERTA_DIAS = 30;
+export const FORMATOS: Readonly<Record<string, { corto: string; nombre: string; contraloria: string }>> = {
+  PM_01_CGSC: {
+    corto: 'CGSC',
+    nombre: 'Formato PM_01 CGSC',
+    contraloria: 'Contraloría General de Santiago de Cali'
+  },
+  F14_CGR: {
+    corto: 'CGR',
+    nombre: 'Formularios 14 y 14.1',
+    contraloria: 'Contraloría General de la República'
+  },
+  OTRO: { corto: 'Otro', nombre: 'Otro formato', contraloria: '' }
+};
+export const formatoDe = (p: { formato: string }) =>
+  FORMATOS[p.formato] ?? (FORMATOS.OTRO as (typeof FORMATOS)[string]);
+export const CONNOTACIONES: Readonly<Record<string, string>> = {
+  administrativa: 'Administrativa',
+  disciplinaria: 'Disciplinaria',
+  fiscal: 'Fiscal',
+  penal: 'Penal',
+  sancionatoria: 'Sancionatoria',
+  otra: 'Otra incidencia'
+};
+export const ESTADO_PLAN: Readonly<Record<string, string>> = {
+  formulacion: 'En formulación',
+  en_ejecucion: 'En ejecución',
+  cerrado: 'Cerrado'
+};
+export const ESTADO_AVANCE: Readonly<Record<string, string>> = {
+  reportado: 'Por validar',
+  validado: 'Validado',
+  devuelto: 'Devuelto'
+};
+
+export interface Plan {
+  id: string;
+  formato: string;
+  contraloria: string;
+  entidad?: string;
+  nit?: string;
+  representante_legal?: string;
+  ordenador_gasto?: string;
+  ejercicio: string;
+  tipo_ejercicio?: string;
+  modalidad?: string;
+  vigencia_pvcft?: string;
+  periodo_auditado?: string;
+  numero_informe?: string;
+  radicado_orfeo?: string;
+  fecha_informe?: string | null;
+  fecha_suscripcion: string;
+  estado: string;
+  observaciones?: string;
+  resolucion?: string;
+}
+export interface Hallazgo {
+  id: string;
+  plan_id: string;
+  numero: string;
+  descripcion: string;
+  causa?: string;
+  efecto?: string;
+  connotaciones?: string[] | null;
+  cuantia?: number | null;
+  macroproceso?: string;
+  orden?: number | null;
+  dependencia_id?: number | null;
+  dependencia_texto?: string;
+}
+export interface Accion {
+  id: string;
+  plan_id: string;
+  hallazgo_id: string;
+  dependencia_id: number | null;
+  responsable?: string;
+  accion: string;
+  proposito?: string;
+  actividad?: string;
+  meta?: string;
+  unidad_medida?: string;
+  cantidad: number | null;
+  fuente_verificacion?: string;
+  lugar_verificacion?: string;
+  fecha_inicio: string | null;
+  fecha_fin: string;
+  fecha_fin_original?: string | null;
+  avance: number | null;
+  fecha_corte: string | null;
+  orden?: number | null;
+  cal_cumplimiento?: number | null;
+  cal_efectividad?: number | null;
+  obs_ci?: string | null;
+  obs_ci_estado?: string | null;
+}
+export interface Avance {
+  id: string;
+  accion_id: string;
+  plan_id: string;
+  dependencia_id: number | null;
+  fecha_corte: string;
+  cantidad: number;
+  descripcion: string;
+  estado: 'reportado' | 'validado' | 'devuelto';
+  radicado_orfeo?: string;
+  soporte_path?: string | null;
+  soporte_hash?: string | null;
+  observacion?: string;
+  reportado_email?: string;
+  revisado_email?: string;
+  revisado_at?: string | null;
+  created_at: string;
+}
+export interface Traslado {
+  hallazgo_id: string;
+  tipo: string;
+}
+
+/** Lo que ve cada usuario de los planes (secretario y enlace: solo lo de su dependencia). */
+export interface DatosPlanes {
+  planes: Plan[];
+  hallazgos: Hallazgo[];
+  acciones: Accion[];
+  avances: Avance[];
+  /** Traslados de los hallazgos (script 18): null si no están instalados; vacío para secretario y enlace. */
+  traslados?: Traslado[] | null;
+}
+
+// ---------- utilidades de texto ----------
+/** pmTxt: espacios normalizados conservando los saltos de línea. */
+export const txt = (v: unknown) =>
+  String(v == null ? '' : v)
+    .replace(/\u00a0/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s*\n\s*/g, '\n')
+    .trim();
+/** pmKey: texto para comparar (sin tildes ni símbolos). */
+export const llave = (s: unknown) =>
+  String(s == null ? '' : s)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[º°ª]/g, ' ')
+    .replace(/[^a-z0-9%()]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+/** pmPctTxt. */
+export const pctTxt = (v: number | null | undefined) =>
+  v == null ? '—' : (Math.round(v * 1000) / 10).toLocaleString('es-CO') + '%';
+/** pmNumTxt. */
+export const numTxt = (v: unknown) => Number(v || 0).toLocaleString('es-CO', { maximumFractionDigits: 2 });
+/** pmMetaTxt: meta en palabras + cantidad ("100% de supervisores capacitados" o "6 Conciliaciones"). */
+export function metaTxt(a: Pick<Accion, 'unidad_medida' | 'cantidad' | 'meta'>): string {
+  const pct = llave(a.unidad_medida).startsWith('porcent'),
+    q = pct ? numTxt(a.cantidad) + '%' : numTxt(a.cantidad) + ' ' + (a.unidad_medida || '');
+  if (!txt(a.meta)) return q;
+  return pct && Number(a.cantidad) === 100 ? txt(a.meta) : txt(a.meta) + ' · ' + q;
+}
+
+// ---------- cálculo (Formulario 14.1 CGR) ----------
+//   Plazo (semanas) = (fecha fin − fecha inicio) / 7          % avance = mín(1, avance físico / cantidad de la meta)
+//   PLAI = plazo × % avance     PLAVI = PLAI si fecha fin ≤ fecha de evaluación, si no 0     PAAVI = plazo si vencida
+//   Cumplimiento (CPM) = Σ PLAVI / Σ PAAVI        Avance (AP) = Σ PLAI / Σ plazo
+export function semanas(a: Pick<Accion, 'fecha_inicio' | 'fecha_fin'>): number {
+  if (!a.fecha_inicio || !a.fecha_fin) return 0;
+  return Math.max(0, Math.round(diasEntre(a.fecha_inicio, a.fecha_fin)) / 7);
+}
+export function pct(a: Pick<Accion, 'cantidad' | 'avance'>, cant?: number | null): number {
+  const c = Number(a.cantidad) || 0,
+    v = cant == null ? Number(a.avance) || 0 : Number(cant) || 0;
+  return c > 0 ? Math.min(1, Math.max(0, v / c)) : 0;
+}
+/** pmAvAl: último avance VALIDADO con fecha de corte hasta la indicada (o el avance cargado en la acción). */
+export function avanceAl(
+  a: Accion,
+  corte: string,
+  avances: readonly Avance[]
+): { cantidad: number | null; fecha_corte: string } | null {
+  const l = avances
+    .filter(v => v.accion_id === a.id && v.estado === 'validado' && v.fecha_corte <= corte)
+    .sort(
+      (x, y) =>
+        String(y.fecha_corte).localeCompare(String(x.fecha_corte)) ||
+        String(y.revisado_at || '').localeCompare(String(x.revisado_at || ''))
+    );
+  const primero = l[0];
+  if (primero) return primero;
+  if (a.fecha_corte && a.fecha_corte <= corte) return { cantidad: a.avance, fecha_corte: a.fecha_corte };
+  return null;
+}
+export interface Indicadores {
+  n: number;
+  pbea: number;
+  pbec: number;
+  plai: number;
+  plavi: number;
+  cpm: number | null;
+  ap: number | null;
+}
+/** pmIndic: cumplimiento (CPM) y avance (AP) a la fecha de evaluación. */
+export function indicadores(lista: readonly Accion[], fev: string, avances: readonly Avance[]): Indicadores {
+  const o = { n: lista.length, pbea: 0, pbec: 0, plai: 0, plavi: 0 };
+  for (const a of lista) {
+    const av = avanceAl(a, fev, avances),
+      p = pct(a, av ? av.cantidad : 0),
+      s = semanas(a);
+    o.pbea += s;
+    o.plai += s * p;
+    if (a.fecha_fin <= fev) {
+      o.pbec += s;
+      o.plavi += s * p;
+    }
+  }
+  return {
+    ...o,
+    cpm: o.pbec ? o.plavi / o.pbec : null,
+    ap: o.pbea ? o.plai / o.pbea : lista.length ? 0 : null
+  };
+}
+
+export type EstadoAccion = 'cumplida' | 'vencida' | 'proxima' | 'termino';
+/** pmEstado: estado de una acción hoy. */
+export function estadoAccion(
+  a: Pick<Accion, 'cantidad' | 'avance' | 'fecha_fin'>,
+  hoy: string
+): { k: EstadoAccion; pill: 'verde' | 'rojo' | 'amarillo' | 'neutral'; txt: string; d: number } {
+  const p = pct(a),
+    d = diasEntre(hoy, a.fecha_fin);
+  if (p >= 1) return { k: 'cumplida', pill: 'verde', txt: 'Cumplida', d };
+  if (d < 0) return { k: 'vencida', pill: 'rojo', txt: 'Vencida', d };
+  if (d <= ALERTA_DIAS)
+    return { k: 'proxima', pill: 'amarillo', txt: d === 0 ? 'Vence hoy' : `Vence en ${d} d`, d };
+  return { k: 'termino', pill: 'neutral', txt: 'En término', d };
+}
+/** pmPend: avance reportado pendiente de validación. */
+export const pendiente = (a: Pick<Accion, 'id'>, avances: readonly Avance[]) =>
+  avances.find(v => v.accion_id === a.id && v.estado === 'reportado') ?? null;
+/** pmUltimo: el avance más reciente. */
+export const ultimo = (a: Pick<Accion, 'id'>, avances: readonly Avance[]) =>
+  avances
+    .filter(v => v.accion_id === a.id)
+    .sort((x, y) => String(y.created_at || '').localeCompare(String(x.created_at || '')))[0] ?? null;
+export interface Conteo {
+  n: number;
+  cumplida: number;
+  vencida: number;
+  proxima: number;
+  termino: number;
+  pend: number;
+  dev: number;
+  sinDep: number;
+}
+/** pmCounts. */
+export function conteos(lista: readonly Accion[], hoy: string, avances: readonly Avance[]): Conteo {
+  const o: Conteo = {
+    n: lista.length,
+    cumplida: 0,
+    vencida: 0,
+    proxima: 0,
+    termino: 0,
+    pend: 0,
+    dev: 0,
+    sinDep: 0
+  };
+  for (const a of lista) {
+    o[estadoAccion(a, hoy).k]++;
+    if (pendiente(a, avances)) o.pend++;
+    const u = ultimo(a, avances);
+    if (u && u.estado === 'devuelto') o.dev++;
+    if (!a.dependencia_id) o.sinDep++;
+  }
+  return o;
+}
+
+// ---------- calificación de la Contraloría General de Santiago de Cali (PM_01) ----------
+//   Cumplimiento del plan = promedio(cumplimiento) × 100 / 2      Efectividad = promedio(efectividad) × 100 / 2
+//   Calificación = cumplimiento × 0,2 + efectividad × 0,8          Solo promedian las acciones calificadas.
+export const UMBRAL_CGSC = 80;
+export const TEXTO_CALIFICACION: Readonly<Record<number, string>> = {
+  0: 'No cumple',
+  1: 'Cumple parcialmente',
+  2: 'Cumple'
+};
+/** pmCumpSug: 2 si la meta se cumplió; 0 si venció sin cumplir; null si sigue en término. */
+export function cumplimientoSugerido(a: Accion, fev: string, avances: readonly Avance[]): number | null {
+  const av = avanceAl(a, fev, avances);
+  const p = av ? pct(a, av.cantidad) : 0;
+  if (p >= 1) return 2;
+  if (a.fecha_fin && a.fecha_fin <= fev) return 0;
+  return null;
+}
+/** pmCalAcc. */
+export function calificacionAccion(a: Accion, fev: string, avances: readonly Avance[]) {
+  const sug = cumplimientoSugerido(a, fev, avances);
+  const c = a.cal_cumplimiento != null ? a.cal_cumplimiento : sug;
+  const e = a.cal_efectividad != null ? a.cal_efectividad : null;
+  return { c, e, sug, manual: a.cal_cumplimiento != null, estado: c === 2 && e === 2 ? 'C' : 'A' };
+}
+/** pmCalCgsc. */
+export function calificacionCgsc(acc: readonly Accion[], fev: string, avances: readonly Avance[]) {
+  const cs: number[] = [],
+    es: number[] = [];
+  let sinEf = 0;
+  for (const a of acc) {
+    const r = calificacionAccion(a, fev, avances);
+    if (r.c != null) cs.push(r.c);
+    if (r.e != null) es.push(r.e);
+    else if (r.c != null) sinEf++;
+  }
+  const prom = (l: number[]) => (l.length ? (l.reduce((t, x) => t + x, 0) / l.length) * 50 : 0);
+  const C = prom(cs),
+    E = prom(es),
+    T = C * 0.2 + E * 0.8;
+  return {
+    C,
+    E,
+    T,
+    nC: cs.length,
+    nE: es.length,
+    sinEf,
+    n: acc.length,
+    concepto: cs.length ? (T >= UMBRAL_CGSC ? 'Cumple' : 'No cumple') : null
+  };
+}
+/** pmPts: puntos con un decimal. */
+export const puntos = (x: number) =>
+  (Math.round(x * 10) / 10).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+// ---------- resolución aplicable (Contraloría General de Santiago de Cali) ----------
+export const RESOLUCIONES: Readonly<
+  Record<
+    string,
+    { nombre: string; corta: string; escala: number[]; plazoMeses: number | null; plazoTxt: string }
+  >
+> = {
+  '24.043': {
+    nombre: 'Resolución Reglamentaria 1000.30.00.24.043 del 17 de junio de 2024',
+    corta: 'Res. 24.043',
+    escala: [2, 0],
+    plazoMeses: 6,
+    plazoTxt: 'seis (6) meses (art. 5)'
+  },
+  '24.003': {
+    nombre: 'Resolución Reglamentaria 1000.30.00.24.003 del 16 de enero de 2024',
+    corta: 'Res. 24.003',
+    escala: [2, 1, 0],
+    plazoMeses: 12,
+    plazoTxt: 'un (1) año (art. 5)'
+  },
+  anterior: {
+    nombre: 'Resolución anterior al 24 de enero de 2024 (verifique la aplicable)',
+    corta: 'Resolución anterior',
+    escala: [2, 1, 0],
+    plazoMeses: null,
+    plazoTxt: ''
+  }
+};
+/**
+ * pmRes (igual a public.pm_resolucion_de() del script 20): presentados del 24-ene-2024 al 31-dic-2024 → 24.003; desde
+ * el 1-ene-2025 → 24.043 (por la fecha de suscripción); se puede fijar a mano en el plan.
+ */
+export function resolucion(p: Pick<Plan, 'formato' | 'resolucion' | 'fecha_suscripcion'> | null): string {
+  if (!p || p.formato !== 'PM_01_CGSC') return '';
+  if (p.resolucion) return p.resolucion;
+  const f = p.fecha_suscripcion;
+  if (!f || f >= '2025-01-01') return '24.043';
+  if (f >= '2024-01-24') return '24.003';
+  return 'anterior';
+}
+export const resolucionInfo = (p: Parameters<typeof resolucion>[0]) => RESOLUCIONES[resolucion(p)] ?? null;
+/** pmMasMeses: la fecha más n meses (con el desborde de fin de mes de JavaScript, igual que la 2.x). */
+export function masMeses(iso: string, m: number): string {
+  const [y, mo, d] = iso.split('-').map(Number) as [number, number, number];
+  const f = new Date(Date.UTC(y, mo - 1 + m, d));
+  return f.toISOString().slice(0, 10);
+}
+
+// ---------- calidad de datos ----------
+const fechaCorta = (s: string | null | undefined) =>
+  s ? String(s).slice(0, 10).split('-').reverse().join('/') : '—';
+
+/** pmAccIssues: problemas de redacción y plazo de una acción. */
+export function problemasAccion(a: Accion, p: Plan | null): string[] {
+  const out: string[] = [];
+  const acc = txt(a.accion);
+  const primera = llave(acc.split(/\s+/)[0] || '');
+  if (acc && !/(ar|er|ir)$/.test(primera))
+    out.push('La acción debería empezar con un verbo en infinitivo (implementar, elaborar, realizar…).');
+  const meta = txt(a.meta) + ' ' + (a.cantidad != null ? a.cantidad : '');
+  if (!/\d|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|cien|total/i.test(meta))
+    out.push('La meta no es medible: incluya una cantidad o un porcentaje.');
+  if (!txt(a.fuente_verificacion))
+    out.push('Falta la fuente de verificación (la evidencia que se entregará).');
+  // art. 5: 24.043 → seis (6) meses; 24.003 → un (1) año. Una prórroga concedida (art. 16) no cuenta.
+  const ri = resolucionInfo(p);
+  const max = ri && ri.plazoMeses;
+  const base = (p && p.fecha_suscripcion) || a.fecha_inicio;
+  const fin = a.fecha_fin_original || a.fecha_fin;
+  if (ri && max && base && fin && fin > masMeses(base, max))
+    out.push(
+      `La fecha de terminación supera ${ri.plazoTxt} desde la suscripción (${ri.corta}; vence ${fechaCorta(fin)}).`
+    );
+  return out;
+}
+/** pmIncidencias: connotaciones que exigen traslado. */
+export const incidencias = (h: Pick<Hallazgo, 'connotaciones'>) =>
+  (h.connotaciones ?? []).filter(c =>
+    ['disciplinaria', 'fiscal', 'penal', 'sancionatoria', 'otra'].includes(c)
+  );
+export interface ProblemaCalidad {
+  nivel: 'r' | 'y';
+  txt: string;
+  act: string;
+  id: string;
+}
+/** pmCalidad: todo lo que impide medir o exportar correctamente el plan (lo rojo primero). */
+export function calidadPlan(
+  p: Plan,
+  hall: readonly Hallazgo[],
+  acc: readonly Accion[],
+  todas: readonly Accion[],
+  avances: readonly Avance[],
+  traslados: readonly Traslado[] | null,
+  hoy: string
+): ProblemaCalidad[] {
+  const out: ProblemaCalidad[] = [];
+  const add = (nivel: 'r' | 'y', t: string, act: string, id: string) => out.push({ nivel, txt: t, act, id });
+  if (!p.fecha_suscripcion) add('r', 'El plan no tiene fecha de suscripción', 'pmEditPlan', p.id);
+  if (p.formato === 'F14_CGR' && !p.nit)
+    add('y', 'Falta el NIT de la entidad (lo exige el Formulario 14)', 'pmEditPlan', p.id);
+  if (!p.representante_legal)
+    add('y', 'Falta el nombre del representante legal para las firmas del formato', 'pmEditPlan', p.id);
+  for (const h of hall) {
+    if (!acc.some(a => a.hallazgo_id === h.id))
+      add('r', `El hallazgo ${h.numero} no tiene acciones`, 'pmNewAcc', h.id);
+    for (const a of todas.filter(x => x.hallazgo_id === h.id)) {
+      const l = problemasAccion(a, p);
+      if (l.length)
+        add(
+          'y',
+          `Hallazgo ${h.numero}: ${l[0]}${l.length > 1 ? ` (y ${l.length - 1} más)` : ''}`,
+          'pmEditAcc',
+          a.id
+        );
+      if (a.obs_ci_estado === 'pendiente')
+        add('y', `Hallazgo ${h.numero}: observación de Control Interno pendiente`, 'pmEditAcc', a.id);
+    }
+    if (traslados) {
+      const sinTras = incidencias(h).filter(
+        c => !traslados.some(t => t.hallazgo_id === h.id && t.tipo === c)
+      );
+      if (sinTras.length)
+        add(
+          'y',
+          `El hallazgo ${h.numero} tiene incidencia ${sinTras.join(', ')} sin traslado registrado`,
+          'pmNewTras',
+          h.id
+        );
+    }
+    if (!(h.connotaciones ?? []).length && p.formato === 'PM_01_CGSC')
+      add('y', `El hallazgo ${h.numero} no tiene connotación`, 'pmEditHall', h.id);
+  }
+  for (const a of acc) {
+    const h = hall.find(x => x.id === a.hallazgo_id),
+      n = `Hallazgo ${h?.numero || '?'} · «${textoCorto(a.accion, 60)}»`;
+    if (!a.dependencia_id)
+      add('r', `${n}: sin dependencia asignada (nadie la ve ni la reporta)`, 'pmEditAcc', a.id);
+    if (semanas(a) === 0)
+      add('y', `${n}: inicio y fin el mismo día, no pesa en los indicadores`, 'pmEditAcc', a.id);
+    if (p.fecha_suscripcion && a.fecha_fin < p.fecha_suscripcion)
+      add('r', `${n}: termina antes de la suscripción del plan`, 'pmEditAcc', a.id);
+    if (!txt(a.meta) && p.formato === 'PM_01_CGSC')
+      add('y', `${n}: sin meta (columna 11 del PM_01)`, 'pmEditAcc', a.id);
+    if (!txt(a.fuente_verificacion)) add('y', `${n}: sin fuente de verificación`, 'pmEditAcc', a.id);
+    if (p.formato === 'F14_CGR' && !txt(a.actividad))
+      add('y', `${n}: sin descripción de actividades (Formulario 14)`, 'pmEditAcc', a.id);
+    if (estadoAccion(a, hoy).k === 'vencida' && !pendiente(a, avances))
+      add('r', `${n}: vencida sin cumplir y sin avance en validación`, 'pmOpenAcc', a.id);
+  }
+  return out.sort((a, b) => (a.nivel === 'r' ? 0 : 1) - (b.nivel === 'r' ? 0 : 1));
+}

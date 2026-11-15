@@ -12,6 +12,7 @@ import {
 } from '../contratos';
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { semillaRequerimientos } from './requerimientos-semilla';
+import { semillaPlanes, vistaPorDependencia } from './planes-semilla';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import type { Requerimiento } from '../../dominio/requerimientos';
@@ -105,6 +106,8 @@ export function datosDemo(): Datos {
   // Requerimientos del módulo operativo (los mismos 15 de la 2.x, con fechas relativas a hoy)
   const reqs: Requerimiento[] = semillaRequerimientos(fechaColombia(new Date()));
   const alertasLog: { requerimiento_id: string; canal: string }[] = [];
+  // Planes de mejoramiento de la demostración (los mismos de la 2.x, ficticios)
+  const planes = semillaPlanes(fechaColombia(new Date()));
   // Histórico después de cargar un Excel en la demostración (si no, el de ejemplo)
   let historicoCargado: { filas: RadicadoHistorico[]; corte: string } | null = null;
   // Configuración de la demostración (en memoria; el semáforo la usa al momento)
@@ -361,6 +364,18 @@ export function datosDemo(): Datos {
           p.correo
         );
         return { registros: c.filas.length, demo: true };
+      }
+    },
+    planes: {
+      async datos() {
+        const p = actual?.perfil;
+        // pmDemoView de la 2.x: secretario y enlace solo ven lo de su dependencia y no ven traslados
+        if (p && ['secretario', 'enlace'].includes(p.rol))
+          return {
+            ...JSON.parse(JSON.stringify(vistaPorDependencia(planes, p.dependenciaId))),
+            traslados: []
+          };
+        return { ...JSON.parse(JSON.stringify(planes)), traslados: [] };
       }
     },
     sistema: {

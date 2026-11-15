@@ -2,8 +2,6 @@
 // renderQueue de src/js/12-centro-de-mando.js, y las acciones tmFilter, tmSel, tmVentana, qVig y openOrg de
 // 18-acciones.js). Solo supervisión (admin, alcalde y Control Interno) lo tiene en el menú. Mismo HTML y clases de
 // la 2.x (cmd, states, tm, tile, tm-det, ticker, trio, brief, seg, tbl).
-// Pendiente para pantallas posteriores: tarjeta de planes de mejoramiento (pmResumenMando, con Planes) y los botones
-// de WhatsApp "Modo despacho" y "Notificar" (con Notificaciones).
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -43,6 +41,7 @@ import {
 } from '../../dominio/mando';
 import { Aviso, Icono } from '../../shared/ui';
 import { useNotificar } from '../notificaciones/Ventanas';
+import { TarjetaPlanesMando } from '../planes/ResumenPlanes';
 import { useDatos } from '../sesion/contexto';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
@@ -415,6 +414,7 @@ export function PantallaMando({ perfil, demo = false }: { perfil: Perfil; demo?:
           <small>incumplimiento histórico</small>
         </button>
       </div>
+      <TarjetaPlanesMando />
       <div className="card brief" id="brief">
         <div className="brief-h">
           <Icono nombre="fa-chart-line" />

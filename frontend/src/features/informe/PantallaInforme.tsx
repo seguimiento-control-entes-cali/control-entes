@@ -2,7 +2,6 @@
 // src/js/16-informe-ejecutivo.js, y la acción rpCsv de 18-acciones.js). Secretario y enlace ven el informe de su
 // dependencia ("Informe de mi dependencia"). "Descargar PDF" registra el informe con su huella y abre la impresión.
 // Mismo HTML y clases de la 2.x (toolbar, paper, rsec, rhead, rgrid, rk, rt, rsmall, rflow, rfoot).
-// Pendiente para la pantalla de Planes: la sección de planes de mejoramiento (pmSeccionInforme).
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import type { Perfil } from '../../datos/contratos';
@@ -32,6 +31,7 @@ import {
 import { nombrePlantilla } from '../../dominio/notificaciones';
 import { descargarCsv } from '../../shared/lib';
 import { Aviso, Icono, useAvisos } from '../../shared/ui';
+import { SeccionPlanesInforme } from '../planes/ResumenPlanes';
 import { useDatos } from '../sesion/contexto';
 import escudo from '../../../../src/assets/escudo.png';
 
@@ -561,6 +561,7 @@ export function PantallaInforme({ perfil, demo = false }: { perfil: Perfil; demo
             </table>
           </div>
         )}
+        <SeccionPlanesInforme org={m.org} num={nCasos + (casos ? 1 : 0)} />
         {m.nots.length > 0 && (
           <div className="rsec">
             <h2>Notificaciones enviadas</h2>

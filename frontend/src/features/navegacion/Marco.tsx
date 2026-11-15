@@ -26,6 +26,7 @@ import { PantallaAlertas } from '../requerimientos/PantallaAlertas';
 import { PantallaReportes } from '../requerimientos/PantallaReportes';
 import { PantallaCuentas } from '../cuentas/PantallaCuentas';
 import { PantallaConfiguracion } from '../configuracion/PantallaConfiguracion';
+import { PantallaPlanes } from '../planes/PantallaPlanes';
 import { VISTAS_CON_VIGENCIA } from '../../dominio/requerimientos';
 import escudo from '../../../../src/assets/escudo.png';
 
@@ -231,6 +232,9 @@ export function Marco({
                 )}
                 {textos.has('reportes') && <Route path="/reportes" element={<PantallaReportes />} />}
                 {textos.has('cuentas') && <Route path="/cuentas" element={<PantallaCuentas />} />}
+                {textos.has('planes') && (
+                  <Route path="/planes" element={<PantallaPlanes perfil={perfil} demo={demo} />} />
+                )}
                 {textos.has('config') && (
                   <Route path="/config" element={<PantallaConfiguracion demo={demo} />} />
                 )}
