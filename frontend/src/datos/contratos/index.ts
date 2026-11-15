@@ -9,6 +9,7 @@ import type { RevisionCruce, TemaManual } from '../../dominio/cruces';
 import type { Requerimiento } from '../../dominio/requerimientos';
 import type { ArchivoSoporte } from '../../dominio/huella-archivo';
 import type { AccionCuenta, Cuenta } from '../../dominio/cuentas';
+import type { FilaHistorico } from '../../dominio/excel-control/lectura';
 import type {
   ArchivoRespaldo,
   CargaExcel,
@@ -122,6 +123,25 @@ export interface RepositorioDirectorio {
 export interface RepositorioHistorico {
   /** Todos los radicados del histórico (con los cierres de la app ya aplicados) y la fecha de corte. */
   radicados(): Promise<{ filas: RadicadoHistorico[]; corte: string }>;
+  /**
+   * Reemplaza las vigencias con lo leído del Excel de control (función cargar_historico, script 16; solo el Super
+   * administrador). Las respuestas registradas en la app con ORFEO y PDF se conservan.
+   */
+  cargarVigencias(c: {
+    vigencias: number[];
+    archivos: string[];
+    corte: string;
+    filas: FilaHistorico[];
+  }): Promise<ResultadoCargaExcel>;
+}
+/** Lo que responde cargar_historico (en la demostración, solo registros y demo). */
+export interface ResultadoCargaExcel {
+  registros: number;
+  abiertos_nuevos?: number;
+  abiertos_retirados?: number;
+  abiertos_conservados_con_escalamiento?: number;
+  respuestas_app_sin_caso?: number;
+  demo?: boolean;
 }
 
 // ---------- auditoria (hoy: audit_log y la función verificar_cadena_auditoria) ----------
