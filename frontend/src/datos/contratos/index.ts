@@ -275,7 +275,11 @@ export interface RepositorioPlanes {
   /** Planes, hallazgos, acciones y avances que el usuario puede ver (RLS); traslados solo para supervisión. */
   datos(): Promise<DatosPlanes>;
   /** Crea (sin id) o actualiza un plan, hallazgo o acción (Super administrador y Control Interno). Devuelve el id. */
-  guardar(tipo: 'plan' | 'hall' | 'acc', datos: Record<string, unknown>, id?: string | null): Promise<string>;
+  guardar(
+    tipo: 'plan' | 'hall' | 'acc' | 'pror' | 'inf',
+    datos: Record<string, unknown>,
+    id?: string | null
+  ): Promise<string>;
   /** Elimina un hallazgo (con sus acciones) o una acción; no se puede si tienen avances reportados. */
   eliminar(tipo: 'hall' | 'acc', id: string): Promise<void>;
   /** Elimina un plan completo (pm_eliminar_plan); no se puede si las dependencias ya reportaron avances. */
@@ -304,6 +308,13 @@ export interface RepositorioPlanes {
   moverDocumento(id: string, aPapelera: boolean): Promise<void>;
   /** Borra un documento definitivamente: solo el Super administrador y solo desde la papelera (pmDocPurgar). */
   purgarDocumento(d: DocumentoArchivo): Promise<void>;
+  /** Registra la decisión de la CGSC sobre una prórroga (pm_resolver_prorroga): concedida o negada. */
+  resolverProrroga(
+    id: string,
+    estado: 'concedida' | 'negada',
+    radicado: string,
+    fecha: string
+  ): Promise<void>;
   /** Planes, hallazgos, acciones y traslados eliminados que se pueden restaurar (pm_papelera). */
   papelera(): Promise<ElementoPapelera[]>;
   /** Restaura un elemento con lo que se eliminó junto con él (pm_restaurar); devuelve el resumen. */

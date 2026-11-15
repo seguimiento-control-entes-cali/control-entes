@@ -21,8 +21,11 @@ import {
   type Avance,
   type DocumentoArchivo,
   type Hallazgo,
-  type Plan
+  type InformeAvance,
+  type Plan,
+  type Prorroga
 } from '../../dominio/planes';
+import { requisitosProrroga } from '../../dominio/planes-norma';
 import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
@@ -122,6 +125,8 @@ export function datosDemo(): Datos {
   const planes = semillaPlanes(fechaColombia(new Date()));
   // Archivo documental y papelera de la demostración (en memoria: el contenido solo existe durante la sesión)
   let documentos: DocumentoArchivo[] = [];
+  const prorrogas: Prorroga[] = [];
+  const informesAvance: InformeAvance[] = [];
   const archivos = new Map<string, ArrayBuffer>();
   type Lista = 'planes' | 'hallazgos' | 'acciones' | 'avances';
   const papelera: (ElementoPapelera & { plan_id: string; filas: [Lista, object][]; restaurado?: boolean })[] =
@@ -488,8 +493,8 @@ export function datosDemo(): Datos {
           traslados: [],
           v19: true,
           v20: true,
-          prorrogas: [],
-          informes: [],
+          prorrogas: JSON.parse(JSON.stringify(prorrogas)) as Prorroga[],
+          informes: JSON.parse(JSON.stringify(informesAvance)) as InformeAvance[],
           documentos: JSON.parse(JSON.stringify(documentos)) as DocumentoArchivo[]
         };
       },
@@ -500,7 +505,11 @@ export function datosDemo(): Datos {
           ? planes.planes
           : tipo === 'hall'
             ? planes.hallazgos
-            : planes.acciones) as unknown as Record<string, unknown>[];
+            : tipo === 'pror'
+              ? prorrogas
+              : tipo === 'inf'
+                ? informesAvance
+                : planes.acciones) as unknown as Record<string, unknown>[];
         if (
           tipo === 'hall' &&
           planes.hallazgos.some(h => h.plan_id === o.plan_id && h.numero === o.numero && h.id !== id)
@@ -509,7 +518,28 @@ export function datosDemo(): Datos {
             'otro',
             'Ya existe un hallazgo con el número ' + String(o.numero) + ' en este plan'
           );
-        const tabla = tipo === 'plan' ? 'pm_planes' : tipo === 'hall' ? 'pm_hallazgos' : 'pm_acciones';
+        const tabla = (
+          {
+            plan: 'pm_planes',
+            hall: 'pm_hallazgos',
+            acc: 'pm_acciones',
+            pror: 'pm_prorrogas',
+            inf: 'pm_informes_avance'
+          } as const
+        )[tipo];
+        if (tipo === 'pror') {
+          const o2 = o as Partial<Prorroga>;
+          const dup = prorrogas.some(
+            x =>
+              x.estado !== 'negada' &&
+              x.tipo === o2.tipo &&
+              (o2.tipo === 'accion'
+                ? x.accion_id === o2.accion_id
+                : x.plan_id === o2.plan_id && (o2.tipo !== 'informe' || x.corte === o2.corte))
+          );
+          if (dup)
+            throw new ErrorDatos('otro', 'Ya existe una prórroga para este caso: solo se permite una vez');
+        }
         if (id) {
           const t = lista.find(x => x.id === id);
           if (!t) throw new ErrorDatos('otro', 'El registro no existe');
@@ -520,7 +550,8 @@ export function datosDemo(): Datos {
         }
         const nuevo: Record<string, unknown> = {
           ...o,
-          id: tipo[0] + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+          id: tipo[0] + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          created_at: new Date().toISOString()
         };
         if (tipo === 'acc') Object.assign(nuevo, { avance: 0, fecha_corte: null });
         lista.push(nuevo);
@@ -651,6 +682,36 @@ export function datosDemo(): Datos {
         documentos = documentos.filter(x => x.id !== d.id);
         archivos.delete(d.path);
         auditar('archivo_documentos', 'DELETE', d.id, d, p.correo);
+      },
+      // pmProrResolver de la 2.x en la demostración: al conceder una prórroga de acción, cambia la fecha de terminación
+      async resolverProrroga(id, estado, radicado, fecha) {
+        const usuario = editorPlanes('Solo Control Interno o el Super administrador registran prórrogas');
+        const pr = prorrogas.find(x => x.id === id);
+        if (!pr || pr.estado !== 'solicitada') throw new ErrorDatos('otro', 'La prórroga ya fue resuelta');
+        if (estado === 'concedida' && pr.tipo === 'accion') {
+          const a = planes.acciones.find(x => x.id === pr.accion_id);
+          if (!a) throw new ErrorDatos('otro', 'La acción no existe');
+          const req = requisitosProrroga(
+            'accion',
+            { a: { ...a } },
+            { fecha_solicitud: String(pr.fecha_solicitud), fecha_nueva: String(pr.fecha_nueva) },
+            []
+          );
+          if (!req[1]?.ok)
+            throw new ErrorDatos(
+              'otro',
+              'Artículo 16: la prórroga exige haber cumplido más de la mitad de la meta (avance validado)'
+            );
+          if (!req[2]?.ok)
+            throw new ErrorDatos(
+              'otro',
+              'Artículo 16: el nuevo plazo no puede superar el 30 % del inicialmente establecido'
+            );
+          a.fecha_fin_original = a.fecha_fin_original || a.fecha_fin;
+          a.fecha_fin = String(pr.fecha_nueva);
+        }
+        Object.assign(pr, { estado, radicado_respuesta: radicado, fecha_respuesta: fecha });
+        auditar('pm_prorrogas', 'UPDATE', id, pr, usuario);
       },
       async papelera() {
         editorPlanes('Tu rol no puede modificar planes de mejoramiento');

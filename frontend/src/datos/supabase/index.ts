@@ -98,7 +98,13 @@ export function errorRequerimiento(error: { message: string }): ErrorDatos {
   return new ErrorDatos('otro', m);
 }
 
-const TABLA_PLANES = { plan: 'pm_planes', hall: 'pm_hallazgos', acc: 'pm_acciones' } as const;
+const TABLA_PLANES = {
+  plan: 'pm_planes',
+  hall: 'pm_hallazgos',
+  acc: 'pm_acciones',
+  pror: 'pm_prorrogas',
+  inf: 'pm_informes_avance'
+} as const;
 /** pmErr de la 2.x: mensajes claros para las restricciones de los planes; el resto, como los requerimientos. */
 export function errorPlanes(error: { message: string }): ErrorDatos {
   if (/pm_hallazgos_numero_unq/.test(error.message))
@@ -610,6 +616,18 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         const { error } = await sb.from('archivo_documentos').delete().eq('id', d.id);
         if (error) throw errorPlanes(error);
         await sb.storage.from('archivo').remove([d.path]);
+      },
+      async resolverProrroga(id, estado, radicado, fecha) {
+        const { error } = await sb.rpc(
+          'pm_resolver_prorroga' as never,
+          {
+            p_id: id,
+            p_estado: estado,
+            p_radicado: radicado,
+            p_fecha: fecha
+          } as never
+        );
+        if (error) throw errorPlanes(error);
       },
       async papelera() {
         const { data, error } = await sb.rpc('pm_papelera' as never);

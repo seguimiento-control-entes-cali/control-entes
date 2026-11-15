@@ -57,6 +57,18 @@ import {
 import { VentanaExportar } from './Exportar';
 import { VentanaImportar } from './Importar';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
+import {
+  AvisoBajo100,
+  LineaProrroga,
+  TarjetaInformes,
+  TarjetaNorma,
+  VentanaInforme,
+  VentanaNuevoPlan,
+  VentanaProrroga,
+  VentanaResolverProrroga,
+  type VentanaNorma
+} from './Norma';
+import { puedeProrrogar } from '../../dominio/planes-norma';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
 const SUPERVISION = ['admin', 'alcalde', 'control_interno'];
@@ -110,6 +122,7 @@ type VentanaPlanes =
   | { t: 'importar' }
   | { t: 'doc'; planId: string }
   | { t: 'papelera' }
+  | VentanaNorma
   | { t: 'exportar'; p: Plan; fev: string };
 interface Ctx {
   d: DatosPlanes;
@@ -222,6 +235,7 @@ function FilaAccion({
           </div>
         )}
         <LineaCalificacion a={a} p={plan} ctx={ctx} fev={fev} />
+        <LineaProrroga a={a} d={ctx.d} edita={ctx.edita} abrir={ctx.abrir} />
         {pend && (
           <div className="pm-note b">
             <Icono nombre="fa-hourglass-half" /> Avance de {pctTxt(pct(a, pend.cantidad))} reportado el{' '}
@@ -272,6 +286,15 @@ function FilaAccion({
           <button type="button" className="btn sm" onClick={() => ctx.verHistorial(a)}>
             <Icono nombre="fa-clock-rotate-left" /> Historial
           </button>
+          {puedeProrrogar(a, ctx.d, ctx.edita) && (
+            <button
+              type="button"
+              className="btn sm"
+              onClick={() => ctx.abrir({ t: 'pror', tipo: 'accion', ctx: { a } })}
+            >
+              <Icono nombre="fa-calendar-plus" /> Prórroga
+            </button>
+          )}
           {ctx.edita && ctx.d.v19 && plan?.formato === 'PM_01_CGSC' && plan.estado !== 'formulacion' && (
             <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'cal', a, fev })}>
               <Icono nombre="fa-scale-balanced" /> Calificar
@@ -594,6 +617,9 @@ function Resumen({
         )}
       </div>
       <div className="grid g-2 pm-g2" style={{ marginTop: 14 }}>
+        {!['secretario', 'enlace'].includes(ctx.rol) && (
+          <TarjetaInformes d={ctx.d} hoy={ctx.hoy} abrirPlan={abrir} />
+        )}
         <div className="card">
           <h3>Acciones que requieren atención</h3>
           <div className="sub">Vencidas sin cumplir y las que vencen en los próximos {ALERTA_DIAS} días</div>
@@ -1228,6 +1254,8 @@ function DetallePlan({
           </div>
         </div>
         <CalificacionCgsc p={p} acc={accAll} ctx={ctx} fev={fev} />
+        <AvisoBajo100 p={p} d={d} edita={ctx.edita} fev={fev} abrir={ctx.abrir} />
+        <TarjetaNorma p={p} d={d} edita={ctx.edita} hoy={ctx.hoy} abrir={ctx.abrir} />
         <div className="pm-chips" style={{ marginTop: 10 }}>
           <span className="pm-chip">{hall.length} hallazgos</span>
           <span className="pm-chip">{cn.n} acciones</span>
@@ -1500,6 +1528,24 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
       />
     ) : w?.t === 'doc' ? (
       <VentanaDocumento planId={w.planId} alCerrar={cerrarVentana} />
+    ) : w?.t === 'pror' ? (
+      <VentanaProrroga tipo={w.tipo} ctx={w.ctx} d={datos.data} hoy={ctx.hoy} alCerrar={cerrarVentana} />
+    ) : w?.t === 'resolver' ? (
+      <VentanaResolverProrroga pr={w.pr} hoy={ctx.hoy} alCerrar={cerrarVentana} />
+    ) : w?.t === 'inf' ? (
+      <VentanaInforme p={w.p} d={datos.data} hoy={ctx.hoy} alCerrar={cerrarVentana} />
+    ) : w?.t === 'nuevo' ? (
+      <VentanaNuevoPlan
+        p={w.p}
+        d={datos.data}
+        fev={w.fev}
+        hoy={ctx.hoy}
+        alCerrar={cerrarVentana}
+        alCrear={id => {
+          cerrarVentana();
+          setPlan(id);
+        }}
+      />
     ) : w?.t === 'papelera' ? (
       <VentanaPapelera d={datos.data} admin={perfil.rol === 'admin'} alCerrar={cerrarVentana} />
     ) : w?.t === 'importar' ? (
