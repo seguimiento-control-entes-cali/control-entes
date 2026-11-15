@@ -47,7 +47,7 @@ export function VentanaExportar({
     setOcupado(true);
     try {
       const X = await cargarSheetJS();
-      const ctx = { d, dep, usuario };
+      const ctx = { d, dep, usuario, v19: d.v19 !== false };
       const wb = X.utils.book_new();
       if (fmt === 'F14_CGR') {
         const [w1, w2] = hojasF14(X, p, corte, ctx);

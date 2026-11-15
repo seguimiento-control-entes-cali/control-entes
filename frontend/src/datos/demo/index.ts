@@ -421,9 +421,22 @@ export function datosDemo(): Datos {
         if (p && ['secretario', 'enlace'].includes(p.rol))
           return {
             ...JSON.parse(JSON.stringify(vistaPorDependencia(planes, p.dependenciaId))),
-            traslados: []
+            traslados: [],
+            v19: true,
+            v20: true,
+            prorrogas: [],
+            informes: [],
+            documentos: []
           };
-        return { ...JSON.parse(JSON.stringify(planes)), traslados: [] };
+        return {
+          ...JSON.parse(JSON.stringify(planes)),
+          traslados: [],
+          v19: true,
+          v20: true,
+          prorrogas: [],
+          informes: [],
+          documentos: []
+        };
       },
       // pmSave de la 2.x en la demostración
       async guardar(tipo, o, id) {

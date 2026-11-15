@@ -147,7 +147,7 @@ function Soporte({ v, demo }: { v: Avance; demo: boolean }) {
 }
 
 function LineaCalificacion({ a, p, ctx, fev }: { a: Accion; p: Plan | undefined; ctx: Ctx; fev: string }) {
-  if (!p || p.formato !== 'PM_01_CGSC' || p.estado === 'formulacion') return null;
+  if (!p || p.formato !== 'PM_01_CGSC' || !ctx.d.v19 || p.estado === 'formulacion') return null;
   const r = calificacionAccion(a, fev, ctx.d.avances);
   if (r.c == null && r.e == null) return null;
   return (
@@ -269,12 +269,12 @@ function FilaAccion({
           <button type="button" className="btn sm" onClick={() => ctx.verHistorial(a)}>
             <Icono nombre="fa-clock-rotate-left" /> Historial
           </button>
-          {ctx.edita && plan?.formato === 'PM_01_CGSC' && plan.estado !== 'formulacion' && (
+          {ctx.edita && ctx.d.v19 && plan?.formato === 'PM_01_CGSC' && plan.estado !== 'formulacion' && (
             <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'cal', a, fev })}>
               <Icono nombre="fa-scale-balanced" /> Calificar
             </button>
           )}
-          {ctx.edita && !a.obs_ci && (
+          {ctx.edita && ctx.d.v19 && !a.obs_ci && (
             <button
               type="button"
               className="icon-btn"
@@ -764,7 +764,7 @@ function MisAcciones({ ctx, depId }: { ctx: Ctx; depId: number | null }) {
 }
 
 function CalificacionCgsc({ p, acc, ctx, fev }: { p: Plan; acc: Accion[]; ctx: Ctx; fev: string }) {
-  if (p.formato !== 'PM_01_CGSC') return null;
+  if (p.formato !== 'PM_01_CGSC' || !ctx.d.v19) return null;
   const k = calificacionCgsc(acc, fev, ctx.d.avances);
   return (
     <div className="pm-cgsc">

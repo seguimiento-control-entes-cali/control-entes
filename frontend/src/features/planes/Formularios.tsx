@@ -16,6 +16,8 @@ import {
   TEXTO_CALIFICACION,
   TIPOS_EJERCICIO,
   calificacionAccion,
+  columnasInstaladas,
+  fechaPlan,
   llave,
   metaTxt,
   numTxt,
@@ -127,6 +129,8 @@ export function VentanaPlan({
     radicado_orfeo: e.radicado_orfeo ?? '',
     estado: e.estado ?? 'en_ejecucion',
     resolucion: e.resolucion ?? '',
+    fecha_radicacion_informe: e.fecha_radicacion_informe ?? '',
+    direccion_tecnica: e.direccion_tecnica ?? '',
     entidad: e.entidad ?? '',
     representante_legal: e.representante_legal ?? '',
     ordenador_gasto: e.ordenador_gasto ?? '',
@@ -138,6 +142,10 @@ export function VentanaPlan({
   const guardar = async () => {
     const o: Record<string, unknown> = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, txt(v)]));
     o.fecha_informe = o.fecha_informe || null;
+    // pmSavePlan: las columnas de los scripts 19 y 20 solo se envían si están instalados
+    columnasInstaladas(o, d);
+    if (o.fecha_radicacion_informe && !fechaPlan(o.fecha_radicacion_informe))
+      return avisar('La fecha de radicación del informe no es válida', 'error');
     o.entidad = o.entidad || 'Distrito Especial de Santiago de Cali';
     const err = validarPlan(
       o as Pick<Plan, 'contraloria' | 'ejercicio' | 'fecha_suscripcion'> & { fecha_informe?: string | null }
@@ -264,20 +272,46 @@ export function VentanaPlan({
           </select>
         </Campo>
       </div>
-      <Campo
-        id="pmPRes"
-        label="Resolución CGSC aplicable"
-        hint="Res. 24.043: planes desde el 1-ene-2025 · Res. 24.003: del 24-ene al 31-dic-2024"
-      >
-        <select id="pmPRes" value={f.resolucion} onChange={cambiar('resolucion')}>
-          <option value="">Automática según la fecha de suscripción</option>
-          {Object.entries(RESOLUCIONES).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v.corta}
-            </option>
-          ))}
-        </select>
-      </Campo>
+      {d.v19 && (
+        <Campo id="pmPDir" label="Dirección técnica de la contraloría (PM_01)">
+          <input
+            id="pmPDir"
+            value={f.direccion_tecnica}
+            placeholder="Ej.: Dirección Técnica ante la Administración Central"
+            onChange={cambiar('direccion_tecnica')}
+          />
+        </Campo>
+      )}
+      {d.v20 && (
+        <div className="row2">
+          <Campo
+            id="pmPRes"
+            label="Resolución CGSC aplicable"
+            hint="Res. 24.043: planes desde el 1-ene-2025 · Res. 24.003: del 24-ene al 31-dic-2024"
+          >
+            <select id="pmPRes" value={f.resolucion} onChange={cambiar('resolucion')}>
+              <option value="">Automática según la fecha de suscripción</option>
+              {Object.entries(RESOLUCIONES).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v.corta}
+                </option>
+              ))}
+            </select>
+          </Campo>
+          <Campo
+            id="pmPRad"
+            label="Fecha de radicación del informe final"
+            hint="Desde aquí corren los 15 días hábiles para presentar el plan (art. 7)"
+          >
+            <input
+              id="pmPRad"
+              type="date"
+              value={f.fecha_radicacion_informe ?? ''}
+              onChange={cambiar('fecha_radicacion_informe')}
+            />
+          </Campo>
+        </div>
+      )}
       <Campo id="pmPEnt" label="Entidad auditada">
         <input id="pmPEnt" value={f.entidad} onChange={cambiar('entidad')} />
       </Campo>

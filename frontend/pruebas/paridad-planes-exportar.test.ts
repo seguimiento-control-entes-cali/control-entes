@@ -168,6 +168,18 @@ describe('paridad con la 2.x · exportar planes en el formato de la contraloría
       ]
     });
   });
+  it('sin el script 19 (sin calificación CGSC) también iguales', () => {
+    d2.PM.v19 = false;
+    try {
+      for (const p of st.planes) {
+        const c = { ...ctx, v19: false };
+        expect(plano(hojaPM01(X, p, HOY, c)), p.id).toEqual(plano(d2.pmSheetPM01(X, p, HOY)));
+        expect(plano(hojaPM02(X, p, HOY, c)), p.id).toEqual(plano(d2.pmSheetPM02(X, p, HOY)));
+      }
+    } finally {
+      d2.PM.v19 = true;
+    }
+  });
   it('el libro se escribe como .xlsx y se vuelve a leer con las fórmulas', () => {
     const p = st.planes.find(x => x.formato === 'F14_CGR') as Plan;
     const wb = X.utils.book_new();
