@@ -1,10 +1,10 @@
 // Planes de mejoramiento · consulta (2.x: vPlanes, pmOverview, pmDepView, pmPlanView, pmAccRow, pmCalLinea,
 // pmCgscHtml, pmTabValidar, pmTabHistorial, pmTabCalidad, pmSoporte y pmHistModal de src/js/19-planes-de-mejoramiento.js).
 // Mismo HTML y clases (pm-hero, pm-plans, pm-plan, pm-meter, pm-chips, pm-h, pm-a, pm-cgsc, pm-tabs, pm-tl).
-// Entregas 1 a 3a de la F3 para Planes: consulta, formulación y edición, reporte y validación de avances, calificación
-// CGSC, observaciones de Control Interno (Formularios.tsx) e importación desde Excel o desde el informe final en PDF
-// (Importar.tsx). La exportación, las sugerencias de acciones, los traslados, la aprobación del plan, las prórrogas, los
-// informes semestrales y el archivo documental llegan en las entregas 3b y 4 (mientras tanto se hacen en la 2.x).
+// Entregas 1 a 3 de la F3 para Planes: consulta, formulación y edición, reporte y validación de avances, calificación
+// CGSC, observaciones de Control Interno (Formularios.tsx) importación desde Excel o desde el informe final en PDF
+// (Importar.tsx) y exportación en el formato de cada contraloría (Exportar.tsx). Las sugerencias de acciones, los traslados, la aprobación del plan, las prórrogas, los
+// informes semestrales y el archivo documental llegan en la entrega 4 (mientras tanto se hacen en la 2.x).
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import type { Perfil } from '../../datos/contratos';
@@ -54,6 +54,7 @@ import {
   VentanaPlan,
   VentanaRevision
 } from './Formularios';
+import { VentanaExportar } from './Exportar';
 import { VentanaImportar } from './Importar';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
@@ -105,7 +106,8 @@ type VentanaPlanes =
   | { t: 'revision'; v: Avance }
   | { t: 'cal'; a: Accion; fev: string }
   | { t: 'obs'; a: Accion }
-  | { t: 'importar' };
+  | { t: 'importar' }
+  | { t: 'exportar'; p: Plan; fev: string };
 interface Ctx {
   d: DatosPlanes;
   hoy: string;
@@ -1147,6 +1149,9 @@ function DetallePlan({
           <Icono nombre="fa-arrow-left" /> Planes
         </button>
         <span style={{ flex: 1 }} />
+        <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'exportar', p, fev })}>
+          <Icono nombre="fa-file-excel" /> Exportar formato
+        </button>
         {ctx.edita && (
           <>
             <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'plan', p })}>
@@ -1460,6 +1465,20 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
       />
     ) : w?.t === 'obs' ? (
       <VentanaObservacion a={w.a} alCerrar={cerrarVentana} />
+    ) : w?.t === 'exportar' ? (
+      <VentanaExportar
+        p={w.p}
+        d={datos.data}
+        dep={ctx.dep}
+        usuario={perfil.correo}
+        corteInicial={w.fev}
+        edita={ctx.edita}
+        completar={a => {
+          const h = datos.data.hallazgos.find(x => x.id === a.hallazgo_id);
+          if (h) setVentana({ t: 'acc', a, h });
+        }}
+        alCerrar={cerrarVentana}
+      />
     ) : w?.t === 'importar' ? (
       <VentanaImportar
         d={datos.data}
