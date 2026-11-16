@@ -14,11 +14,13 @@
     "tipos": "tsc -b --noEmit",
     "tipos:bd": "node scripts/tipos-bd.mjs",
     "tipos:bd:revisar": "node scripts/tipos-bd.mjs --revisar",
+    "bd:huella": "node scripts/huella-bd.mjs",
+    "bd:huella:revisar": "node scripts/huella-bd.mjs --revisar",
     "lint": "eslint .",
     "formato": "prettier --write \"src/**/*.{ts,tsx,css}\" \"pruebas/**/*.ts\" \"*.{ts,js,json}\"",
     "formato:revisar": "prettier --check \"src/**/*.{ts,tsx,css}\" \"pruebas/**/*.ts\" \"*.{ts,js,json}\"",
     "test": "vitest run",
-    "verificar": "npm run tipos:bd:revisar && npm run formato:revisar && npm run tipos && npm run lint && npm run test && npm run build"
+    "verificar": "npm run tipos:bd:revisar && npm run bd:huella:revisar && npm run formato:revisar && npm run tipos && npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
