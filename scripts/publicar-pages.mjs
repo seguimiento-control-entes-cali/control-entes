@@ -4,7 +4,7 @@
 //   2. lanza la tarea y espera a que termine;
 //   3. comprueba en el sitio en línea la versión (package.json), la caché del service worker (public/sw.js) y /v3/;
 //   4. pide cada archivo que citan las páginas publicadas (2.x y 3.0) y revisa que ninguno falte (404) y que la 3.0
-//      declare su ícono (sin él el navegador pide /favicon.ico en la raíz del dominio y da 404).
+//      declaren su ícono (la 2.x y la 3.0) (sin él el navegador pide /favicon.ico en la raíz del dominio y da 404).
 // La llave de GitHub se toma de Git Credential Manager en el momento; nunca se escribe ni se muestra.
 //   node scripts/publicar-pages.mjs
 import { execFileSync } from 'node:child_process';
@@ -94,7 +94,7 @@ async function archivosDe(base) {
 const faltan = [];
 for (const base of [SITIO, SITIO + 'v3/']) {
   const { html, urls } = await archivosDe(base);
-  if (base.endsWith('v3/') && !/<link rel="icon"/.test(html))
+  if (!/<link rel="icon"/.test(html))
     faltan.push(base + ' no declara su ícono (rel="icon"): el navegador pediría /favicon.ico y daría 404');
   for (const u of urls) {
     const r = await fetch(u);
