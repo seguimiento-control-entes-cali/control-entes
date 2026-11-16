@@ -33,6 +33,7 @@ import {
 } from '../../dominio/planes-norma';
 import { Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
+import { useOficios } from './Oficio';
 
 export type VentanaNorma =
   | { t: 'pror'; tipo: TipoProrroga; ctx: ContextoProrroga }
@@ -63,10 +64,14 @@ export function TarjetaNorma({
   hoy: string;
   abrir: (v: VentanaNorma) => void;
 }) {
+  const oficios = useOficios();
   const ri = RESOLUCIONES[resolucion(p)];
   if (!ri || !d.v20) return null;
   const pror = d.prorrogas ?? [];
-  const pres = presentacion(p, pror);
+  const oficio = p.requerimiento_id
+    ? (oficios.find(x => String(x.id) === String(p.requerimiento_id)) ?? null)
+    : null;
+  const pres = presentacion(p, pror, oficio);
   const filas: React.ReactNode[] = [];
   if (pres && pres.base) {
     const dd = diasEntre(hoy, pres.limite);

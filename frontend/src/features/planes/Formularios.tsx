@@ -43,6 +43,7 @@ import {
 import { sugerencias, type AccionSugerida } from '../../dominio/planes-plantillas';
 import { Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
+import { useOficios } from './Oficio';
 
 type Dep = { id: number; nombre: string; activo?: boolean };
 
@@ -110,6 +111,7 @@ export function VentanaPlan({
   const { planes } = useDatos();
   const refrescar = useRefrescar();
   const avisar = useAvisos();
+  const oficios = useOficios();
   const e: Partial<Plan> = p ?? {
     formato: 'PM_01_CGSC',
     contraloria: FORMATOS.PM_01_CGSC?.contraloria,
@@ -133,6 +135,7 @@ export function VentanaPlan({
     resolucion: e.resolucion ?? '',
     fecha_radicacion_informe: e.fecha_radicacion_informe ?? '',
     direccion_tecnica: e.direccion_tecnica ?? '',
+    requerimiento_id: e.requerimiento_id ?? '',
     entidad: e.entidad ?? '',
     representante_legal: e.representante_legal ?? '',
     ordenador_gasto: e.ordenador_gasto ?? '',
@@ -145,6 +148,7 @@ export function VentanaPlan({
     const o: Record<string, unknown> = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, txt(v)]));
     o.fecha_informe = o.fecha_informe || null;
     // pmSavePlan: las columnas de los scripts 19 y 20 solo se envían si están instalados
+    o.requerimiento_id = o.requerimiento_id || null;
     columnasInstaladas(o, d);
     if (o.fecha_radicacion_informe && !fechaPlan(o.fecha_radicacion_informe))
       return avisar('La fecha de radicación del informe no es válida', 'error');
@@ -275,14 +279,36 @@ export function VentanaPlan({
         </Campo>
       </div>
       {d.v19 && (
-        <Campo id="pmPDir" label="Dirección técnica de la contraloría (PM_01)">
-          <input
-            id="pmPDir"
-            value={f.direccion_tecnica}
-            placeholder="Ej.: Dirección Técnica ante la Administración Central"
-            onChange={cambiar('direccion_tecnica')}
-          />
-        </Campo>
+        <div className="row2">
+          <Campo
+            id="pmPReq"
+            label="Oficio de remisión del informe"
+            hint="Su plazo y su cierre se siguen desde el plan"
+          >
+            <select id="pmPReq" value={f.requerimiento_id} onChange={cambiar('requerimiento_id')}>
+              <option value="">— Sin enlazar —</option>
+              {oficios
+                .filter(
+                  r =>
+                    /informe|plan de mejoramiento|auditor|fiscalizaci/i.test(r.asunto || '') ||
+                    String(r.id) === String(f.requerimiento_id)
+                )
+                .map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.radicado} · {textoCorto(r.asunto, 70)}
+                  </option>
+                ))}
+            </select>
+          </Campo>
+          <Campo id="pmPDir" label="Dirección técnica de la contraloría (PM_01)">
+            <input
+              id="pmPDir"
+              value={f.direccion_tecnica}
+              placeholder="Ej.: Dirección Técnica ante la Administración Central"
+              onChange={cambiar('direccion_tecnica')}
+            />
+          </Campo>
+        </div>
       )}
       {d.v20 && (
         <div className="row2">

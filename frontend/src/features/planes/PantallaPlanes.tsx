@@ -59,6 +59,7 @@ import { VentanaExportar } from './Exportar';
 import { VentanaImportar } from './Importar';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
 import { TrasladosHallazgo, VentanaTraslado } from './Traslados';
+import { TarjetaOficio, VentanaAprobar, VentanaNotificarPlanes } from './Oficio';
 import {
   AvisoBajo100,
   LineaProrroga,
@@ -126,6 +127,8 @@ type VentanaPlanes =
   | { t: 'papelera' }
   | VentanaNorma
   | { t: 'tras'; tras: Traslado | null; h: Hallazgo }
+  | { t: 'aprobar'; p: Plan }
+  | { t: 'notificar'; dep: number; nombre: string }
   | { t: 'exportar'; p: Plan; fev: string };
 interface Ctx {
   d: DatosPlanes;
@@ -703,6 +706,17 @@ function Resumen({
                 </div>
                 <div className="pm-deprow-r">
                   <b className="mono">{pctTxt(r.i.cpm)}</b>
+                  {r.key !== 'sin' &&
+                    SUPERVISION.includes(ctx.rol) &&
+                    (r.c.vencida > 0 || r.c.proxima > 0) && (
+                      <button
+                        type="button"
+                        className="btn sm"
+                        onClick={() => ctx.abrir({ t: 'notificar', dep: Number(r.key), nombre: r.n })}
+                      >
+                        <Icono nombre="fa-paper-plane" /> Notificar
+                      </button>
+                    )}
                 </div>
               </div>
             ))
@@ -1200,6 +1214,11 @@ function DetallePlan({
         <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'exportar', p, fev })}>
           <Icono nombre="fa-file-excel" /> Exportar formato
         </button>
+        {ctx.edita && p.estado === 'formulacion' && d.v19 && (
+          <button type="button" className="btn sm primary" onClick={() => ctx.abrir({ t: 'aprobar', p })}>
+            <Icono nombre="fa-file-signature" /> Aprobar y suscribir
+          </button>
+        )}
         {ctx.edita && (
           <>
             <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'plan', p })}>
@@ -1258,6 +1277,7 @@ function DetallePlan({
         </div>
         <CalificacionCgsc p={p} acc={accAll} ctx={ctx} fev={fev} />
         <AvisoBajo100 p={p} d={d} edita={ctx.edita} fev={fev} abrir={ctx.abrir} />
+        <TarjetaOficio p={p} d={d} edita={ctx.edita} hoy={ctx.hoy} />
         <TarjetaNorma p={p} d={d} edita={ctx.edita} hoy={ctx.hoy} abrir={ctx.abrir} />
         <div className="pm-chips" style={{ marginTop: 10 }}>
           <span className="pm-chip">{hall.length} hallazgos</span>
@@ -1537,6 +1557,16 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
       />
     ) : w?.t === 'doc' ? (
       <VentanaDocumento planId={w.planId} alCerrar={cerrarVentana} />
+    ) : w?.t === 'aprobar' ? (
+      <VentanaAprobar p={w.p} d={datos.data} hoy={ctx.hoy} rol={perfil.rol} alCerrar={cerrarVentana} />
+    ) : w?.t === 'notificar' ? (
+      <VentanaNotificarPlanes
+        depId={w.dep}
+        depNombre={w.nombre}
+        d={datos.data}
+        hoy={ctx.hoy}
+        alCerrar={cerrarVentana}
+      />
     ) : w?.t === 'tras' ? (
       <VentanaTraslado t={w.tras} h={w.h} alCerrar={cerrarVentana} />
     ) : w?.t === 'pror' ? (
