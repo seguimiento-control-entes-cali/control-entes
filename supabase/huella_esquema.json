@@ -1,0 +1,4959 @@
+{
+  "tablas": [
+    {
+      "rls": true,
+      "tabla": "accesos",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "alertas_log",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "archivo_documentos",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "audit_log",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "config",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "cruce_revision",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "cuentas_eventos",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "dependencias",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "directorio",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "entes",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "eventos_sistema",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "historico_cargas",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "historico_requerimientos",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "informes",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "notificaciones",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_acciones",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_avances",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_avisos",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_hallazgos",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_informes_avance",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_planes",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_prorrogas",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_restauraciones",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "pm_traslados",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "profiles",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "requerimientos",
+      "rls_forzado": false
+    },
+    {
+      "rls": true,
+      "tabla": "tema_manual",
+      "rls_forzado": false
+    }
+  ],
+  "vistas": [
+    {
+      "tipo": "v",
+      "vista": "v_cumplimiento_organismo",
+      "columnas": [
+        "organismo",
+        "vigencia",
+        "a_tiempo",
+        "tardias",
+        "sin_respuesta",
+        "incumplimientos",
+        "evaluables",
+        "pct_incumplimiento",
+        "semaforo"
+      ],
+      "opciones": [
+        "security_invoker=true"
+      ]
+    },
+    {
+      "tipo": "v",
+      "vista": "v_directorio_verificacion",
+      "columnas": [
+        "problema",
+        "dependencia",
+        "detalle"
+      ],
+      "opciones": [
+        "security_invoker=true"
+      ]
+    },
+    {
+      "tipo": "v",
+      "vista": "v_requerimientos",
+      "columnas": [
+        "id",
+        "radicado",
+        "vigencia",
+        "ente_id",
+        "dependencia_id",
+        "asunto",
+        "fecha_radicacion",
+        "fecha_limite",
+        "estado",
+        "orfeo_salida",
+        "fecha_cierre",
+        "soporte_path",
+        "soporte_hash",
+        "escalado_at",
+        "created_by",
+        "created_at",
+        "ente",
+        "ente_sigla",
+        "dependencia",
+        "dias_restantes",
+        "semaforo"
+      ],
+      "opciones": [
+        "security_invoker=true"
+      ]
+    }
+  ],
+  "indices": [
+    {
+      "tabla": "accesos",
+      "nombre": "accesos_pkey",
+      "definicion": "CREATE UNIQUE INDEX accesos_pkey ON public.accesos USING btree (id)"
+    },
+    {
+      "tabla": "accesos",
+      "nombre": "idx_accesos_user",
+      "definicion": "CREATE INDEX idx_accesos_user ON public.accesos USING btree (user_id, created_at DESC)"
+    },
+    {
+      "tabla": "alertas_log",
+      "nombre": "alertas_log_pkey",
+      "definicion": "CREATE UNIQUE INDEX alertas_log_pkey ON public.alertas_log USING btree (id)"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_doc_plan",
+      "definicion": "CREATE INDEX archivo_doc_plan ON public.archivo_documentos USING btree (plan_id)"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_documentos_path_key",
+      "definicion": "CREATE UNIQUE INDEX archivo_documentos_path_key ON public.archivo_documentos USING btree (path)"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_documentos_pkey",
+      "definicion": "CREATE UNIQUE INDEX archivo_documentos_pkey ON public.archivo_documentos USING btree (id)"
+    },
+    {
+      "tabla": "audit_log",
+      "nombre": "audit_log_pkey",
+      "definicion": "CREATE UNIQUE INDEX audit_log_pkey ON public.audit_log USING btree (id)"
+    },
+    {
+      "tabla": "config",
+      "nombre": "config_pkey",
+      "definicion": "CREATE UNIQUE INDEX config_pkey ON public.config USING btree (id)"
+    },
+    {
+      "tabla": "cruce_revision",
+      "nombre": "cruce_revision_pkey",
+      "definicion": "CREATE UNIQUE INDEX cruce_revision_pkey ON public.cruce_revision USING btree (clave)"
+    },
+    {
+      "tabla": "cuentas_eventos",
+      "nombre": "cuentas_eventos_pkey",
+      "definicion": "CREATE UNIQUE INDEX cuentas_eventos_pkey ON public.cuentas_eventos USING btree (id)"
+    },
+    {
+      "tabla": "dependencias",
+      "nombre": "dependencias_nombre_key",
+      "definicion": "CREATE UNIQUE INDEX dependencias_nombre_key ON public.dependencias USING btree (nombre)"
+    },
+    {
+      "tabla": "dependencias",
+      "nombre": "dependencias_pkey",
+      "definicion": "CREATE UNIQUE INDEX dependencias_pkey ON public.dependencias USING btree (id)"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "directorio_organismo_cargo_key",
+      "definicion": "CREATE UNIQUE INDEX directorio_organismo_cargo_key ON public.directorio USING btree (organismo, cargo)"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "directorio_pkey",
+      "definicion": "CREATE UNIQUE INDEX directorio_pkey ON public.directorio USING btree (id)"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "ux_directorio_correo",
+      "definicion": "CREATE UNIQUE INDEX ux_directorio_correo ON public.directorio USING btree (correo) WHERE (correo <> ''::text)"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "ux_directorio_telefono",
+      "definicion": "CREATE UNIQUE INDEX ux_directorio_telefono ON public.directorio USING btree (telefono) WHERE (telefono <> ''::text)"
+    },
+    {
+      "tabla": "entes",
+      "nombre": "entes_nombre_key",
+      "definicion": "CREATE UNIQUE INDEX entes_nombre_key ON public.entes USING btree (nombre)"
+    },
+    {
+      "tabla": "entes",
+      "nombre": "entes_pkey",
+      "definicion": "CREATE UNIQUE INDEX entes_pkey ON public.entes USING btree (id)"
+    },
+    {
+      "tabla": "eventos_sistema",
+      "nombre": "eventos_sistema_fecha",
+      "definicion": "CREATE INDEX eventos_sistema_fecha ON public.eventos_sistema USING btree (created_at DESC)"
+    },
+    {
+      "tabla": "eventos_sistema",
+      "nombre": "eventos_sistema_pkey",
+      "definicion": "CREATE UNIQUE INDEX eventos_sistema_pkey ON public.eventos_sistema USING btree (id)"
+    },
+    {
+      "tabla": "historico_cargas",
+      "nombre": "historico_cargas_pkey",
+      "definicion": "CREATE UNIQUE INDEX historico_cargas_pkey ON public.historico_cargas USING btree (id)"
+    },
+    {
+      "tabla": "historico_requerimientos",
+      "nombre": "historico_requerimientos_pkey",
+      "definicion": "CREATE UNIQUE INDEX historico_requerimientos_pkey ON public.historico_requerimientos USING btree (id)"
+    },
+    {
+      "tabla": "historico_requerimientos",
+      "nombre": "idx_hist_org",
+      "definicion": "CREATE INDEX idx_hist_org ON public.historico_requerimientos USING btree (organismo, vigencia)"
+    },
+    {
+      "tabla": "informes",
+      "nombre": "informes_pkey",
+      "definicion": "CREATE UNIQUE INDEX informes_pkey ON public.informes USING btree (id)"
+    },
+    {
+      "tabla": "notificaciones",
+      "nombre": "idx_notif_org",
+      "definicion": "CREATE INDEX idx_notif_org ON public.notificaciones USING btree (organismo, created_at DESC)"
+    },
+    {
+      "tabla": "notificaciones",
+      "nombre": "notificaciones_pkey",
+      "definicion": "CREATE UNIQUE INDEX notificaciones_pkey ON public.notificaciones USING btree (id)"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "idx_pm_acc_dep",
+      "definicion": "CREATE INDEX idx_pm_acc_dep ON public.pm_acciones USING btree (dependencia_id, fecha_fin)"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "idx_pm_acc_plan",
+      "definicion": "CREATE INDEX idx_pm_acc_plan ON public.pm_acciones USING btree (plan_id, hallazgo_id, orden)"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_acciones_pkey ON public.pm_acciones USING btree (id)"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "idx_pm_av_accion",
+      "definicion": "CREATE INDEX idx_pm_av_accion ON public.pm_avances USING btree (accion_id, fecha_corte)"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "idx_pm_av_estado",
+      "definicion": "CREATE INDEX idx_pm_av_estado ON public.pm_avances USING btree (estado)"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "pm_avances_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_avances_pkey ON public.pm_avances USING btree (id)"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "idx_pm_avisos_fecha",
+      "definicion": "CREATE INDEX idx_pm_avisos_fecha ON public.pm_avisos USING btree (created_at DESC)"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "pm_avisos_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_avisos_pkey ON public.pm_avisos USING btree (id)"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "pm_avisos_unico",
+      "definicion": "CREATE UNIQUE INDEX pm_avisos_unico ON public.pm_avisos USING btree (accion_id, tipo, fecha_fin)"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "idx_pm_hall_plan",
+      "definicion": "CREATE INDEX idx_pm_hall_plan ON public.pm_hallazgos USING btree (plan_id, orden)"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_numero_unq",
+      "definicion": "CREATE UNIQUE INDEX pm_hallazgos_numero_unq ON public.pm_hallazgos USING btree (plan_id, numero)"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_hallazgos_pkey ON public.pm_hallazgos USING btree (id)"
+    },
+    {
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_informes_avance_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_informes_avance_pkey ON public.pm_informes_avance USING btree (id)"
+    },
+    {
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_informes_avance_plan_id_corte_key",
+      "definicion": "CREATE UNIQUE INDEX pm_informes_avance_plan_id_corte_key ON public.pm_informes_avance USING btree (plan_id, corte)"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_planes_pkey ON public.pm_planes USING btree (id)"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_req",
+      "definicion": "CREATE INDEX pm_planes_req ON public.pm_planes USING btree (requerimiento_id)"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_prorrogas_pkey ON public.pm_prorrogas USING btree (id)"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_una_accion",
+      "definicion": "CREATE UNIQUE INDEX pm_prorrogas_una_accion ON public.pm_prorrogas USING btree (accion_id) WHERE ((tipo = 'accion'::text) AND (estado <> 'negada'::text))"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_una_informe",
+      "definicion": "CREATE UNIQUE INDEX pm_prorrogas_una_informe ON public.pm_prorrogas USING btree (plan_id, corte) WHERE ((tipo = 'informe'::text) AND (estado <> 'negada'::text))"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_una_present",
+      "definicion": "CREATE UNIQUE INDEX pm_prorrogas_una_present ON public.pm_prorrogas USING btree (plan_id) WHERE ((tipo = 'presentacion'::text) AND (estado <> 'negada'::text))"
+    },
+    {
+      "tabla": "pm_restauraciones",
+      "nombre": "pm_restauraciones_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_restauraciones_pkey ON public.pm_restauraciones USING btree (audit_id)"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "pm_traslados_hallazgo",
+      "definicion": "CREATE INDEX pm_traslados_hallazgo ON public.pm_traslados USING btree (hallazgo_id)"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "pm_traslados_pkey",
+      "definicion": "CREATE UNIQUE INDEX pm_traslados_pkey ON public.pm_traslados USING btree (id)"
+    },
+    {
+      "tabla": "profiles",
+      "nombre": "profiles_pkey",
+      "definicion": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "idx_req_dep",
+      "definicion": "CREATE INDEX idx_req_dep ON public.requerimientos USING btree (dependencia_id)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "idx_req_vigencia",
+      "definicion": "CREATE INDEX idx_req_vigencia ON public.requerimientos USING btree (vigencia, estado, fecha_limite)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_hist_key_unq",
+      "definicion": "CREATE UNIQUE INDEX requerimientos_hist_key_unq ON public.requerimientos USING btree (hist_key) WHERE (hist_key IS NOT NULL)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_orfeo_unq",
+      "definicion": "CREATE UNIQUE INDEX requerimientos_orfeo_unq ON public.requerimientos USING btree (orfeo_salida)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_pkey",
+      "definicion": "CREATE UNIQUE INDEX requerimientos_pkey ON public.requerimientos USING btree (id)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_radicado_app_unq",
+      "definicion": "CREATE UNIQUE INDEX requerimientos_radicado_app_unq ON public.requerimientos USING btree (radicado) WHERE (hist_key IS NULL)"
+    },
+    {
+      "tabla": "tema_manual",
+      "nombre": "tema_manual_pkey",
+      "definicion": "CREATE UNIQUE INDEX tema_manual_pkey ON public.tema_manual USING btree (row_key)"
+    }
+  ],
+  "columnas": [
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "accesos",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "accesos",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "accesos",
+      "columna": "user_id",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "alertas_log",
+      "columna": "canal",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "alertas_log",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "alertas_log",
+      "columna": "enviado_por",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "alertas_log",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "alertas_log",
+      "columna": "requerimiento_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "archivo_documentos",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "archivo_documentos",
+      "columna": "eliminado_at",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "archivo_documentos",
+      "columna": "eliminado_por",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "archivo_documentos",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "archivo_documentos",
+      "columna": "mime",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "archivo_documentos",
+      "columna": "nombre",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "archivo_documentos",
+      "columna": "observaciones",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "archivo_documentos",
+      "columna": "path",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "archivo_documentos",
+      "columna": "plan_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "archivo_documentos",
+      "columna": "radicado_orfeo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "archivo_documentos",
+      "columna": "requerimiento_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "archivo_documentos",
+      "columna": "sha256",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "archivo_documentos",
+      "columna": "subido_email",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "archivo_documentos",
+      "columna": "subido_por",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "archivo_documentos",
+      "columna": "tamano",
+      "defecto": "0"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "archivo_documentos",
+      "columna": "tipo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "audit_log",
+      "columna": "accion",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "jsonb",
+      "tabla": "audit_log",
+      "columna": "cambios",
+      "defecto": "'{}'::jsonb"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "audit_log",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "audit_log",
+      "columna": "hash",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "audit_log",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "jsonb",
+      "tabla": "audit_log",
+      "columna": "payload",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "audit_log",
+      "columna": "prev_hash",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "audit_log",
+      "columna": "registro_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "audit_log",
+      "columna": "tabla",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "bigint",
+      "tabla": "audit_log",
+      "columna": "txid",
+      "defecto": "txid_current()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "audit_log",
+      "columna": "usuario",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "boolean",
+      "tabla": "config",
+      "columna": "avisos_activo",
+      "defecto": "false"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "config",
+      "columna": "avisos_copia_correo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "config",
+      "columna": "avisos_ultimo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "config",
+      "columna": "avisos_ultimo_detalle",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "config",
+      "columna": "correo_disciplinario",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "config",
+      "columna": "dias_rojo",
+      "defecto": "5"
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "config",
+      "columna": "id",
+      "defecto": "1"
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "config",
+      "columna": "respaldo_ultimo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "config",
+      "columna": "respaldo_ultimo_detalle",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "boolean",
+      "tabla": "config",
+      "columna": "resumen_activo",
+      "defecto": "false"
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "config",
+      "columna": "resumen_ultimo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "config",
+      "columna": "resumen_ultimo_detalle",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "cruce_revision",
+      "columna": "clave",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "cruce_revision",
+      "columna": "estado",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "cruce_revision",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "cruce_revision",
+      "columna": "nota",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "cruce_revision",
+      "columna": "updated_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "cruce_revision",
+      "columna": "usuario",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "cuentas_eventos",
+      "columna": "accion",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "cuentas_eventos",
+      "columna": "actor",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "cuentas_eventos",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "jsonb",
+      "tabla": "cuentas_eventos",
+      "columna": "detalle",
+      "defecto": "'{}'::jsonb"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "cuentas_eventos",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "boolean",
+      "tabla": "dependencias",
+      "columna": "activo",
+      "defecto": "true"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "dependencias",
+      "columna": "correo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "dependencias",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "dependencias",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "dependencias",
+      "columna": "nombre",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "dependencias",
+      "columna": "secretario_nombre",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "dependencias",
+      "columna": "telefono",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "directorio",
+      "columna": "cargo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "directorio",
+      "columna": "correo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "directorio",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "directorio",
+      "columna": "nombre",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "directorio",
+      "columna": "organismo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "directorio",
+      "columna": "telefono",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "directorio",
+      "columna": "updated_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "directorio",
+      "columna": "updated_by",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "boolean",
+      "tabla": "entes",
+      "columna": "activo",
+      "defecto": "true"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "entes",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "entes",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "entes",
+      "columna": "nombre",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "entes",
+      "columna": "sigla",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "entes",
+      "columna": "tipo",
+      "defecto": "'Otro'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "eventos_sistema",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "jsonb",
+      "tabla": "eventos_sistema",
+      "columna": "detalle",
+      "defecto": "'{}'::jsonb"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "eventos_sistema",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "eventos_sistema",
+      "columna": "mensaje",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "eventos_sistema",
+      "columna": "nivel",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "eventos_sistema",
+      "columna": "origen",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "boolean",
+      "tabla": "eventos_sistema",
+      "columna": "revisado",
+      "defecto": "false"
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "eventos_sistema",
+      "columna": "usuario",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text[]",
+      "tabla": "historico_cargas",
+      "columna": "archivos",
+      "defecto": "'{}'::text[]"
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "historico_cargas",
+      "columna": "corte",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "historico_cargas",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "historico_cargas",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "historico_cargas",
+      "columna": "registros",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "jsonb",
+      "tabla": "historico_cargas",
+      "columna": "resultado",
+      "defecto": "'{}'::jsonb"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "historico_cargas",
+      "columna": "usuario",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "integer[]",
+      "tabla": "historico_cargas",
+      "columna": "vigencias",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "asunto",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "integer",
+      "tabla": "historico_requerimientos",
+      "columna": "dias_habiles_responder",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "ente",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "estado_excel",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "historico_requerimientos",
+      "columna": "fecha_maxima",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "historico_requerimientos",
+      "columna": "fecha_recibo",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "historico_requerimientos",
+      "columna": "fecha_respuesta",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "integer",
+      "tabla": "historico_requerimientos",
+      "columna": "fila_excel",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "hoja_excel",
+      "defecto": "'CONTROL'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "historico_requerimientos",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "observaciones",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "oportunidad",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "orfeo_entrada",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "orfeo_respuesta",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "organismo",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "radicacion_ente",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "respondio",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "integer",
+      "tabla": "historico_requerimientos",
+      "columna": "retraso_dias_habiles",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "tardia",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "integer",
+      "tabla": "historico_requerimientos",
+      "columna": "termino_dias_habiles",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "historico_requerimientos",
+      "columna": "tipo_organismo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "historico_requerimientos",
+      "columna": "vigencia",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "informes",
+      "columna": "alcance",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "informes",
+      "columna": "corte",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "informes",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "informes",
+      "columna": "generado_por",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "informes",
+      "columna": "huella",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "informes",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "informes",
+      "columna": "n_registros",
+      "defecto": "0"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "informes",
+      "columna": "vigencias",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "notificaciones",
+      "columna": "canal",
+      "defecto": "'whatsapp'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "notificaciones",
+      "columna": "correo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "notificaciones",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "notificaciones",
+      "columna": "destinatario",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "notificaciones",
+      "columna": "enviado_por",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "notificaciones",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "notificaciones",
+      "columna": "mensaje",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "notificaciones",
+      "columna": "n_items",
+      "defecto": "0"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "notificaciones",
+      "columna": "organismo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "notificaciones",
+      "columna": "plantilla",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "notificaciones",
+      "columna": "telefono",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "accion",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "actividad",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "numeric(14,2)",
+      "tabla": "pm_acciones",
+      "columna": "avance",
+      "defecto": "0"
+    },
+    {
+      "nula": true,
+      "tipo": "smallint",
+      "tabla": "pm_acciones",
+      "columna": "cal_cumplimiento",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "smallint",
+      "tabla": "pm_acciones",
+      "columna": "cal_efectividad",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "numeric(14,2)",
+      "tabla": "pm_acciones",
+      "columna": "cantidad",
+      "defecto": "100"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_acciones",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "bigint",
+      "tabla": "pm_acciones",
+      "columna": "dependencia_id",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_acciones",
+      "columna": "fecha_corte",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_acciones",
+      "columna": "fecha_fin",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_acciones",
+      "columna": "fecha_fin_original",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_acciones",
+      "columna": "fecha_inicio",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "fuente_verificacion",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_acciones",
+      "columna": "hallazgo_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_acciones",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "lugar_verificacion",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "meta",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "obs_ci",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_acciones",
+      "columna": "obs_ci_at",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "obs_ci_estado",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "pm_acciones",
+      "columna": "orden",
+      "defecto": "0"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_acciones",
+      "columna": "plan_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "proposito",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "responsable",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "unidad_medida",
+      "defecto": "'Porcentaje'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_acciones",
+      "columna": "updated_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_avances",
+      "columna": "accion_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "numeric(14,2)",
+      "tabla": "pm_avances",
+      "columna": "cantidad",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_avances",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "bigint",
+      "tabla": "pm_avances",
+      "columna": "dependencia_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avances",
+      "columna": "descripcion",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avances",
+      "columna": "estado",
+      "defecto": "'reportado'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_avances",
+      "columna": "fecha_corte",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_avances",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avances",
+      "columna": "observacion",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_avances",
+      "columna": "plan_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avances",
+      "columna": "radicado_orfeo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avances",
+      "columna": "reportado_email",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_avances",
+      "columna": "reportado_por",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_avances",
+      "columna": "revisado_at",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avances",
+      "columna": "revisado_email",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_avances",
+      "columna": "revisado_por",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "pm_avances",
+      "columna": "soporte_hash",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "pm_avances",
+      "columna": "soporte_path",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_avisos",
+      "columna": "accion_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avisos",
+      "columna": "copia",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avisos",
+      "columna": "correo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_avisos",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "bigint",
+      "tabla": "pm_avisos",
+      "columna": "dependencia_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_avisos",
+      "columna": "fecha_fin",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "pm_avisos",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_avisos",
+      "columna": "tipo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "causa",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text[]",
+      "tabla": "pm_hallazgos",
+      "columna": "connotaciones",
+      "defecto": "'{}'::text[]"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_hallazgos",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "numeric(18,2)",
+      "tabla": "pm_hallazgos",
+      "columna": "cuantia",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "bigint",
+      "tabla": "pm_hallazgos",
+      "columna": "dependencia_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "dependencia_texto",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "descripcion",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "efecto",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_hallazgos",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "macroproceso",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "numero",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "pm_hallazgos",
+      "columna": "orden",
+      "defecto": "0"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_hallazgos",
+      "columna": "plan_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_hallazgos",
+      "columna": "updated_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_informes_avance",
+      "columna": "corte",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_informes_avance",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_informes_avance",
+      "columna": "created_by",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_informes_avance",
+      "columna": "documento_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_informes_avance",
+      "columna": "fecha_envio",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_informes_avance",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_informes_avance",
+      "columna": "observaciones",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_informes_avance",
+      "columna": "plan_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_informes_avance",
+      "columna": "radicado_orfeo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "contraloria",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_planes",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_planes",
+      "columna": "created_by",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "direccion_tecnica",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "ejercicio",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "bigint",
+      "tabla": "pm_planes",
+      "columna": "ente_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "entidad",
+      "defecto": "'Distrito Especial de Santiago de Cali'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "estado",
+      "defecto": "'en_ejecucion'::text"
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_planes",
+      "columna": "fecha_informe",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_planes",
+      "columna": "fecha_radicacion_informe",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_planes",
+      "columna": "fecha_suscripcion",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "formato",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_planes",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "modalidad",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "nit",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "numero_informe",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "observaciones",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "ordenador_gasto",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "periodo_auditado",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_planes",
+      "columna": "plan_origen_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "radicado_orfeo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "representante_legal",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_planes",
+      "columna": "requerimiento_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "resolucion",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "tipo_ejercicio",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_planes",
+      "columna": "updated_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_planes",
+      "columna": "vigencia_pvcft",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_prorrogas",
+      "columna": "accion_id",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_prorrogas",
+      "columna": "corte",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_prorrogas",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_prorrogas",
+      "columna": "created_by",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_prorrogas",
+      "columna": "estado",
+      "defecto": "'solicitada'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_prorrogas",
+      "columna": "fecha_nueva",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_prorrogas",
+      "columna": "fecha_respuesta",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_prorrogas",
+      "columna": "fecha_solicitud",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "pm_prorrogas",
+      "columna": "fecha_vencimiento_anterior",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_prorrogas",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_prorrogas",
+      "columna": "observaciones",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_prorrogas",
+      "columna": "plan_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_prorrogas",
+      "columna": "radicado_respuesta",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_prorrogas",
+      "columna": "radicado_solicitud",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_prorrogas",
+      "columna": "tipo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_prorrogas",
+      "columna": "updated_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "pm_restauraciones",
+      "columna": "audit_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_restauraciones",
+      "columna": "restaurado_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_restauraciones",
+      "columna": "restaurado_por",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_traslados",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "pm_traslados",
+      "columna": "created_by",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_traslados",
+      "columna": "destino",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_traslados",
+      "columna": "estado",
+      "defecto": "'trasladado'::text"
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_traslados",
+      "columna": "fecha",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_traslados",
+      "columna": "hallazgo_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_traslados",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_traslados",
+      "columna": "observaciones",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "pm_traslados",
+      "columna": "plan_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_traslados",
+      "columna": "radicado",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_traslados",
+      "columna": "tipo",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_traslados",
+      "columna": "updated_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": false,
+      "tipo": "boolean",
+      "tabla": "profiles",
+      "columna": "activo",
+      "defecto": "false"
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "profiles",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "bigint",
+      "tabla": "profiles",
+      "columna": "dependencia_id",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "profiles",
+      "columna": "email",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "profiles",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "profiles",
+      "columna": "nombre",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "profiles",
+      "columna": "rol",
+      "defecto": "'enlace'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "requerimientos",
+      "columna": "asunto",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "requerimientos",
+      "columna": "created_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "uuid",
+      "tabla": "requerimientos",
+      "columna": "created_by",
+      "defecto": "auth.uid()"
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "requerimientos",
+      "columna": "dependencia_id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "requerimientos",
+      "columna": "ente_id",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "requerimientos",
+      "columna": "escalado_at",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "requerimientos",
+      "columna": "estado",
+      "defecto": "'abierto'::text"
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "requerimientos",
+      "columna": "fecha_cierre",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "requerimientos",
+      "columna": "fecha_limite",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "date",
+      "tabla": "requerimientos",
+      "columna": "fecha_radicacion",
+      "defecto": "hoy_colombia()"
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "requerimientos",
+      "columna": "hist_key",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "uuid",
+      "tabla": "requerimientos",
+      "columna": "id",
+      "defecto": "gen_random_uuid()"
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "requerimientos",
+      "columna": "orfeo_salida",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "requerimientos",
+      "columna": "radicado",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "requerimientos",
+      "columna": "soporte_hash",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "requerimientos",
+      "columna": "soporte_path",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "integer",
+      "tabla": "requerimientos",
+      "columna": "vigencia",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "bigint",
+      "tabla": "tema_manual",
+      "columna": "id",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "tema_manual",
+      "columna": "row_key",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "tema_manual",
+      "columna": "tema",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "timestamp with time zone",
+      "tabla": "tema_manual",
+      "columna": "updated_at",
+      "defecto": "now()"
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "tema_manual",
+      "columna": "usuario",
+      "defecto": null
+    }
+  ],
+  "funciones": [
+    {
+      "md5": "368009d7f9754e632789abd1d2fff01b",
+      "nombre": "archivo_doc_guard",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "17aa7b4cada7fb69703d8eccb7b5f09f",
+      "nombre": "audit_block_changes",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "5908de4f035d7a41f96af58a88026c58",
+      "nombre": "audit_hash",
+      "devuelve": "text",
+      "argumentos": "p_prev text, p_tabla text, p_accion text, p_registro text, p_usuario text, p_ts timestamp with time zone, p_payload jsonb, p_cambios jsonb",
+      "configuracion": [
+        "search_path=public, extensions"
+      ],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "393881e4d35b664361b821059390d094",
+      "nombre": "audit_trigger",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public, extensions"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "ceb9cf70535193736d33b226be8b2a69",
+      "nombre": "cargar_historico",
+      "devuelve": "jsonb",
+      "argumentos": "p jsonb",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "33f3daf9abb9a3d37db5be767bfaaec7",
+      "nombre": "cerrar_requerimiento",
+      "devuelve": "requerimientos",
+      "argumentos": "p_id uuid, p_orfeo text, p_fecha date, p_path text, p_hash text",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "2bc0bf6a65f7f86fbf2db00ed703891c",
+      "nombre": "current_dep",
+      "devuelve": "bigint",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "7fc28880e141791adfbfaf9160d90a9a",
+      "nombre": "current_dep_name",
+      "devuelve": "text",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "31a195287b055e243f208e14843af796",
+      "nombre": "current_rol",
+      "devuelve": "text",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "1551911ea14aca204fef48080f7b6bf6",
+      "nombre": "directorio_validar",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "3f56d3b7514f4ffbba04e533a8f7ae19",
+      "nombre": "escalar_requerimiento",
+      "devuelve": "void",
+      "argumentos": "p_id uuid, p_canal text",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "45538c101442eb3e559337ed7122773a",
+      "nombre": "fecha_colombia",
+      "devuelve": "date",
+      "argumentos": "p_ts timestamp with time zone",
+      "configuracion": [
+        "search_path=\"\""
+      ],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "12bea030cf92338ee4f43e7b72428833",
+      "nombre": "firmar_decision",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "7f5447fd853a0c5ec6d9eed961668145",
+      "nombre": "handle_new_user",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "8a8e628aa71239f8d630b6cf7a6453ef",
+      "nombre": "hoy_colombia",
+      "devuelve": "date",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=\"\""
+      ],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "747c2fedebbb142d5a82b81000259b2c",
+      "nombre": "org_key",
+      "devuelve": "text",
+      "argumentos": "t text",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "035411cfe899c7efad83ce1ccd32199e",
+      "nombre": "org_oficial",
+      "devuelve": "text",
+      "argumentos": "t text",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "0e2b1798c083ca5ff5fcda5806d99b4a",
+      "nombre": "pm_acciones_guard",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "d42a18f51ddf3bed91719ad0af6b8699",
+      "nombre": "pm_borrado_guard",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "a028930582ebc24b79f94c2405bdf30b",
+      "nombre": "pm_calificacion_guard",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "92f78456f0b59b3abc1b29ade0b4918a",
+      "nombre": "pm_eliminar_plan",
+      "devuelve": "void",
+      "argumentos": "p_id uuid",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "8f435ff76254ac77537872ec69821448",
+      "nombre": "pm_importar",
+      "devuelve": "uuid",
+      "argumentos": "p jsonb",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "72c010527e5d9872b9ae2932ec563d12",
+      "nombre": "pm_misma_operacion",
+      "devuelve": "boolean",
+      "argumentos": "a audit_log, b audit_log",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "2cd2fac077aaeedec961b62b982621e4",
+      "nombre": "pm_papelera",
+      "devuelve": "TABLE(audit_id bigint, tabla text, registro_id text, plan_id text, descripcion text, eliminado_por text, eliminado_at timestamp with time zone, dependientes integer)",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "ad7f1702c40e57e626b40101d1e726a8",
+      "nombre": "pm_reinsertar",
+      "devuelve": "void",
+      "argumentos": "p_tabla text, p_payload jsonb",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "9353a8d39696fa63eaeaeb1ac3b2ed35",
+      "nombre": "pm_reportar_avance",
+      "devuelve": "uuid",
+      "argumentos": "p_accion uuid, p_fecha date, p_cantidad numeric, p_descripcion text, p_orfeo text, p_path text, p_hash text, p_validar boolean",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "11274da62586cdfc4ca872fb79874071",
+      "nombre": "pm_resolucion_de",
+      "devuelve": "text",
+      "argumentos": "p_formato text, p_resolucion text, p_fecha date",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "f913cd5e8167cf0ef77350f0ab0f4a5f",
+      "nombre": "pm_resolver_prorroga",
+      "devuelve": "void",
+      "argumentos": "p_id uuid, p_estado text, p_radicado text, p_fecha date",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "25c596b1baa055ba5f51bbc82846a213",
+      "nombre": "pm_restaurar",
+      "devuelve": "text",
+      "argumentos": "p_audit_id bigint",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "68c86973f0bb03be81d98feb9dd7b4f1",
+      "nombre": "pm_revisar_avance",
+      "devuelve": "void",
+      "argumentos": "p_id uuid, p_estado text, p_observacion text",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "2087ee763cae5a840d5f9851ac4e1eb8",
+      "nombre": "pm_touch",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "094160aedfbdbe1c9cabebd1c88d3ccc",
+      "nombre": "registrar_error_app",
+      "devuelve": "void",
+      "argumentos": "p_mensaje text, p_detalle jsonb",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "0b90e4a456799eeb3f497eae2472946c",
+      "nombre": "respaldo_lote",
+      "devuelve": "text",
+      "argumentos": "p_tabla text, p_orden text, p_desde integer, p_cantidad integer",
+      "configuracion": [
+        "search_path=\"\""
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "446824683ec4fdda1678e334baca06cd",
+      "nombre": "sembrar_desde_historico",
+      "devuelve": "integer",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "76077b7be972e6509932e02d26e4b81c",
+      "nombre": "verificar_cadena_auditoria",
+      "devuelve": "TABLE(ok boolean, total bigint, primer_id_roto bigint)",
+      "argumentos": "",
+      "configuracion": [
+        "search_path=public, extensions"
+      ],
+      "seguridad_definidor": true
+    }
+  ],
+  "politicas": [
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "accesos",
+      "nombre": "acc_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "((user_id = auth.uid()) AND (current_rol() IS NOT NULL))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "accesos",
+      "nombre": "acc_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR (user_id = auth.uid()))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "alertas_log",
+      "nombre": "alertas_read",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_doc_leer",
+      "usando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_doc_papelera",
+      "usando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_doc_purgar",
+      "usando": "((COALESCE(current_rol(), ''::text) = 'admin'::text) AND (eliminado_at IS NOT NULL))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_doc_subir",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "audit_log",
+      "nombre": "audit_read",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "config",
+      "nombre": "config_read",
+      "usando": "(current_rol() IS NOT NULL)",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "config",
+      "nombre": "config_write",
+      "usando": "(current_rol() = 'admin'::text)",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = 'admin'::text)"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "cruce_revision",
+      "nombre": "cruce_read",
+      "usando": "(current_rol() IS NOT NULL)",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "cruce_revision",
+      "nombre": "cruce_write",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "cuentas_eventos",
+      "nombre": "cuentas_eventos_read",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "dependencias",
+      "nombre": "deps_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = 'admin'::text)"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "dependencias",
+      "nombre": "deps_read",
+      "usando": "(current_rol() IS NOT NULL)",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "dependencias",
+      "nombre": "deps_upd",
+      "usando": "(current_rol() = 'admin'::text)",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = 'admin'::text)"
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "directorio",
+      "nombre": "dir_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "directorio",
+      "nombre": "dir_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (organismo = current_dep_name())))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "directorio",
+      "nombre": "dir_upd",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text]))"
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "entes",
+      "nombre": "entes_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = 'admin'::text)"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "entes",
+      "nombre": "entes_read",
+      "usando": "(current_rol() IS NOT NULL)",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "entes",
+      "nombre": "entes_upd",
+      "usando": "(current_rol() = 'admin'::text)",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = 'admin'::text)"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "eventos_sistema",
+      "nombre": "eventos_leer",
+      "usando": "(current_rol() = 'admin'::text)",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "eventos_sistema",
+      "nombre": "eventos_revisar",
+      "usando": "(current_rol() = 'admin'::text)",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = 'admin'::text)"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "historico_cargas",
+      "nombre": "hcargas_read",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "historico_requerimientos",
+      "nombre": "hist_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (organismo = current_dep_name())))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "informes",
+      "nombre": "inf_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "((generado_por = auth.uid()) AND (current_rol() IS NOT NULL))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "informes",
+      "nombre": "inf_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR (generado_por = auth.uid()))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "notificaciones",
+      "nombre": "notif_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "notificaciones",
+      "nombre": "notif_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (organismo = current_dep_name())))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_acciones",
+      "nombre": "pm_acc_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep())))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_acciones",
+      "nombre": "pm_acc_write",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_avances",
+      "nombre": "pm_av_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep())))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_avisos",
+      "nombre": "pm_avisos_leer",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (EXISTS ( SELECT 1\n   FROM pm_acciones a\n  WHERE ((a.hallazgo_id = pm_hallazgos.id) AND (a.dependencia_id = current_dep()))))))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_write",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_inf_read",
+      "usando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_inf_write",
+      "usando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (EXISTS ( SELECT 1\n   FROM pm_acciones a\n  WHERE ((a.plan_id = pm_planes.id) AND (a.dependencia_id = current_dep()))))))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_write",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_pror_read",
+      "usando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_pror_write",
+      "usando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_restauraciones",
+      "nombre": "pm_rest_read",
+      "usando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_traslados",
+      "nombre": "pm_tras_read",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_traslados",
+      "nombre": "pm_tras_write",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "profiles",
+      "nombre": "profiles_read",
+      "usando": "((id = auth.uid()) OR (current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "profiles",
+      "nombre": "profiles_upd",
+      "usando": "(current_rol() = 'admin'::text)",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = 'admin'::text)"
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "requerimientos",
+      "nombre": "req_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "((current_rol() = 'admin'::text) OR ((current_rol() = 'enlace'::text) AND (dependencia_id = current_dep())))"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "requerimientos",
+      "nombre": "req_read",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep())))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "requerimientos",
+      "nombre": "req_upd",
+      "usando": "(current_rol() = 'admin'::text)",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = 'admin'::text)"
+    },
+    {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "tema_manual",
+      "nombre": "tema_read",
+      "usando": "(current_rol() IS NOT NULL)",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "tema_manual",
+      "nombre": "tema_write",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text]))"
+    }
+  ],
+  "disparadores": [
+    {
+      "tabla": "alertas_log",
+      "nombre": "trg_audit_alertas",
+      "definicion": "CREATE TRIGGER trg_audit_alertas AFTER INSERT ON public.alertas_log FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "trg_archivo_doc_guard",
+      "definicion": "CREATE TRIGGER trg_archivo_doc_guard BEFORE UPDATE ON public.archivo_documentos FOR EACH ROW EXECUTE FUNCTION archivo_doc_guard()"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "trg_audit_archivo_doc",
+      "definicion": "CREATE TRIGGER trg_audit_archivo_doc AFTER INSERT OR DELETE OR UPDATE ON public.archivo_documentos FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "audit_log",
+      "nombre": "trg_audit_immutable",
+      "definicion": "CREATE TRIGGER trg_audit_immutable BEFORE DELETE OR UPDATE ON public.audit_log FOR EACH ROW EXECUTE FUNCTION audit_block_changes()"
+    },
+    {
+      "tabla": "audit_log",
+      "nombre": "trg_audit_immutable_trunc",
+      "definicion": "CREATE TRIGGER trg_audit_immutable_trunc BEFORE TRUNCATE ON public.audit_log FOR EACH STATEMENT EXECUTE FUNCTION audit_block_changes()"
+    },
+    {
+      "tabla": "cruce_revision",
+      "nombre": "trg_audit_cruce",
+      "definicion": "CREATE TRIGGER trg_audit_cruce AFTER INSERT OR DELETE OR UPDATE ON public.cruce_revision FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "cruce_revision",
+      "nombre": "trg_firma_cruce",
+      "definicion": "CREATE TRIGGER trg_firma_cruce BEFORE INSERT OR UPDATE ON public.cruce_revision FOR EACH ROW EXECUTE FUNCTION firmar_decision()"
+    },
+    {
+      "tabla": "cuentas_eventos",
+      "nombre": "trg_audit_cuentas",
+      "definicion": "CREATE TRIGGER trg_audit_cuentas AFTER INSERT ON public.cuentas_eventos FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "dependencias",
+      "nombre": "trg_audit_deps",
+      "definicion": "CREATE TRIGGER trg_audit_deps AFTER INSERT OR UPDATE ON public.dependencias FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "trg_audit_dir",
+      "definicion": "CREATE TRIGGER trg_audit_dir AFTER INSERT OR UPDATE ON public.directorio FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "trg_dir_validar",
+      "definicion": "CREATE TRIGGER trg_dir_validar BEFORE INSERT OR UPDATE ON public.directorio FOR EACH ROW EXECUTE FUNCTION directorio_validar()"
+    },
+    {
+      "tabla": "entes",
+      "nombre": "trg_audit_entes",
+      "definicion": "CREATE TRIGGER trg_audit_entes AFTER INSERT OR UPDATE ON public.entes FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "historico_cargas",
+      "nombre": "trg_audit_hcargas",
+      "definicion": "CREATE TRIGGER trg_audit_hcargas AFTER INSERT ON public.historico_cargas FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "informes",
+      "nombre": "trg_audit_informes",
+      "definicion": "CREATE TRIGGER trg_audit_informes AFTER INSERT ON public.informes FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "notificaciones",
+      "nombre": "trg_audit_notif",
+      "definicion": "CREATE TRIGGER trg_audit_notif AFTER INSERT ON public.notificaciones FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "trg_audit_pm_acc",
+      "definicion": "CREATE TRIGGER trg_audit_pm_acc AFTER INSERT OR DELETE OR UPDATE ON public.pm_acciones FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "trg_pm_acc_del",
+      "definicion": "CREATE TRIGGER trg_pm_acc_del BEFORE DELETE ON public.pm_acciones FOR EACH ROW EXECUTE FUNCTION pm_borrado_guard()"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "trg_pm_acciones_guard",
+      "definicion": "CREATE TRIGGER trg_pm_acciones_guard BEFORE INSERT OR UPDATE ON public.pm_acciones FOR EACH ROW EXECUTE FUNCTION pm_acciones_guard()"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "trg_pm_calificacion_guard",
+      "definicion": "CREATE TRIGGER trg_pm_calificacion_guard BEFORE INSERT OR UPDATE OF cal_cumplimiento, cal_efectividad ON public.pm_acciones FOR EACH ROW EXECUTE FUNCTION pm_calificacion_guard()"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "trg_audit_pm_av",
+      "definicion": "CREATE TRIGGER trg_audit_pm_av AFTER INSERT OR DELETE OR UPDATE ON public.pm_avances FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "trg_audit_pm_avisos",
+      "definicion": "CREATE TRIGGER trg_audit_pm_avisos AFTER INSERT OR DELETE ON public.pm_avisos FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "trg_audit_pm_hall",
+      "definicion": "CREATE TRIGGER trg_audit_pm_hall AFTER INSERT OR DELETE OR UPDATE ON public.pm_hallazgos FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "trg_pm_hall_del",
+      "definicion": "CREATE TRIGGER trg_pm_hall_del BEFORE DELETE ON public.pm_hallazgos FOR EACH ROW EXECUTE FUNCTION pm_borrado_guard()"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "trg_pm_hall_touch",
+      "definicion": "CREATE TRIGGER trg_pm_hall_touch BEFORE UPDATE ON public.pm_hallazgos FOR EACH ROW EXECUTE FUNCTION pm_touch()"
+    },
+    {
+      "tabla": "pm_informes_avance",
+      "nombre": "trg_audit_pm_inf",
+      "definicion": "CREATE TRIGGER trg_audit_pm_inf AFTER INSERT OR DELETE OR UPDATE ON public.pm_informes_avance FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "trg_audit_pm_planes",
+      "definicion": "CREATE TRIGGER trg_audit_pm_planes AFTER INSERT OR DELETE OR UPDATE ON public.pm_planes FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "trg_pm_plan_del",
+      "definicion": "CREATE TRIGGER trg_pm_plan_del BEFORE DELETE ON public.pm_planes FOR EACH ROW EXECUTE FUNCTION pm_borrado_guard()"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "trg_pm_planes_touch",
+      "definicion": "CREATE TRIGGER trg_pm_planes_touch BEFORE UPDATE ON public.pm_planes FOR EACH ROW EXECUTE FUNCTION pm_touch()"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "trg_audit_pm_pror",
+      "definicion": "CREATE TRIGGER trg_audit_pm_pror AFTER INSERT OR DELETE OR UPDATE ON public.pm_prorrogas FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "trg_audit_pm_tras",
+      "definicion": "CREATE TRIGGER trg_audit_pm_tras AFTER INSERT OR DELETE OR UPDATE ON public.pm_traslados FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "profiles",
+      "nombre": "trg_audit_profiles",
+      "definicion": "CREATE TRIGGER trg_audit_profiles AFTER DELETE OR UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "trg_audit_req",
+      "definicion": "CREATE TRIGGER trg_audit_req AFTER INSERT OR DELETE OR UPDATE ON public.requerimientos FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "tema_manual",
+      "nombre": "trg_audit_tema",
+      "definicion": "CREATE TRIGGER trg_audit_tema AFTER INSERT OR DELETE OR UPDATE ON public.tema_manual FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
+    },
+    {
+      "tabla": "tema_manual",
+      "nombre": "trg_firma_tema",
+      "definicion": "CREATE TRIGGER trg_firma_tema BEFORE INSERT OR UPDATE ON public.tema_manual FOR EACH ROW EXECUTE FUNCTION firmar_decision()"
+    }
+  ],
+  "restricciones": [
+    {
+      "tabla": "accesos",
+      "nombre": "accesos_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "alertas_log",
+      "nombre": "alertas_log_canal_check",
+      "definicion": "CHECK ((canal = ANY (ARRAY['whatsapp'::text, 'correo'::text, 'registro'::text, 'disciplinario'::text])))"
+    },
+    {
+      "tabla": "alertas_log",
+      "nombre": "alertas_log_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "alertas_log",
+      "nombre": "alertas_log_requerimiento_id_fkey",
+      "definicion": "FOREIGN KEY (requerimiento_id) REFERENCES requerimientos(id)"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_documentos_path_key",
+      "definicion": "UNIQUE (path)"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_documentos_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_documentos_plan_id_fkey",
+      "definicion": "FOREIGN KEY (plan_id) REFERENCES pm_planes(id) ON DELETE SET NULL"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_documentos_requerimiento_id_fkey",
+      "definicion": "FOREIGN KEY (requerimiento_id) REFERENCES requerimientos(id) ON DELETE SET NULL"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_documentos_sha256_check",
+      "definicion": "CHECK ((sha256 ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_documentos_tipo_check",
+      "definicion": "CHECK ((tipo = ANY (ARRAY['informe_final'::text, 'plan_excel'::text, 'formato_exportado'::text, 'informe_avance'::text, 'oficio'::text, 'soporte'::text, 'otro'::text])))"
+    },
+    {
+      "tabla": "audit_log",
+      "nombre": "audit_log_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "config",
+      "nombre": "config_avisos_copia_ok",
+      "definicion": "CHECK (((avisos_copia_correo = ''::text) OR (lower(avisos_copia_correo) ~ '^[a-z0-9._%+-]+@cali\\.gov\\.co$'::text)))"
+    },
+    {
+      "tabla": "config",
+      "nombre": "config_dias_rojo_check",
+      "definicion": "CHECK (((dias_rojo >= 1) AND (dias_rojo <= 30)))"
+    },
+    {
+      "tabla": "config",
+      "nombre": "config_id_check",
+      "definicion": "CHECK ((id = 1))"
+    },
+    {
+      "tabla": "config",
+      "nombre": "config_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "cruce_revision",
+      "nombre": "cruce_revision_estado_check",
+      "definicion": "CHECK ((estado = ANY (ARRAY['confirmado'::text, 'descartado'::text])))"
+    },
+    {
+      "tabla": "cruce_revision",
+      "nombre": "cruce_revision_pkey",
+      "definicion": "PRIMARY KEY (clave)"
+    },
+    {
+      "tabla": "cuentas_eventos",
+      "nombre": "cuentas_eventos_accion_check",
+      "definicion": "CHECK ((accion = ANY (ARRAY['invitar'::text, 'cambiar_correo'::text, 'enlace_clave'::text, 'activar'::text, 'desactivar'::text])))"
+    },
+    {
+      "tabla": "cuentas_eventos",
+      "nombre": "cuentas_eventos_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "dependencias",
+      "nombre": "dependencias_nombre_key",
+      "definicion": "UNIQUE (nombre)"
+    },
+    {
+      "tabla": "dependencias",
+      "nombre": "dependencias_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "directorio_correo_check",
+      "definicion": "CHECK (((correo = ''::text) OR (correo ~ '^[a-z0-9._%+-]+@cali\\.gov\\.co$'::text)))"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "directorio_organismo_cargo_key",
+      "definicion": "UNIQUE (organismo, cargo)"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "directorio_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "directorio",
+      "nombre": "directorio_telefono_check",
+      "definicion": "CHECK (((telefono = ''::text) OR (telefono ~ '^57[0-9]{10}$'::text)))"
+    },
+    {
+      "tabla": "entes",
+      "nombre": "entes_nombre_key",
+      "definicion": "UNIQUE (nombre)"
+    },
+    {
+      "tabla": "entes",
+      "nombre": "entes_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "eventos_sistema",
+      "nombre": "eventos_sistema_nivel_check",
+      "definicion": "CHECK ((nivel = ANY (ARRAY['info'::text, 'aviso'::text, 'error'::text])))"
+    },
+    {
+      "tabla": "eventos_sistema",
+      "nombre": "eventos_sistema_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "historico_cargas",
+      "nombre": "historico_cargas_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "historico_requerimientos",
+      "nombre": "historico_requerimientos_hoja_excel_check",
+      "definicion": "CHECK ((hoja_excel = ANY (ARRAY['CONTROL'::text, 'NO RESPUESTA'::text])))"
+    },
+    {
+      "tabla": "historico_requerimientos",
+      "nombre": "historico_requerimientos_oportunidad_check",
+      "definicion": "CHECK ((oportunidad = ANY (ARRAY['A tiempo'::text, 'Tardía'::text, 'Sin respuesta (vencida)'::text, 'Pendiente en término'::text, 'Respondida (sin fecha para medir)'::text, 'No requiere respuesta'::text])))"
+    },
+    {
+      "tabla": "historico_requerimientos",
+      "nombre": "historico_requerimientos_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "historico_requerimientos",
+      "nombre": "historico_requerimientos_respondio_check",
+      "definicion": "CHECK ((respondio = ANY (ARRAY['Sí'::text, 'No'::text, 'No aplica'::text])))"
+    },
+    {
+      "tabla": "historico_requerimientos",
+      "nombre": "historico_requerimientos_tardia_check",
+      "definicion": "CHECK ((tardia = ANY (ARRAY['Sí'::text, 'No'::text, 'No aplica'::text])))"
+    },
+    {
+      "tabla": "informes",
+      "nombre": "informes_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "notificaciones",
+      "nombre": "notificaciones_canal_check",
+      "definicion": "CHECK ((canal = ANY (ARRAY['whatsapp'::text, 'correo'::text])))"
+    },
+    {
+      "tabla": "notificaciones",
+      "nombre": "notificaciones_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acc_cal_ok",
+      "definicion": "CHECK ((((cal_cumplimiento IS NULL) OR ((cal_cumplimiento >= 0) AND (cal_cumplimiento <= 2))) AND ((cal_efectividad IS NULL) OR ((cal_efectividad >= 0) AND (cal_efectividad <= 2))) AND (obs_ci_estado = ANY (ARRAY[''::text, 'pendiente'::text, 'atendida'::text]))))"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_accion_check",
+      "definicion": "CHECK ((length(TRIM(BOTH FROM accion)) > 3))"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_avance_check",
+      "definicion": "CHECK ((avance >= (0)::numeric))"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_cantidad_check",
+      "definicion": "CHECK ((cantidad > (0)::numeric))"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_dependencia_id_fkey",
+      "definicion": "FOREIGN KEY (dependencia_id) REFERENCES dependencias(id)"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_fechas_ok",
+      "definicion": "CHECK ((fecha_fin >= fecha_inicio))"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_hallazgo_id_fkey",
+      "definicion": "FOREIGN KEY (hallazgo_id) REFERENCES pm_hallazgos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_plan_id_fkey",
+      "definicion": "FOREIGN KEY (plan_id) REFERENCES pm_planes(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "pm_avances_accion_id_fkey",
+      "definicion": "FOREIGN KEY (accion_id) REFERENCES pm_acciones(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "pm_avances_cantidad_check",
+      "definicion": "CHECK ((cantidad >= (0)::numeric))"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "pm_avances_dependencia_id_fkey",
+      "definicion": "FOREIGN KEY (dependencia_id) REFERENCES dependencias(id)"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "pm_avances_descripcion_check",
+      "definicion": "CHECK ((length(TRIM(BOTH FROM descripcion)) > 9))"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "pm_avances_estado_check",
+      "definicion": "CHECK ((estado = ANY (ARRAY['reportado'::text, 'validado'::text, 'devuelto'::text])))"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "pm_avances_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_avances",
+      "nombre": "pm_avances_plan_id_fkey",
+      "definicion": "FOREIGN KEY (plan_id) REFERENCES pm_planes(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "pm_avisos_accion_id_fkey",
+      "definicion": "FOREIGN KEY (accion_id) REFERENCES pm_acciones(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "pm_avisos_dependencia_id_fkey",
+      "definicion": "FOREIGN KEY (dependencia_id) REFERENCES dependencias(id)"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "pm_avisos_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "pm_avisos_tipo_check",
+      "definicion": "CHECK ((tipo = ANY (ARRAY['previo'::text, 'atraso'::text])))"
+    },
+    {
+      "tabla": "pm_avisos",
+      "nombre": "pm_avisos_unico",
+      "definicion": "UNIQUE (accion_id, tipo, fecha_fin)"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_conn_ok",
+      "definicion": "CHECK ((connotaciones <@ ARRAY['administrativa'::text, 'disciplinaria'::text, 'fiscal'::text, 'penal'::text, 'sancionatoria'::text, 'otra'::text]))"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_cuantia_check",
+      "definicion": "CHECK (((cuantia IS NULL) OR (cuantia >= (0)::numeric)))"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_dependencia_id_fkey",
+      "definicion": "FOREIGN KEY (dependencia_id) REFERENCES dependencias(id)"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_descripcion_check",
+      "definicion": "CHECK ((length(TRIM(BOTH FROM descripcion)) > 3))"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_numero_check",
+      "definicion": "CHECK ((length(TRIM(BOTH FROM numero)) > 0))"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_numero_unq",
+      "definicion": "UNIQUE (plan_id, numero)"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hallazgos_plan_id_fkey",
+      "definicion": "FOREIGN KEY (plan_id) REFERENCES pm_planes(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_informes_avance_corte_check",
+      "definicion": "CHECK ((to_char((corte)::timestamp with time zone, 'MM-DD'::text) = ANY (ARRAY['06-30'::text, '12-31'::text])))"
+    },
+    {
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_informes_avance_documento_id_fkey",
+      "definicion": "FOREIGN KEY (documento_id) REFERENCES archivo_documentos(id) ON DELETE SET NULL"
+    },
+    {
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_informes_avance_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_informes_avance_plan_id_corte_key",
+      "definicion": "UNIQUE (plan_id, corte)"
+    },
+    {
+      "tabla": "pm_informes_avance",
+      "nombre": "pm_informes_avance_plan_id_fkey",
+      "definicion": "FOREIGN KEY (plan_id) REFERENCES pm_planes(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_ejercicio_check",
+      "definicion": "CHECK ((length(TRIM(BOTH FROM ejercicio)) > 3))"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_ente_id_fkey",
+      "definicion": "FOREIGN KEY (ente_id) REFERENCES entes(id)"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_estado_check",
+      "definicion": "CHECK ((estado = ANY (ARRAY['formulacion'::text, 'en_ejecucion'::text, 'cerrado'::text])))"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_formato_check",
+      "definicion": "CHECK ((formato = ANY (ARRAY['PM_01_CGSC'::text, 'F14_CGR'::text, 'OTRO'::text])))"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_plan_origen_id_fkey",
+      "definicion": "FOREIGN KEY (plan_origen_id) REFERENCES pm_planes(id) ON DELETE SET NULL"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_requerimiento_id_fkey",
+      "definicion": "FOREIGN KEY (requerimiento_id) REFERENCES requerimientos(id) ON DELETE SET NULL"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_resolucion_ok",
+      "definicion": "CHECK ((resolucion = ANY (ARRAY[''::text, '24.043'::text, '24.003'::text, 'anterior'::text])))"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_accion_id_fkey",
+      "definicion": "FOREIGN KEY (accion_id) REFERENCES pm_acciones(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_check",
+      "definicion": "CHECK (((tipo = 'accion'::text) = (accion_id IS NOT NULL)))"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_check1",
+      "definicion": "CHECK (((tipo = 'informe'::text) = (corte IS NOT NULL)))"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_check2",
+      "definicion": "CHECK ((fecha_nueva > fecha_vencimiento_anterior))"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_estado_check",
+      "definicion": "CHECK ((estado = ANY (ARRAY['solicitada'::text, 'concedida'::text, 'negada'::text])))"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_plan_id_fkey",
+      "definicion": "FOREIGN KEY (plan_id) REFERENCES pm_planes(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_prorrogas",
+      "nombre": "pm_prorrogas_tipo_check",
+      "definicion": "CHECK ((tipo = ANY (ARRAY['presentacion'::text, 'informe'::text, 'accion'::text])))"
+    },
+    {
+      "tabla": "pm_restauraciones",
+      "nombre": "pm_restauraciones_audit_id_fkey",
+      "definicion": "FOREIGN KEY (audit_id) REFERENCES audit_log(id)"
+    },
+    {
+      "tabla": "pm_restauraciones",
+      "nombre": "pm_restauraciones_pkey",
+      "definicion": "PRIMARY KEY (audit_id)"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "pm_tras_tipo_ok",
+      "definicion": "CHECK ((tipo = ANY (ARRAY['disciplinaria'::text, 'fiscal'::text, 'penal'::text, 'sancionatoria'::text, 'otra'::text])))"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "pm_traslados_destino_check",
+      "definicion": "CHECK ((length(TRIM(BOTH FROM destino)) > 2))"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "pm_traslados_estado_check",
+      "definicion": "CHECK ((estado = ANY (ARRAY['trasladado'::text, 'en_indagacion'::text, 'en_investigacion'::text, 'archivado'::text, 'con_decision'::text])))"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "pm_traslados_hallazgo_id_fkey",
+      "definicion": "FOREIGN KEY (hallazgo_id) REFERENCES pm_hallazgos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "pm_traslados_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "pm_traslados",
+      "nombre": "pm_traslados_plan_id_fkey",
+      "definicion": "FOREIGN KEY (plan_id) REFERENCES pm_planes(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "profiles",
+      "nombre": "profiles_dependencia_id_fkey",
+      "definicion": "FOREIGN KEY (dependencia_id) REFERENCES dependencias(id)"
+    },
+    {
+      "tabla": "profiles",
+      "nombre": "profiles_id_fkey",
+      "definicion": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "profiles",
+      "nombre": "profiles_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "profiles",
+      "nombre": "profiles_rol_check",
+      "definicion": "CHECK ((rol = ANY (ARRAY['admin'::text, 'alcalde'::text, 'secretario'::text, 'enlace'::text, 'control_interno'::text])))"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_asunto_check",
+      "definicion": "CHECK ((length(TRIM(BOTH FROM asunto)) > 3))"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_cierre_ok",
+      "definicion": "CHECK ((((estado = 'abierto'::text) AND (orfeo_salida IS NULL) AND (fecha_cierre IS NULL)) OR ((estado = 'cerrado'::text) AND (orfeo_salida ~ '^[0-9]{10,20}$'::text) AND (fecha_cierre IS NOT NULL))))"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_dependencia_id_fkey",
+      "definicion": "FOREIGN KEY (dependencia_id) REFERENCES dependencias(id)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_ente_id_fkey",
+      "definicion": "FOREIGN KEY (ente_id) REFERENCES entes(id)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_estado_check",
+      "definicion": "CHECK ((estado = ANY (ARRAY['abierto'::text, 'cerrado'::text])))"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_limite_ok",
+      "definicion": "CHECK ((fecha_limite >= fecha_radicacion))"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_orfeo_unq",
+      "definicion": "UNIQUE (orfeo_salida)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "requerimientos",
+      "nombre": "requerimientos_radicado_fmt",
+      "definicion": "CHECK (((hist_key IS NOT NULL) OR (radicado ~ '^[0-9]{4}[A-Z]{2}[0-9]{4,10}$'::text)))"
+    },
+    {
+      "tabla": "tema_manual",
+      "nombre": "tema_manual_pkey",
+      "definicion": "PRIMARY KEY (row_key)"
+    },
+    {
+      "tabla": "tema_manual",
+      "nombre": "tema_manual_tema_check",
+      "definicion": "CHECK ((tema = ANY (ARRAY['contractual'::text, 'fiscal'::text, 'disciplinario'::text, 'peticion'::text, 'ddhh'::text, 'obras'::text, 'administrativo'::text, 'servicios'::text, 'sin'::text])))"
+    }
+  ],
+  "permisos_tablas": [
+    {
+      "rol": "authenticated",
+      "tabla": "accesos",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "accesos",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "alertas_log",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "archivo_documentos",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "archivo_documentos",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "archivo_documentos",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "archivo_documentos",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "audit_log",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "config",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "config",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "cruce_revision",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "cruce_revision",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "cruce_revision",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "cruce_revision",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "cuentas_eventos",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "dependencias",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "dependencias",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "dependencias",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "directorio",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "directorio",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "directorio",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "entes",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "entes",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "entes",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "eventos_sistema",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "historico_cargas",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "historico_requerimientos",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "informes",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "informes",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "notificaciones",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "notificaciones",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_acciones",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_acciones",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_acciones",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_acciones",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_avances",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_avisos",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_hallazgos",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_hallazgos",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_hallazgos",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_hallazgos",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_informes_avance",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_informes_avance",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_informes_avance",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_informes_avance",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_planes",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_planes",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_planes",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_planes",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_prorrogas",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_prorrogas",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_prorrogas",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_prorrogas",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_restauraciones",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_traslados",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_traslados",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_traslados",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "pm_traslados",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "profiles",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "profiles",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "requerimientos",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "requerimientos",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "requerimientos",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "tema_manual",
+      "permiso": "DELETE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "tema_manual",
+      "permiso": "INSERT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "tema_manual",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "tema_manual",
+      "permiso": "UPDATE"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "v_cumplimiento_organismo",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "v_directorio_verificacion",
+      "permiso": "SELECT"
+    },
+    {
+      "rol": "authenticated",
+      "tabla": "v_requerimientos",
+      "permiso": "SELECT"
+    }
+  ],
+  "permisos_funciones": [
+    {
+      "rol": "anon",
+      "funcion": "archivo_doc_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "archivo_doc_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "archivo_doc_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "audit_block_changes",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "audit_block_changes",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "audit_block_changes",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "audit_hash",
+      "argumentos": "p_prev text, p_tabla text, p_accion text, p_registro text, p_usuario text, p_ts timestamp with time zone, p_payload jsonb, p_cambios jsonb"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "audit_hash",
+      "argumentos": "p_prev text, p_tabla text, p_accion text, p_registro text, p_usuario text, p_ts timestamp with time zone, p_payload jsonb, p_cambios jsonb"
+    },
+    {
+      "rol": "service_role",
+      "funcion": "audit_hash",
+      "argumentos": "p_prev text, p_tabla text, p_accion text, p_registro text, p_usuario text, p_ts timestamp with time zone, p_payload jsonb, p_cambios jsonb"
+    },
+    {
+      "rol": "anon",
+      "funcion": "audit_trigger",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "audit_trigger",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "audit_trigger",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "cargar_historico",
+      "argumentos": "p jsonb"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "cerrar_requerimiento",
+      "argumentos": "p_id uuid, p_orfeo text, p_fecha date, p_path text, p_hash text"
+    },
+    {
+      "rol": "anon",
+      "funcion": "current_dep",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "current_dep",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "current_dep",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "current_dep_name",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "current_dep_name",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "current_dep_name",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "current_rol",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "current_rol",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "current_rol",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "directorio_validar",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "directorio_validar",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "directorio_validar",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "escalar_requerimiento",
+      "argumentos": "p_id uuid, p_canal text"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "escalar_requerimiento",
+      "argumentos": "p_id uuid, p_canal text"
+    },
+    {
+      "rol": "service_role",
+      "funcion": "escalar_requerimiento",
+      "argumentos": "p_id uuid, p_canal text"
+    },
+    {
+      "rol": "anon",
+      "funcion": "fecha_colombia",
+      "argumentos": "p_ts timestamp with time zone"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "fecha_colombia",
+      "argumentos": "p_ts timestamp with time zone"
+    },
+    {
+      "rol": "service_role",
+      "funcion": "fecha_colombia",
+      "argumentos": "p_ts timestamp with time zone"
+    },
+    {
+      "rol": "anon",
+      "funcion": "firmar_decision",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "firmar_decision",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "firmar_decision",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "handle_new_user",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "handle_new_user",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "handle_new_user",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "hoy_colombia",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "hoy_colombia",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "hoy_colombia",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "org_key",
+      "argumentos": "t text"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "org_key",
+      "argumentos": "t text"
+    },
+    {
+      "rol": "service_role",
+      "funcion": "org_key",
+      "argumentos": "t text"
+    },
+    {
+      "rol": "anon",
+      "funcion": "org_oficial",
+      "argumentos": "t text"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "org_oficial",
+      "argumentos": "t text"
+    },
+    {
+      "rol": "service_role",
+      "funcion": "org_oficial",
+      "argumentos": "t text"
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_acciones_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_acciones_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_acciones_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_borrado_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_borrado_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_borrado_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_calificacion_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_calificacion_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_calificacion_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_eliminar_plan",
+      "argumentos": "p_id uuid"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_importar",
+      "argumentos": "p jsonb"
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_misma_operacion",
+      "argumentos": "a audit_log, b audit_log"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_misma_operacion",
+      "argumentos": "a audit_log, b audit_log"
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_misma_operacion",
+      "argumentos": "a audit_log, b audit_log"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_papelera",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_reportar_avance",
+      "argumentos": "p_accion uuid, p_fecha date, p_cantidad numeric, p_descripcion text, p_orfeo text, p_path text, p_hash text, p_validar boolean"
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_resolucion_de",
+      "argumentos": "p_formato text, p_resolucion text, p_fecha date"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_resolucion_de",
+      "argumentos": "p_formato text, p_resolucion text, p_fecha date"
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_resolucion_de",
+      "argumentos": "p_formato text, p_resolucion text, p_fecha date"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_resolver_prorroga",
+      "argumentos": "p_id uuid, p_estado text, p_radicado text, p_fecha date"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_restaurar",
+      "argumentos": "p_audit_id bigint"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_revisar_avance",
+      "argumentos": "p_id uuid, p_estado text, p_observacion text"
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_touch",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_touch",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_touch",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "registrar_error_app",
+      "argumentos": "p_mensaje text, p_detalle jsonb"
+    },
+    {
+      "rol": "service_role",
+      "funcion": "respaldo_lote",
+      "argumentos": "p_tabla text, p_orden text, p_desde integer, p_cantidad integer"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "sembrar_desde_historico",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "verificar_cadena_auditoria",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "verificar_cadena_auditoria",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "verificar_cadena_auditoria",
+      "argumentos": ""
+    }
+  ]
+}

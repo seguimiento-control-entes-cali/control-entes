@@ -587,9 +587,10 @@ Alcaldía). F5 a F8 quedan como hoja de ruta para DATIC.
 **Salida:** la 3.0 cubre las 20 rutas; la 2.x se puede retirar de la raíz.
 
 #### F4 · Base de datos bajo control
-- [ ] `pg_dump --schema-only` de producción, comparación con `supabase/01-20`, resolución de diferencias.
-- [ ] Alembic `0001_linea_base` + `alembic stamp` en producción; Supabase CLI local y en la CI.
-- [ ] Prueba: Supabase vacío → `upgrade head` = esquema de producción; cadena de auditoría verificada en la CI.
+**Ajuste aprobado por Erika (2026-11-16):** sin Alembic; detalle en [F4_BASE_BAJO_CONTROL.md](F4_BASE_BAJO_CONTROL.md).
+- [x] Huella del esquema (consulta de solo lectura `supabase/consultas/huella_esquema.sql`) calculada sobre los scripts con PGlite y guardada en `supabase/huella_esquema.json`; la CI falla si no está al día.
+- [ ] Comparar con la huella de producción y resolver cada diferencia con un script numerado (requiere que Erika corra la consulta).
+- [ ] Alembic `0001_linea_base` + `alembic stamp`: pasa a la hoja de ruta de DATIC (F5, backend en Python).
 
 #### F5 · Esqueleto del backend
 - [ ] FastAPI con `core/`, rol `ce_app` (`0002_rol_aplicacion`), contexto de usuario por transacción.
@@ -683,8 +684,8 @@ Fecha: AAAA-MM-DD
 | 1 | F0 Preparación | ✅ terminada | 2026-11-08 | 2026-11-08 | 2026-10-28 → 10-30; rev. 4: 2026-11-19 → 11-23 |
 | 1 | F1 Cimientos del frontend | ✅ terminada | 2026-11-08 | 2026-11-10 | 2026-11-03 → 11-06; rev. 4: 2026-11-24 → 12-02 |
 | 1 | F2 Primeras pantallas | ✅ terminada | 2026-11-10 | 2026-11-11 | 2026-11-09 → 11-13; rev. 4: 2026-12-03 → 12-11 |
-| 1 | F3 Pantallas restantes | 🔵 en curso (adelantada) | 2026-11-12 | | rev. 4: desde 2026-12-14 |
-| 1 | F4 Base de datos bajo control | ⬜ | | | rev. 4: desde 2026-12-14 |
+| 1 | F3 Pantallas restantes | ✅ terminada | 2026-11-12 | 2026-11-16 | rev. 4: desde 2026-12-14 |
+| 1 | F4 Base de datos bajo control | 🔵 en curso (adelantada) | 2026-11-16 | | rev. 4: desde 2026-12-14 |
 | 2 | F5 Esqueleto del backend | ⬜ hoja de ruta para DATIC | | | |
 | 2 | F6 Módulos del backend | ⬜ hoja de ruta para DATIC | | | |
 | 2 | F7 Cierre del acceso directo | ⬜ hoja de ruta para DATIC | | | |
@@ -720,3 +721,5 @@ Pausa: 2026-12-23 → 2027-01-07. Sin cambios en producción del 2026-12-19 al 2
 | 2026-11-16 | F3 | 4a en main (PR #37): publicación #31, verificada. Entrega 4c, parte 1: sugerencias de acciones según la causa del hallazgo (7 plantillas copiadas por script de la 2.x, prueba de igualdad con PM_PLANTILLAS y pmSugerencias reales) y traslados de hallazgos por incidencia (registrar, editar, eliminar; script 18). El botón de un hallazgo sin acciones pasa a «Formular con sugerencias», como en la 2.x. |
 | 2026-11-16 | F3 | 4c parte 1 en main (PR #38). Entrega 4c, parte 2: oficio de remisión del informe (sugerido por el número de la actuación y su año, enlazar, ver; selector en el formulario del plan; la importación lo sugiere), «Aprobar y suscribir» (bloquea sin acciones o con observaciones pendientes; ofrece registrar la respuesta del oficio en Carga ORFEO con el radicado y la fecha del plan) y «Notificar» a la dependencia por WhatsApp o correo con el mensaje de la 2.x, registrado en la bitácora. Paridad con pmReqSugerido y pmMsg reales. |
 | 2026-11-16 | F3 | 4c parte 2 en main (PR #39). Integridad y respaldo de archivos en Configuración → Copias de seguridad (último pendiente de Planes en la 3.0): «Verificar archivos» comprueba que cada soporte y documento exista y conserve su huella SHA-256; «Descargar archivos (ZIP)» los baja con un MANIFIESTO.csv. El ZIP es idéntico byte por byte al de la 2.x (prueba con zipCrear y crc32 reales). Prueba de importar con más tiempo de espera (fallaba solo con carga). |
+| 2026-11-16 | F3 | **F3 terminada:** respaldo de archivos en main (PR #40). Todas las pantallas de la 2.x están en la 3.0. |
+| 2026-11-16 | F4 | F4 iniciada. **Decisión de Erika:** sin Alembic (Python no está instalado; Alembic va con el backend de la F5, para DATIC). Huella del esquema de solo lectura (`supabase/consultas/huella_esquema.sql`), calculada sobre los scripts con PGlite (`npm run bd:huella`), guardada en `supabase/huella_esquema.json` y revisada en `npm run verificar`; comparación con producción con `--comparar`. |
