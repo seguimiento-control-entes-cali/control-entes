@@ -7,7 +7,14 @@ import { useState } from 'react';
 import { textoCorto } from '../../dominio/actividad';
 import { nombreCorto } from '../../dominio/directorio';
 import { fechaColombia, formatoCorto } from '../../dominio/fechas';
-import { CONNOTACIONES, FORMATOS, TIPOS_EJERCICIO, txt, type DatosPlanes } from '../../dominio/planes';
+import {
+  CONNOTACIONES,
+  FORMATOS,
+  TIPOS_EJERCICIO,
+  txt,
+  type DatosPlanes,
+  type Plan
+} from '../../dominio/planes';
 import {
   avanceImpTxt,
   cargaImportacion,
@@ -20,6 +27,8 @@ import { Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
 import { leerLibroExcel, leerPdf } from './leer-plan';
 import { useCopiaDocumento } from './Memoria';
+import { useOficios } from './Oficio';
+import { oficioSugerido } from '../../dominio/planes-oficio';
 
 type Dep = { id: number; nombre: string };
 
@@ -40,6 +49,7 @@ export function VentanaImportar({
   const avisar = useAvisos();
   const cliente = useQueryClient();
   const hoy = fechaColombia(new Date());
+  const oficios = useOficios();
   const [imp, setImp] = useState<Importacion | null>(null);
   const [leyendo, setLeyendo] = useState(false);
   const [fallo, setFallo] = useState('');
@@ -89,6 +99,9 @@ export function VentanaImportar({
     setOcupado(true);
     try {
       const carga = cargaImportacion(normal(imp), entes, hoy);
+      const sug = oficioSugerido(imp.plan as unknown as Plan, oficios);
+      if (d.v19) Object.assign(carga.plan, { requerimiento_id: sug?.id ?? null });
+      if (d.v20) Object.assign(carga.plan, { fecha_radicacion_informe: sug?.fecha_radicacion ?? null });
       const id = await planes.importar(carga);
       avisar(`Plan importado: ${carga.hallazgos.length} hallazgos y ${k.nAcc} acciones`, 'ok');
       await Promise.all([

@@ -17,7 +17,8 @@ export function PantallaCarga() {
   const cliente = useQueryClient();
   const avisar = useAvisos();
   const ir = useNavigate();
-  const llegada = (useLocation().state as { id?: string } | null)?.id ?? null;
+  const estado = useLocation().state as { id?: string; orfeo?: string; fecha?: string } | null;
+  const llegada = estado?.id ?? null;
   const abiertos = useMemo(
     () => vivos.filter(r => r.estado === 'abierto').sort((a, b) => a.dias - b.dias),
     [vivos]
@@ -25,8 +26,8 @@ export function PantallaCarga() {
   const hoy = fechaColombia(new Date());
   const [busqueda, setBusqueda] = useState('');
   const [elegido, setElegido] = useState<string | null>(llegada);
-  const [orfeo, setOrfeo] = useState('');
-  const [fecha, setFecha] = useState(hoy);
+  const [orfeo, setOrfeo] = useState(estado?.orfeo ?? '');
+  const [fecha, setFecha] = useState(estado?.fecha ?? hoy);
   const [err, setErr] = useState('');
   const [guardando, setGuardando] = useState(false);
   const archivo = useRef<HTMLInputElement>(null);
