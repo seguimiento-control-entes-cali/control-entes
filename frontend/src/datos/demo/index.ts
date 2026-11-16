@@ -23,7 +23,8 @@ import {
   type Hallazgo,
   type InformeAvance,
   type Plan,
-  type Prorroga
+  type Prorroga,
+  type Traslado
 } from '../../dominio/planes';
 import { requisitosProrroga } from '../../dominio/planes-norma';
 import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
@@ -126,6 +127,7 @@ export function datosDemo(): Datos {
   // Archivo documental y papelera de la demostración (en memoria: el contenido solo existe durante la sesión)
   let documentos: DocumentoArchivo[] = [];
   const prorrogas: Prorroga[] = [];
+  let traslados: Traslado[] = [];
   const informesAvance: InformeAvance[] = [];
   const archivos = new Map<string, ArrayBuffer>();
   type Lista = 'planes' | 'hallazgos' | 'acciones' | 'avances';
@@ -490,7 +492,7 @@ export function datosDemo(): Datos {
           };
         return {
           ...JSON.parse(JSON.stringify(planes)),
-          traslados: [],
+          traslados: JSON.parse(JSON.stringify(traslados)) as Traslado[],
           v19: true,
           v20: true,
           prorrogas: JSON.parse(JSON.stringify(prorrogas)) as Prorroga[],
@@ -509,7 +511,9 @@ export function datosDemo(): Datos {
               ? prorrogas
               : tipo === 'inf'
                 ? informesAvance
-                : planes.acciones) as unknown as Record<string, unknown>[];
+                : tipo === 'tras'
+                  ? traslados
+                  : planes.acciones) as unknown as Record<string, unknown>[];
         if (
           tipo === 'hall' &&
           planes.hallazgos.some(h => h.plan_id === o.plan_id && h.numero === o.numero && h.id !== id)
@@ -524,7 +528,8 @@ export function datosDemo(): Datos {
             hall: 'pm_hallazgos',
             acc: 'pm_acciones',
             pror: 'pm_prorrogas',
-            inf: 'pm_informes_avance'
+            inf: 'pm_informes_avance',
+            tras: 'pm_traslados'
           } as const
         )[tipo];
         if (tipo === 'pror') {
@@ -560,6 +565,11 @@ export function datosDemo(): Datos {
       },
       async eliminar(tipo, id) {
         const usuario = editorPlanes('Tu rol no puede eliminar');
+        if (tipo === 'tras') {
+          traslados = traslados.filter(t => t.id !== id);
+          auditar('pm_traslados', 'DELETE', id, { id }, usuario);
+          return;
+        }
         const accIds =
           tipo === 'acc' ? [id] : planes.acciones.filter(a => a.hallazgo_id === id).map(a => a.id);
         if (planes.avances.some(v => accIds.includes(v.accion_id)))

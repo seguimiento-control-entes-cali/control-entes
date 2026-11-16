@@ -19,6 +19,7 @@ import {
   columnasInstaladas,
   fechaPlan,
   llave,
+  masMeses,
   metaTxt,
   numTxt,
   numero,
@@ -39,6 +40,7 @@ import {
   type Hallazgo,
   type Plan
 } from '../../dominio/planes';
+import { sugerencias, type AccionSugerida } from '../../dominio/planes-plantillas';
 import { Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
 
@@ -541,6 +543,23 @@ export function VentanaAccion({
       alCerrar={alCerrar}
       pie={<Pie alCerrar={alCerrar} guardar={() => void guardar()} />}
     >
+      {!a && (
+        <Sugerencias
+          h={h}
+          usar={x => {
+            setF({
+              ...f,
+              accion: x.accion,
+              meta: x.meta,
+              unidad_medida: x.unidad,
+              cantidad: String(x.cantidad),
+              fuente_verificacion: x.fuente,
+              fecha_fin: masMeses(f.fecha_inicio || fechaColombia(new Date()), x.meses)
+            });
+            avisar('Sugerencia cargada: revise y ajuste antes de guardar', 'ok');
+          }}
+        />
+      )}
       <Campo
         id="pmAAcc"
         label={(p.formato === 'F14_CGR' ? 'Acción de mejoramiento' : 'Acción correctiva') + ' *'}
@@ -1066,4 +1085,35 @@ export function useMarcarAtendida() {
       avisar((er as Error).message, 'error');
     }
   };
+}
+
+/** pmSugHtml: sugerencias según la causa del hallazgo (solo al agregar una acción). */
+function Sugerencias({ h, usar }: { h: Hallazgo; usar: (x: AccionSugerida) => void }) {
+  return (
+    <div className="pm-sug">
+      <div className="pm-sug-h">
+        <Icono nombre="fa-lightbulb" /> Sugerencias según la causa del hallazgo{' '}
+        <span className="muted">(un punto de partida: ajústelas a su caso)</span>
+      </div>
+      {sugerencias(h).map(g => (
+        <div className="pm-sug-g" key={g.id}>
+          <b>{g.tema}</b>
+          {g.acciones.map(x => (
+            <div className="pm-sug-a" key={x.accion}>
+              <span>
+                {x.accion}
+                <span className="muted">
+                  {' '}
+                  · Meta: {x.meta} · Plazo: {x.meses} meses
+                </span>
+              </span>
+              <button type="button" className="btn sm" onClick={() => usar(x)}>
+                Usar
+              </button>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 }

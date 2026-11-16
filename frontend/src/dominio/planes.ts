@@ -124,8 +124,15 @@ export interface Avance {
   created_at: string;
 }
 export interface Traslado {
+  id?: string;
+  plan_id?: string;
   hallazgo_id: string;
   tipo: string;
+  estado?: string;
+  destino?: string;
+  radicado?: string;
+  fecha?: string | null;
+  observaciones?: string;
 }
 
 /** Lo que ve cada usuario de los planes (secretario y enlace: solo lo de su dependencia). */
