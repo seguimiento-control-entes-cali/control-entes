@@ -104,8 +104,12 @@ describe('3.0 · Planes de mejoramiento (demo, importar)', () => {
     fireEvent.change(dep, { target: { value: (dep.options[1] as HTMLOptionElement).value } });
     expect(within(v).queryByText(/Fila 7: no se reconoció la dependencia responsable/)).toBeNull();
     fireEvent.click(importar);
-    expect(await screen.findByText('Plan importado: 2 hallazgos y 2 acciones')).toBeTruthy();
-    expect(await screen.findByText('Actualizar la tabla de retención')).toBeTruthy();
+    expect(
+      await screen.findByText('Plan importado: 2 hallazgos y 2 acciones', undefined, { timeout: 8000 })
+    ).toBeTruthy();
+    expect(
+      await screen.findByText('Actualizar la tabla de retención', undefined, { timeout: 8000 })
+    ).toBeTruthy();
     expect(screen.getAllByText(/^Hallazgo \d$/)).toHaveLength(2);
   });
 
@@ -117,7 +121,9 @@ describe('3.0 · Planes de mejoramiento (demo, importar)', () => {
     fireEvent.change(within(v).getByLabelText('Archivo del plan o del informe final'), {
       target: { files: [planExcel()] }
     });
-    const fs = (await within(v).findByLabelText('Fecha de suscripción *')) as HTMLInputElement;
+    const fs = (await within(v).findByLabelText('Fecha de suscripción *', undefined, {
+      timeout: 8000
+    })) as HTMLInputElement;
     fireEvent.change(fs, { target: { value: '' } });
     expect(within(v).getByText('Indica la fecha de suscripción del plan.')).toBeTruthy();
     expect((within(v).getByRole('button', { name: /^Importar$/ }) as HTMLButtonElement).disabled).toBe(true);

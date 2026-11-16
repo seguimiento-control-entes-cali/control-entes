@@ -12,6 +12,7 @@ import type { AccionCuenta, Cuenta } from '../../dominio/cuentas';
 import type { DatosPlanes } from '../../dominio/planes';
 import type { CargaPlan } from '../../dominio/planes-importar';
 import type { ElementoPapelera, MetaDocumento } from '../../dominio/planes-memoria';
+import type { ArchivoInventario } from '../../dominio/respaldo-archivos';
 import type { DocumentoArchivo } from '../../dominio/planes';
 /** Archivo elegido para el archivo documental (File del navegador). */
 export interface ArchivoDocumento extends ArchivoSoporte {
@@ -315,6 +316,10 @@ export interface RepositorioPlanes {
     radicado: string,
     fecha: string
   ): Promise<void>;
+  /** Inventario de archivos con su huella registrada: soportes de respuestas y de avances y archivo documental. */
+  inventarioArchivos(): Promise<ArchivoInventario[]>;
+  /** Contenido de un archivo del inventario, o null si no está en el depósito. */
+  descargarArchivo(it: ArchivoInventario): Promise<ArrayBuffer | null>;
   /** Planes, hallazgos, acciones y traslados eliminados que se pueden restaurar (pm_papelera). */
   papelera(): Promise<ElementoPapelera[]>;
   /** Restaura un elemento con lo que se eliminó junto con él (pm_restaurar); devuelve el resumen. */

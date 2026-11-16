@@ -73,4 +73,12 @@ describe('3.0 · Configuración (demo)', () => {
     expect(screen.getByText('En modo demostración no se crean copias de seguridad.')).toBeTruthy();
     expect(screen.getByText('En modo demostración no hay funciones automáticas.')).toBeTruthy();
   });
+
+  it('verifica los archivos (huellas) desde Copias de seguridad', async () => {
+    const menu = await entrarAdmin();
+    fireEvent.click(menu.getByRole('link', { name: 'Configuración' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Verificar archivos/ }));
+    expect(await screen.findByText(/archivos completos y sin alteraciones\./)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Descargar archivos \(ZIP\)/ })).toBeTruthy();
+  });
 });
