@@ -569,7 +569,7 @@ F0 ─► F1 ─► F2 ──────────► F3 pantallas restantes 
 
 **Decisión de Erika (2026-11-11):** la migración llega hasta la F4 y se entrega a DATIC (repositorio, código, pruebas,
 base bajo control de versiones y documento con dos opciones: seguir con Supabase o instalar en el servidor de la
-Alcaldía). F5 a F8 quedan como hoja de ruta para DATIC.
+Alcaldía). F5 a F8 quedan como hoja de ruta para DATIC. Documento de entrega: [docs/ENTREGA_DATIC.md](../ENTREGA_DATIC.md).
 - [ ] Playwright: ingreso y recorrido de esas pantallas por rol (supervisión y secretario).
 - [ ] Decidir D-17 (variante privada).
 - [ ] Revisión con usuarios piloto.
@@ -723,3 +723,4 @@ Pausa: 2026-12-23 → 2027-01-07. Sin cambios en producción del 2026-12-19 al 2
 | 2026-11-16 | F3 | 4c parte 2 en main (PR #39). Integridad y respaldo de archivos en Configuración → Copias de seguridad (último pendiente de Planes en la 3.0): «Verificar archivos» comprueba que cada soporte y documento exista y conserve su huella SHA-256; «Descargar archivos (ZIP)» los baja con un MANIFIESTO.csv. El ZIP es idéntico byte por byte al de la 2.x (prueba con zipCrear y crc32 reales). Prueba de importar con más tiempo de espera (fallaba solo con carga). |
 | 2026-11-16 | F3 | **F3 terminada:** respaldo de archivos en main (PR #40). Todas las pantallas de la 2.x están en la 3.0. |
 | 2026-11-16 | F4 | F4 iniciada. **Decisión de Erika:** sin Alembic (Python no está instalado; Alembic va con el backend de la F5, para DATIC). Huella del esquema de solo lectura (`supabase/consultas/huella_esquema.sql`), calculada sobre los scripts con PGlite (`npm run bd:huella`), guardada en `supabase/huella_esquema.json` y revisada en `npm run verificar`; comparación con producción con `--comparar`. |
+| 2026-11-16 | F4 | Huella del esquema en main (PR #41). **Documento de entrega a DATIC** en `docs/ENTREGA_DATIC.md`: estado, qué se entrega, arquitectura, base bajo control, seguridad, las dos opciones (seguir con Supabase o instalar en el servidor de la Alcaldía, en dos caminos) y hoja de ruta F5 a F8. |
