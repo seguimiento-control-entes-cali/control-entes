@@ -4,7 +4,7 @@
 // Diferencias a propósito con la 2.x:
 // - "Conexión a Supabase" solo informa: en la 3.0 el proyecto se fija al construir (configuracion.json) y no se
 //   puede cambiar desde el navegador.
-// - La verificación y descarga de archivos llegan con Planes de mejoramiento.
+// - La verificación y descarga de archivos (huellas y ZIP con manifiesto) están en ArchivosRespaldo.tsx.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { formatoFechaHora } from '../../dominio/auditoria';
@@ -27,6 +27,7 @@ import { FECHA_CONSTRUCCION, VERSION_APP } from '../../shared/lib';
 import { Aviso, Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
 import { VentanaExcel } from './VentanaExcel';
+import { ArchivosRespaldo } from './ArchivosRespaldo';
 
 const nf = (n: number) => n.toLocaleString('es-CO');
 const Mono = ({ children }: { children: ReactNode }) => <span className="mono">{children}</span>;
@@ -416,10 +417,7 @@ function Respaldos({ c, demo }: { c: ConfiguracionGeneral; demo: boolean }) {
           La copia anterior guarda los datos. Los archivos se respaldan aparte: verifique que estén completos
           y sin alteraciones, y descárguelos en un ZIP con su manifiesto de huellas digitales.
         </div>
-        <div className="hint">
-          En la versión 3.0 la verificación y la descarga de archivos llegan con Planes de mejoramiento;
-          mientras tanto se hacen en la versión 2.x.
-        </div>
+        <ArchivosRespaldo />
       </div>
     </div>
   );

@@ -723,6 +723,23 @@ export function datosDemo(): Datos {
         Object.assign(pr, { estado, radicado_respuesta: radicado, fecha_respuesta: fecha });
         auditar('pm_prorrogas', 'UPDATE', id, pr, usuario);
       },
+      // En la demostración solo existen los documentos subidos en la sesión (igual que la 2.x)
+      async inventarioArchivos() {
+        return [...archivos.keys()].map(path => {
+          const d = documentos.find(x => x.path === path);
+          return {
+            deposito: 'archivo' as const,
+            path,
+            nombre: d ? d.nombre : path,
+            sha256: d ? d.sha256 : '',
+            origen: 'Archivo documental'
+          };
+        });
+      },
+      async descargarArchivo(it) {
+        const b = archivos.get(it.path);
+        return b ? b.slice(0) : null;
+      },
       async papelera() {
         editorPlanes('Tu rol no puede modificar planes de mejoramiento');
         return papelera

@@ -13,6 +13,7 @@ import type { Database, Json } from './tipos.generados';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
+import type { ArchivoInventario } from '../../dominio/respaldo-archivos';
 import { rutaSoporte } from '../../dominio/requerimientos';
 import type {
   Accion,
@@ -629,6 +630,73 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           } as never
         );
         if (error) throw errorPlanes(error);
+      },
+      // archivoInventario de la 2.x: lo que no se puede leer se omite (sin el script 20 no hay archivo documental)
+      async inventarioArchivos() {
+        const lee = async <T>(tabla: string, cols: string): Promise<T[]> => {
+          let desde = 0,
+            todo: T[] = [];
+          for (;;) {
+            const { data, error } = await sb
+              .from(tabla as never)
+              .select(cols)
+              .range(desde, desde + 999);
+            if (error) return todo;
+            todo = todo.concat((data ?? []) as T[]);
+            if (!data || data.length < 1000) return todo;
+            desde += 1000;
+          }
+        };
+        const out: ArchivoInventario[] = [];
+        (
+          await lee<{ radicado: string; soporte_path: string | null; soporte_hash: string | null }>(
+            'requerimientos',
+            'radicado, soporte_path, soporte_hash'
+          )
+        ).forEach(r => {
+          if (r.soporte_path)
+            out.push({
+              deposito: 'soportes',
+              path: r.soporte_path,
+              nombre: 'Respuesta ' + r.radicado + '.pdf',
+              sha256: r.soporte_hash || '',
+              origen: 'Respuesta de requerimiento'
+            });
+        });
+        (
+          await lee<{ id: string; soporte_path: string | null; soporte_hash: string | null }>(
+            'pm_avances',
+            'id, soporte_path, soporte_hash'
+          )
+        ).forEach(v => {
+          if (v.soporte_path)
+            out.push({
+              deposito: 'soportes',
+              path: v.soporte_path,
+              nombre: 'Avance ' + v.id + '.pdf',
+              sha256: v.soporte_hash || '',
+              origen: 'Soporte de avance'
+            });
+        });
+        (
+          await lee<{ path: string; nombre: string; sha256: string; eliminado_at: string | null }>(
+            'archivo_documentos',
+            'path, nombre, sha256, eliminado_at'
+          )
+        ).forEach(d =>
+          out.push({
+            deposito: 'archivo',
+            path: d.path,
+            nombre: d.nombre,
+            sha256: d.sha256,
+            origen: d.eliminado_at ? 'Archivo documental (en la papelera)' : 'Archivo documental'
+          })
+        );
+        return out;
+      },
+      async descargarArchivo(it) {
+        const { data, error } = await sb.storage.from(it.deposito).download(it.path);
+        return error || !data ? null : data.arrayBuffer();
       },
       async papelera() {
         const { data, error } = await sb.rpc('pm_papelera' as never);
