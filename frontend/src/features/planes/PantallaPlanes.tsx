@@ -40,6 +40,7 @@ import {
   type DatosPlanes,
   type Hallazgo,
   type Plan,
+  type Traslado,
   type ProblemaCalidad
 } from '../../dominio/planes';
 import { Icono, Modal, useAvisos } from '../../shared/ui';
@@ -57,6 +58,7 @@ import {
 import { VentanaExportar } from './Exportar';
 import { VentanaImportar } from './Importar';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
+import { TrasladosHallazgo, VentanaTraslado } from './Traslados';
 import {
   AvisoBajo100,
   LineaProrroga,
@@ -123,6 +125,7 @@ type VentanaPlanes =
   | { t: 'doc'; planId: string }
   | { t: 'papelera' }
   | VentanaNorma
+  | { t: 'tras'; tras: Traslado | null; h: Hallazgo }
   | { t: 'exportar'; p: Plan; fev: string };
 interface Ctx {
   d: DatosPlanes;
@@ -1368,6 +1371,12 @@ function SeccionHallazgo({
           <Icono nombre="fa-building-columns" /> {ctx.dep(h.dependencia_id) || h.dependencia_texto}
         </div>
       )}
+      <TrasladosHallazgo
+        h={h}
+        d={ctx.d}
+        edita={ctx.edita}
+        abrir={t => ctx.abrir({ t: 'tras', tras: t, h })}
+      />
       <div className="pm-acts">
         {l.length ? (
           l.map(a => <FilaAccion key={a.id} a={a} ctx={ctx} fev={fev} />)
@@ -1378,7 +1387,7 @@ function SeccionHallazgo({
               <>
                 {' '}
                 <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
-                  <Icono nombre="fa-plus" /> Agregar acción
+                  <Icono nombre="fa-lightbulb" /> Formular con sugerencias
                 </button>
               </>
             )}
@@ -1528,6 +1537,8 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
       />
     ) : w?.t === 'doc' ? (
       <VentanaDocumento planId={w.planId} alCerrar={cerrarVentana} />
+    ) : w?.t === 'tras' ? (
+      <VentanaTraslado t={w.tras} h={w.h} alCerrar={cerrarVentana} />
     ) : w?.t === 'pror' ? (
       <VentanaProrroga tipo={w.tipo} ctx={w.ctx} d={datos.data} hoy={ctx.hoy} alCerrar={cerrarVentana} />
     ) : w?.t === 'resolver' ? (

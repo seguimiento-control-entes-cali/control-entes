@@ -60,7 +60,7 @@ describe('3.0 · Planes de mejoramiento (demo, edición)', () => {
     fireEvent.click(within(v).getByRole('button', { name: /Guardar/ }));
     expect(await screen.findByText('Hallazgo agregado')).toBeTruthy();
     expect(await screen.findByText('Hallazgo 1')).toBeTruthy();
-    fireEvent.click(await screen.findByRole('button', { name: /Agregar acción/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Formular con sugerencias/ }));
     v = await screen.findByRole('dialog');
     expect(within(v).getByText(/Agregar acción · hallazgo 1/)).toBeTruthy();
     escribir(v, /Acción correctiva/, 'Actualizar la tabla de retención documental');

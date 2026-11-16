@@ -103,7 +103,8 @@ const TABLA_PLANES = {
   hall: 'pm_hallazgos',
   acc: 'pm_acciones',
   pror: 'pm_prorrogas',
-  inf: 'pm_informes_avance'
+  inf: 'pm_informes_avance',
+  tras: 'pm_traslados'
 } as const;
 /** pmErr de la 2.x: mensajes claros para las restricciones de los planes; el resto, como los requerimientos. */
 export function errorPlanes(error: { message: string }): ErrorDatos {

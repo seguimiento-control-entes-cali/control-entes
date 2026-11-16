@@ -276,12 +276,12 @@ export interface RepositorioPlanes {
   datos(): Promise<DatosPlanes>;
   /** Crea (sin id) o actualiza un plan, hallazgo o acción (Super administrador y Control Interno). Devuelve el id. */
   guardar(
-    tipo: 'plan' | 'hall' | 'acc' | 'pror' | 'inf',
+    tipo: 'plan' | 'hall' | 'acc' | 'pror' | 'inf' | 'tras',
     datos: Record<string, unknown>,
     id?: string | null
   ): Promise<string>;
   /** Elimina un hallazgo (con sus acciones) o una acción; no se puede si tienen avances reportados. */
-  eliminar(tipo: 'hall' | 'acc', id: string): Promise<void>;
+  eliminar(tipo: 'hall' | 'acc' | 'tras', id: string): Promise<void>;
   /** Elimina un plan completo (pm_eliminar_plan); no se puede si las dependencias ya reportaron avances. */
   eliminarPlan(id: string): Promise<void>;
   /** Reporta un avance con soporte (PDF o radicado ORFEO); quien edita planes puede validarlo de inmediato. */
