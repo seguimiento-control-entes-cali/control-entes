@@ -251,6 +251,8 @@ export interface RepositorioCuentas {
 export interface RepositorioSistema {
   /** La fila de configuración tal como está en la base (sin las columnas de los scripts no instalados). */
   general(): Promise<ConfiguracionGeneral>;
+  /** Registra un error del navegador en eventos_sistema (registrar_error_app del script 17). */
+  registrarError(mensaje: string, detalle: Record<string, unknown>): Promise<void>;
   /** Guarda los cambios (solo el Super administrador, por RLS). */
   guardar(c: Partial<ConfiguracionGeneral>): Promise<void>;
   /** Envía el resumen semanal de prueba al correo de quien lo pide; devuelve cuántos correos salieron. */

@@ -84,4 +84,21 @@ describe('componentes base', () => {
     expect(screen.getByRole('button', { name: 'Volver a intentar' })).toBeTruthy();
     silencio.mockRestore();
   });
+
+  it('Límite de errores: avisa el error para registrarlo en Salud del sistema (como la 2.x)', () => {
+    const silencio = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const alError = vi.fn();
+    function Falla(): never {
+      throw new Error('falla de prueba');
+    }
+    render(
+      <LimiteErrores alError={alError}>
+        <Falla />
+      </LimiteErrores>
+    );
+    expect(alError).toHaveBeenCalledTimes(1);
+    expect(alError.mock.calls[0]?.[0]).toBe('falla de prueba');
+    expect(alError.mock.calls[0]?.[1]).toMatchObject({ tipo: 'pantalla' });
+    silencio.mockRestore();
+  });
 });

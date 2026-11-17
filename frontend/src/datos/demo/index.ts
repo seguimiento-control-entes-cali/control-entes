@@ -838,6 +838,8 @@ export function datosDemo(): Datos {
       }
     },
     sistema: {
+      // En la demostración no hay bitácora de errores del servidor
+      async registrarError() {},
       async general() {
         return { ...config };
       },
