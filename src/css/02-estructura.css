@@ -388,6 +388,8 @@ input[type="range"] {
 }
 .content {
   padding: 20px 26px 48px;
-  max-width: 1280px;
+  /* Aprovecha pantallas anchas (1920 px): con 1280 px quedaba un espacio vacío a la derecha y las tablas largas,
+     como el histórico, cortaban sus últimas columnas */
+  max-width: 1760px;
   width: 100%;
 }
