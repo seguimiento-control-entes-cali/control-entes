@@ -67,7 +67,7 @@ Fases del plan de migración (`docs/migracion/README.md`):
 | Pruebas | `tests/` (2.x, base de datos y funciones) y `frontend/pruebas/` + `frontend/src/**/*.test.*` (3.0) |
 | Revisión automática | `.github/workflows/` (pruebas en dos zonas horarias, compilación y publicación) |
 | Documentación | `docs/` (arquitectura, modelo de datos, reglas de negocio, seguridad, respaldos, despliegue y migración) |
-| Manuales (Word y PDF) | `docs/manuales/`: instalación y puesta en marcha (incluye el piloto con Control Interno), manejo y administración, módulos, y técnico de construcción |
+| Manuales (Word y PDF) | `docs/manuales/`: instalación y puesta en marcha (incluye el piloto con Control Interno), manejo y administración, módulos, técnico de construcción, y Planes de mejoramiento paso a paso con pantallazos |
 
 **Cómo empezar** (equipo técnico):
 1. Clonar el repositorio; Node.js 22.
