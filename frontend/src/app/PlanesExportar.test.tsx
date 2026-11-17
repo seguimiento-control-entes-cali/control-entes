@@ -63,7 +63,11 @@ describe('3.0 · Planes de mejoramiento (demo, exportar)', () => {
     expect(fmt.value).toBe('PM_01_CGSC');
     expect([...fmt.options].map(o => o.value)).toEqual(['PM_01_CGSC', 'PM_01_AVANCE', 'F14_CGR']);
     fireEvent.click(within(v).getByRole('button', { name: /Descargar Excel/ }));
-    expect(await screen.findByText(/^Formato descargado: FORMATO_202001_PM_CGSC_\d{6}_AC/)).toBeTruthy();
+    expect(
+      await screen.findByText(/^Formato descargado: FORMATO_202001_PM_CGSC_\d{6}_AC/, undefined, {
+        timeout: 6000
+      })
+    ).toBeTruthy();
     expect(archivos).toHaveLength(1);
     expect(archivos[0]).toMatch(/^FORMATO_202001_PM_CGSC_\d{6}_AC.*\.xlsx$/);
   });

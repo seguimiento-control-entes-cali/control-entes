@@ -8,6 +8,7 @@ import { ICONO, menuDe, pantallaInicial, pestanasDe, TITULO } from '../../domini
 import { NOMBRE_ROL } from '../../dominio/roles';
 import { Icono, LimiteErrores, Tarjeta } from '../../shared/ui';
 import { useReportarErrores } from './reportar-errores';
+import { AvisoVersionNueva } from './version-nueva';
 import { useDatos } from '../sesion/contexto';
 import { VentanaMiCuenta } from '../sesion/MiCuenta';
 import { PantallaDirectorio } from '../directorio/PantallaDirectorio';
@@ -222,6 +223,7 @@ export function Marco({
             <Reloj />
             <Modo demo={demo} />
           </header>
+          <AvisoVersionNueva />
           {demo && (
             <div className="banner">
               <b>Versión de demostración con datos de ejemplo.</b> Los nombres, cifras y radicados son
