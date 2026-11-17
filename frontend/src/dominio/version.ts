@@ -20,3 +20,6 @@ export function textoVersion(version: string, variante?: Variante, fechaConstruc
   if (fecha) partes.push(`construida el ${fecha[3]}/${fecha[2]}/${fecha[1]}`);
   return partes.join(' · ');
 }
+
+/** Autoría de la aplicación (pantalla de ingreso, Configuración, documentos). */
+export const AUTORIA = 'Creada por Erika Yovanna Torres Valencia · Oficina Secretaría Privada';

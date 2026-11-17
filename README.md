@@ -91,3 +91,7 @@ Nunca se edita el archivo publicado: se edita `src/` y se reconstruye. Detalle e
 
 Software de uso institucional de la Alcaldía Distrital de Santiago de Cali. Componentes de terceros en
 [LICENCIAS-TERCEROS.md](LICENCIAS-TERCEROS.md).
+
+---
+
+<sub>Creada por Erika Yovanna Torres Valencia · Oficina Secretaría Privada.</sub>

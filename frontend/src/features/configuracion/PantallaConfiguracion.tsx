@@ -22,7 +22,7 @@ import {
   type VistaPreviaAvisos
 } from '../../dominio/configuracion';
 import { formatoCorto } from '../../dominio/historico';
-import { textoVersion } from '../../dominio/version';
+import { AUTORIA, textoVersion } from '../../dominio/version';
 import { FECHA_CONSTRUCCION, VERSION_APP } from '../../shared/lib';
 import { Aviso, Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
@@ -508,6 +508,8 @@ export function PantallaConfiguracion({ demo = false }: { demo?: boolean }) {
       <div className="hint" id="cfVersion" style={{ marginBottom: 12 }}>
         <Icono nombre="fa-circle-info" />{' '}
         {textoVersion(VERSION_APP, demo ? 'demo' : 'institucional', FECHA_CONSTRUCCION)}
+        <br />
+        {AUTORIA}
       </div>
       <div
         className="grid g-2"

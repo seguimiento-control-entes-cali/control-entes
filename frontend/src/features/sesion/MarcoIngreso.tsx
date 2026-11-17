@@ -1,5 +1,6 @@
 // Tarjeta de ingreso igual a la de la 2.x (src/index.html, #loginScreen): fondo, escudo, título y subtítulo.
 import type { ReactNode } from 'react';
+import { AUTORIA } from '../../dominio/version';
 import escudo from '../../../../src/assets/escudo.png';
 
 export function MarcoIngreso({
@@ -22,6 +23,9 @@ export function MarcoIngreso({
           {subtitulo}
         </p>
         {children}
+        <p className="hint" style={{ textAlign: 'center', marginTop: 16, fontSize: '.72rem' }}>
+          {AUTORIA}
+        </p>
       </div>
     </main>
   );

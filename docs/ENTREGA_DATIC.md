@@ -1,7 +1,7 @@
 # Control de Entes · Entrega a DATIC
 
 **Fecha:** 16 de noviembre de 2026
-**Entrega:** responsable del proyecto en la Alcaldía de Santiago de Cali
+**Entrega:** Alcaldía de Santiago de Cali
 **Recibe:** Departamento Administrativo de Tecnologías de la Información y las Comunicaciones (DATIC)
 **Repositorio:** https://github.com/seguimiento-control-entes-cali/control-entes
 
@@ -198,3 +198,7 @@ El detalle técnico (capas, seguridad, base y tareas programadas del backend) es
 - El resumen semanal y el aviso diario de planes **no se encienden** sin autorización de DATIC.
 - Todo cambio en Supabase (SQL, funciones, secretos, configuración) se hace con aprobación y queda en un script numerado y
   en la bitácora (`docs/migracion/README.md` §13).
+
+---
+
+<sub>Creada por Erika Yovanna Torres Valencia · Oficina Secretaría Privada.</sub>
