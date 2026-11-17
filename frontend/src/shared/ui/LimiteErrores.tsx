@@ -2,7 +2,10 @@
 // español y permite volver a intentar. No muestra detalles técnicos al usuario.
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
-export class LimiteErrores extends Component<{ children: ReactNode }, { fallo: boolean }> {
+export class LimiteErrores extends Component<
+  { children: ReactNode; alError?: (mensaje: string, detalle: Record<string, unknown>) => void },
+  { fallo: boolean }
+> {
   override state = { fallo: false };
 
   static getDerivedStateFromError() {
@@ -10,8 +13,12 @@ export class LimiteErrores extends Component<{ children: ReactNode }, { fallo: b
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
-    // En la 2.x estos errores se registran con registrar_error_app (script 17); se conecta con la capa de datos real.
+    // Igual que la 2.x: queda en «Salud del sistema» (registrar_error_app del script 17)
     console.error('Error en la pantalla:', error.message, info.componentStack);
+    this.props.alError?.(error.message, {
+      tipo: 'pantalla',
+      componente: (info.componentStack ?? '').slice(0, 300)
+    });
   }
 
   override render() {

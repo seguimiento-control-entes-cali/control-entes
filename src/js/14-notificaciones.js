@@ -300,7 +300,8 @@ function despachoModal() {
             .map(o => {
               const ct = contactsOf(o.org)[0],
                 ok = ct && normPhone(ct.telefono),
-                done = NOTIF.some(n => n.org === o.org && String(n.ts).slice(0, 10) === today);
+                /* fecha local de la notificación (se guarda en UTC: de 7 p. m. a medianoche ya sería el día siguiente) */
+                done = NOTIF.some(n => n.org === o.org && iso(new Date(n.ts)) === today);
               return `<div class="list-row"><div class="grow"><b>${esc(shortOrg(o.org))}</b><small>${o.venc} sin respuesta · ${o.pend} por vencer · ${ct && ct.nombre ? esc(ct.nombre) : 'sin responsable'}${ok ? '' : ' · sin celular'}${ct && ct.correo ? '' : ' · sin correo'}</small></div>
       ${done ? '<span class="pill verde"><i></i>NOTIFICADA HOY</span>' : ''}<button class="btn sm ${done ? '' : 'primary'}" data-act="notify" data-org="${esc(o.org)}">${done ? 'Reenviar' : 'Preparar'}</button></div>`;
             })

@@ -722,6 +722,9 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
       }
     },
     sistema: {
+      async registrarError(mensaje, detalle) {
+        await sb.rpc('registrar_error_app' as never, { p_mensaje: mensaje, p_detalle: detalle } as never);
+      },
       async general() {
         // select('*'): si un script no está instalado, su columna no llega y la pantalla lo indica (igual que la 2.x)
         const { data, error } = await sb.from('config').select('*').eq('id', 1).maybeSingle();

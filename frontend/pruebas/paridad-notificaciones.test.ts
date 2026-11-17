@@ -90,6 +90,12 @@ describe('paridad con la 2.x · Notificaciones', () => {
     ];
     expect(notificadaHoy(lista, org, '2026-11-13')).toBe(true);
     expect(notificadaHoy(lista, org, '2026-11-12')).toBe(false);
+    // De 7 p. m. a medianoche de Colombia la hora UTC ya es del día siguiente: cuenta el día local
+    if (new Date('2026-11-17T03:16:00Z').getDate() === 16) {
+      const noche = [{ ...lista[0], ts: '2026-11-17T03:16:00Z' }] as typeof lista;
+      expect(notificadaHoy(noche, org, '2026-11-16')).toBe(true);
+      expect(notificadaHoy(noche, org, '2026-11-17')).toBe(false);
+    }
     expect(filasCsvNotificaciones(lista)[1]).toEqual([
       '2026-11-13T15:00:00Z',
       org,

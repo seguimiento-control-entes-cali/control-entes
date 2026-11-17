@@ -7,6 +7,8 @@ import type { Perfil } from '../../datos/contratos';
 import { ICONO, menuDe, pantallaInicial, pestanasDe, TITULO } from '../../dominio/menu';
 import { NOMBRE_ROL } from '../../dominio/roles';
 import { Icono, LimiteErrores, Tarjeta } from '../../shared/ui';
+import { useReportarErrores } from './reportar-errores';
+import { useDatos } from '../sesion/contexto';
 import { PantallaDirectorio } from '../directorio/PantallaDirectorio';
 import { PantallaHistorico } from '../historico/PantallaHistorico';
 import { PantallaCumplimiento } from '../cumplimiento/PantallaCumplimiento';
@@ -101,6 +103,8 @@ export function Marco({
   alSalir: () => void;
   demo?: boolean;
 }) {
+  const { sistema } = useDatos();
+  const reportar = useReportarErrores(sistema, demo);
   const grupos = menuDe(perfil.rol);
   const textos = new Map(grupos.flatMap(g => g.opciones.map(o => [o.id, o.texto] as const)));
   const pestanas = pestanasDe(perfil.rol);
@@ -214,7 +218,7 @@ export function Marco({
             </div>
           )}
           <section className="content">
-            <LimiteErrores>
+            <LimiteErrores alError={reportar}>
               <Routes>
                 {textos.has('mando') && (
                   <Route path="/mando" element={<PantallaMando perfil={perfil} demo={demo} />} />
