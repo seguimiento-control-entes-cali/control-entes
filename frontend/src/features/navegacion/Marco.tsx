@@ -9,6 +9,7 @@ import { NOMBRE_ROL } from '../../dominio/roles';
 import { Icono, LimiteErrores, Tarjeta } from '../../shared/ui';
 import { useReportarErrores } from './reportar-errores';
 import { useDatos } from '../sesion/contexto';
+import { VentanaMiCuenta } from '../sesion/MiCuenta';
 import { PantallaDirectorio } from '../directorio/PantallaDirectorio';
 import { PantallaHistorico } from '../historico/PantallaHistorico';
 import { PantallaCumplimiento } from '../cumplimiento/PantallaCumplimiento';
@@ -109,6 +110,7 @@ export function Marco({
   const textos = new Map(grupos.flatMap(g => g.opciones.map(o => [o.id, o.texto] as const)));
   const pestanas = pestanasDe(perfil.rol);
   const [abierto, setAbierto] = useState(false);
+  const [miCuenta, setMiCuenta] = useState(false);
   const [contraido, setContraido] = useState(leerContraido);
   const { pathname } = useLocation();
   const vista = pathname.replace(/^\//, '');
@@ -176,6 +178,15 @@ export function Marco({
             <button
               type="button"
               className="icon-btn logout"
+              onClick={() => setMiCuenta(true)}
+              title="Mi cuenta y seguridad"
+              aria-label="Mi cuenta y seguridad"
+            >
+              <Icono nombre="fa-key" />
+            </button>
+            <button
+              type="button"
+              className="icon-btn logout"
               onClick={alSalir}
               title="Cerrar sesión"
               aria-label="Salir"
@@ -185,6 +196,7 @@ export function Marco({
           </div>
         </aside>
         <div className="mobile-ov" onClick={() => setAbierto(false)} />
+        {miCuenta && <VentanaMiCuenta perfil={perfil} demo={demo} alCerrar={() => setMiCuenta(false)} />}
 
         <main className="main">
           <header className="topbar">

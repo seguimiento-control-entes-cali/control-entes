@@ -227,6 +227,21 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
             'El código no es correcto o ya cambió. Escriba el código actual de la app.'
           );
       },
+      async celularesVerificados() {
+        const { data, error } = await sb.auth.mfa.listFactors();
+        if (error) throw red();
+        return (data?.totp ?? [])
+          .filter(f => f.status === 'verified')
+          .map(f => ({
+            id: f.id,
+            nombre: f.friendly_name ?? '',
+            desde: String(f.created_at ?? '').slice(0, 10)
+          }));
+      },
+      async quitarCelular(factorId) {
+        const { error } = await sb.auth.mfa.unenroll({ factorId });
+        if (error) throw new ErrorDatos('otro', error.message);
+      },
       async cancelarVerificacion(factorId) {
         await sb.auth.mfa.unenroll({ factorId }).then(
           () => undefined,
