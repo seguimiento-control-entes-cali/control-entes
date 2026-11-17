@@ -142,9 +142,17 @@ export const enlaceGmail = (remitente: string, para: string, asunto: string, msg
   '&body=' +
   encodeURIComponent(msg);
 
-/** ¿Ya se notificó hoy a la dependencia? (despachoModal: fecha local de hoy contra los 10 primeros caracteres). */
+/** Fecha local (AAAA-MM-DD) del instante guardado: la hora se guarda en UTC y de 7 p. m. a medianoche de Colombia
+ * los 10 primeros caracteres ya son el día siguiente. */
+const fechaLocalDe = (ts: string) => {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return String(ts).slice(0, 10);
+  const dos = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+};
+/** ¿Ya se notificó hoy a la dependencia? (despachoModal de la 2.x, corregido en las dos versiones el 16-nov-2026). */
 export const notificadaHoy = (lista: readonly Notificacion[], org: string, hoy: string) =>
-  lista.some(n => n.org === org && String(n.ts).slice(0, 10) === hoy);
+  lista.some(n => n.org === org && fechaLocalDe(String(n.ts)) === hoy);
 
 /** Archivo notificaciones.csv (notifCsv). */
 export function filasCsvNotificaciones(lista: readonly Notificacion[]): unknown[][] {
