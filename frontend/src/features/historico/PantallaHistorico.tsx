@@ -155,8 +155,8 @@ export function PantallaHistorico({ perfil }: { perfil: Perfil }) {
                     </td>
                     <td style={{ minWidth: 210 }}>{r.org}</td>
                     <td className="right mono">{r.term == null ? '—' : r.term + ' d'}</td>
-                    <td>{formatoCorto(r.fmax)}</td>
-                    <td>{formatoCorto(r.fresp)}</td>
+                    <td className="fecha">{formatoCorto(r.fmax)}</td>
+                    <td className="fecha">{formatoCorto(r.fresp)}</td>
                     <td className="mono" style={{ fontSize: '.76rem' }}>
                       {r.orfR || '—'}
                     </td>

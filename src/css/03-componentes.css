@@ -226,6 +226,13 @@
   vertical-align: top;
   font-size: 0.85rem;
 }
+/* Números, radicados, fechas y títulos en una sola línea: si no caben (pantalla angosta o zoom alto), la tabla se
+   desplaza hacia el lado en vez de partirlos (por ejemplo, la vigencia «20 / 26» o un radicado ORFEO en dos líneas). */
+.tbl th,
+.tbl td.mono,
+.tbl td.fecha {
+  white-space: nowrap;
+}
 .tbl tr:last-child td {
   border-bottom: 0;
 }

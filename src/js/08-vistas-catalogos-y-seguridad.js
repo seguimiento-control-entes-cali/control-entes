@@ -729,7 +729,7 @@ async function previaAvisos(btn) {
 }
 
 function vConfig(c) {
-  c.innerHTML = `<div class="hint" id="cfVersion" style="margin-bottom:12px"><i class="fa-solid fa-circle-info"></i> ${esc(versionApp())}</div>
+  c.innerHTML = `<div class="hint" id="cfVersion" style="margin-bottom:12px"><i class="fa-solid fa-circle-info"></i> ${esc(versionApp())}<br>Creada por Erika Yovanna Torres Valencia · Oficina Secretaría Privada</div>
   <div class="grid g-2">
     <div class="card"><h3>Parámetros del semáforo</h3><div class="sub">Se guardan en la base de datos y aplican a toda la entidad.</div>
       <div class="field"><label>Días para considerar un requerimiento crítico (rojo)</label><input id="cfDias" type="number" min="1" max="30" value="${S.cfg.dias_rojo}"><div class="hint">Un requerimiento abierto pasa a rojo cuando le quedan este número de días o menos, o ya venció.</div></div>

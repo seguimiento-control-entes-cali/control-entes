@@ -552,21 +552,26 @@ export function PantallaMando({ perfil, demo = false }: { perfil: Perfil; demo?:
                         <td className="muted" style={{ fontSize: '.78rem' }}>
                           {ln ? formatoFechaHora(ln.ts) : 'Nunca'}
                         </td>
-                        <td className="right" style={{ whiteSpace: 'nowrap' }}>
-                          {notifica && (
-                            <>
-                              <button
-                                type="button"
-                                className="btn sm primary"
-                                onClick={() => notificar(o.org)}
-                              >
-                                <Icono nombre="fa-whatsapp" tipo="brands" /> Notificar
-                              </button>{' '}
-                            </>
-                          )}
-                          <button type="button" className="btn sm" onClick={() => abrir(o.org)}>
-                            Expediente
-                          </button>
+                        <td className="right">
+                          {/* Con poco espacio (zoom alto o pantalla angosta) los botones bajan uno debajo del otro */}
+                          <div
+                            style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' }}
+                          >
+                            {notifica && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="btn sm primary"
+                                  onClick={() => notificar(o.org)}
+                                >
+                                  <Icono nombre="fa-whatsapp" tipo="brands" /> Notificar
+                                </button>
+                              </>
+                            )}
+                            <button type="button" className="btn sm" onClick={() => abrir(o.org)}>
+                              Expediente
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

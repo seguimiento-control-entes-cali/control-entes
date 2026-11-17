@@ -343,7 +343,7 @@ function renderQueue() {
     <td class="right mono">${o.maxRet ? o.maxRet + ' d' : '—'}</td>
     <td>${ct && ct.nombre ? esc(ct.nombre) + `<div class="muted" style="font-size:.72rem">${ok ? fmtPhone(normPhone(ct.telefono)) : 'sin celular'}</div>` : '<span class="faint">Sin directorio</span>'}</td>
     <td class="muted" style="font-size:.78rem">${ln ? fmtTs(ln.ts) : 'Nunca'}</td>
-    <td class="right" style="white-space:nowrap">${canNotify() ? `<button class="btn sm primary" data-act="notify" data-org="${esc(o.org)}"><i class="fa-brands fa-whatsapp"></i> Notificar</button> ` : ''}<button class="btn sm" data-act="openOrg" data-org="${esc(o.org)}">Expediente</button></td></tr>`;
+    <td class="right"><div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">${canNotify() ? `<button class="btn sm primary" data-act="notify" data-org="${esc(o.org)}"><i class="fa-brands fa-whatsapp"></i> Notificar</button>` : ''}<button class="btn sm" data-act="openOrg" data-org="${esc(o.org)}">Expediente</button></div></td></tr>`;
     })
     .join('')}
   </tbody></table></div>`;
