@@ -350,6 +350,11 @@ export function datosDemo(): Datos {
           );
         verificados.add(factorId.replace('demo-factor-', ''));
       },
+      // En la demostración no hay celulares reales (Mi cuenta lo indica)
+      async celularesVerificados() {
+        return [];
+      },
+      async quitarCelular() {},
       async cancelarVerificacion() {
         // Nada que deshacer en la demostración.
       }

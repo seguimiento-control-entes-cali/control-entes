@@ -27,3 +27,43 @@ describe('registro de errores de la aplicación', () => {
     await expect(d.sistema.registrarError('x', {})).resolves.toBeUndefined();
   });
 });
+
+describe('Mi cuenta · verificación en dos pasos con Supabase simulado', () => {
+  it('lista los celulares verificados y quita uno', async () => {
+    const quitados: string[] = [];
+    const sb = {
+      auth: {
+        mfa: {
+          listFactors: () =>
+            Promise.resolve({
+              data: {
+                totp: [
+                  {
+                    id: 'f1',
+                    status: 'verified',
+                    friendly_name: 'Celular 1',
+                    created_at: '2026-11-10T15:00:00Z'
+                  },
+                  {
+                    id: 'f2',
+                    status: 'unverified',
+                    friendly_name: 'Celular 2',
+                    created_at: '2026-11-11T15:00:00Z'
+                  }
+                ]
+              },
+              error: null
+            }),
+          unenroll: ({ factorId }: { factorId: string }) => {
+            quitados.push(factorId);
+            return Promise.resolve({ data: null, error: null });
+          }
+        }
+      }
+    };
+    const a = datosSupabase(sb as unknown as Parameters<typeof datosSupabase>[0]).auth;
+    expect(await a.celularesVerificados()).toEqual([{ id: 'f1', nombre: 'Celular 1', desde: '2026-11-10' }]);
+    await a.quitarCelular('f1');
+    expect(quitados).toEqual(['f1']);
+  });
+});

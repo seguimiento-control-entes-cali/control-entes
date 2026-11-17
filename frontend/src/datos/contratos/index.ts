@@ -65,6 +65,10 @@ export interface RepositorioAuth {
   confirmarVerificacion(factorId: string, codigo: string): Promise<void>;
   /** Deja sin efecto una activación que no se terminó. */
   cancelarVerificacion(factorId: string): Promise<void>;
+  /** Celulares con la verificación en dos pasos activa (Mi cuenta). */
+  celularesVerificados(): Promise<{ id: string; nombre: string; desde: string }[]>;
+  /** Quita un celular de la verificación en dos pasos (mfaQuitar de la 2.x). */
+  quitarCelular(factorId: string): Promise<void>;
 }
 export interface InscripcionVerificacion {
   factorId: string;
