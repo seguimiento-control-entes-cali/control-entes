@@ -51,7 +51,7 @@ Fases del plan de migración (`docs/migracion/README.md`):
 **Pendientes conocidos de la 3.0** (no impiden su uso; la 2.x los cubre):
 - Recorridos automáticos de punta a punta en navegador real (Playwright) por rol.
 - Revisión con usuarios piloto (requiere autorización de DATIC).
-- En el menú: selector «Ver como» de la demostración, contadores rojos y el botón «Mi cuenta».
+- En el menú: selector «Ver como» de la demostración y contadores rojos («Mi cuenta» ya está en la 3.0 desde el 16-nov).
 - El resumen semanal por correo y el aviso diario de planes están **apagados** hasta que DATIC autorice el piloto.
 
 ---
@@ -67,6 +67,7 @@ Fases del plan de migración (`docs/migracion/README.md`):
 | Pruebas | `tests/` (2.x, base de datos y funciones) y `frontend/pruebas/` + `frontend/src/**/*.test.*` (3.0) |
 | Revisión automática | `.github/workflows/` (pruebas en dos zonas horarias, compilación y publicación) |
 | Documentación | `docs/` (arquitectura, modelo de datos, reglas de negocio, seguridad, respaldos, despliegue y migración) |
+| Manuales (Word y PDF) | `docs/manuales/`: instalación y puesta en marcha (incluye el piloto con Control Interno), manejo y administración, módulos, y técnico de construcción |
 
 **Cómo empezar** (equipo técnico):
 1. Clonar el repositorio; Node.js 22.
