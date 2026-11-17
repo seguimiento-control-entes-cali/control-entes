@@ -14,6 +14,7 @@ assert.strictEqual(R.ceFecha('3/2/25').d, '2025-02-03'); ok();
 assert.strictEqual(R.ceFecha('31/02/2025').d, null); ok();
 assert.strictEqual(R.ceFecha('pendiente').malo, 'pendiente'); ok();
 assert.strictEqual(R.ceFecha({ d: '2026-03-01', h: '00:00:00' }).d, '2026-03-01'); ok();
+assert.deepStrictEqual(R.ceFecha({ d: '1900-01-00', h: '00:00:00' }), { d: null, malo: '1900-01-00' }); ok();   // celda con 0 en formato de fecha
 
 // texto de Python: enteros, decimales y números grandes
 assert.strictEqual(R.cePyStr(num(1, true)), '1.0'); ok();

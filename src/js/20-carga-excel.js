@@ -139,7 +139,12 @@ function ceFechaValida(y, m, d) {
 /* pdate(): devuelve { d: 'AAAA-MM-DD' | null, malo: texto original si no se pudo leer } */
 function ceFecha(v) {
   if (v == null) return { d: null, malo: null };
-  if (ceEsFecha(v)) return { d: v.d, malo: null };
+  if (ceEsFecha(v)) {
+    /* Una celda con 0 (o una hora sola) en formato de fecha llega como 1900-01-00: no es una fecha real */
+    const [y, m, d] = v.d.split('-').map(Number);
+    const r = ceFechaValida(y, m, d);
+    return r ? { d: r, malo: null } : { d: null, malo: v.d };
+  }
   const s = cePyStr(v).trim().toLowerCase();
   let m = /^(\d{1,2})[-/ ]([a-z]{3,4})\.?[-/ ](\d{2,4})$/.exec(s);
   if (m && CE_MES[m[2]]) {

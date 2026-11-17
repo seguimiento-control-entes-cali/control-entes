@@ -343,7 +343,16 @@ describe('paridad con la 2.x · lectura y clasificación del Excel de control', 
     ];
     for (const [a, b] of pares)
       expect(habiles(a as string, b as string), `${a} → ${b}`).toBe(d2.ceHabiles(a as string, b as string));
-    for (const v of ['15-ene-2025', '3/2/25', '29/02/2025', '1 sept 2026', 'mañana', null])
-      expect(fecha(v as Celda), String(v)).toEqual(d2.ceFecha(v));
+    for (const v of [
+      '15-ene-2025',
+      '3/2/25',
+      '29/02/2025',
+      '1 sept 2026',
+      'mañana',
+      null,
+      { d: '2026-03-01', h: '00:00:00' },
+      { d: '1900-01-00', h: '00:00:00' }
+    ])
+      expect(fecha(v as Celda), JSON.stringify(v)).toEqual(d2.ceFecha(v));
   });
 });

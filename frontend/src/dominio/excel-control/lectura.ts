@@ -108,7 +108,12 @@ function fechaValida(y: number, m: number, d: number): string | null {
 /** pdate() (ceFecha): { d: 'AAAA-MM-DD' | null, malo: texto original si no se pudo leer }. */
 export function fecha(v: Celda): { d: string | null; malo: string | null } {
   if (v == null) return { d: null, malo: null };
-  if (esFecha(v)) return { d: v.d, malo: null };
+  if (esFecha(v)) {
+    // Una celda con 0 (o una hora sola) en formato de fecha llega como 1900-01-00: no es una fecha real
+    const [y, m, d] = v.d.split('-').map(Number);
+    const r = fechaValida(y ?? 0, m ?? 0, d ?? 0);
+    return r ? { d: r, malo: null } : { d: null, malo: v.d };
+  }
   const s = pyStr(v).trim().toLowerCase();
   let m = /^(\d{1,2})[-/ ]([a-z]{3,4})\.?[-/ ](\d{2,4})$/.exec(s);
   const mes = m ? MES[m[2] as string] : undefined;
