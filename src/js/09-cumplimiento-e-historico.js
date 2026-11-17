@@ -156,7 +156,7 @@ function drillModal(org) {
       .slice(0, 200)
       .map(
         r =>
-          `<tr><td class="mono">${r.v}</td><td class="mono">${esc(r.rad || '—')}</td><td>${fmtD(r.fmax)}</td><td>${fmtD(r.fresp)}</td><td class="mono" style="font-size:.76rem">${esc(r.orfR || '—')}</td><td class="right mono">${r.ret == null ? '—' : r.ret + ' d'}</td><td><span class="pill ${OPO_PILL[r.opo][0]}">${OPO_PILL[r.opo][1]}</span></td></tr>`
+          `<tr><td class="mono">${r.v}</td><td class="mono">${esc(r.rad || '—')}</td><td class="fecha">${fmtD(r.fmax)}</td><td class="fecha">${fmtD(r.fresp)}</td><td class="mono" style="font-size:.76rem">${esc(r.orfR || '—')}</td><td class="right mono">${r.ret == null ? '—' : r.ret + ' d'}</td><td><span class="pill ${OPO_PILL[r.opo][0]}">${OPO_PILL[r.opo][1]}</span></td></tr>`
       )
       .join('')}
     </tbody></table></div>${rows.length > 200 ? `<div class="muted" style="font-size:.76rem;margin-top:8px">Se muestran los 200 con mayor retraso. El detalle completo está en Histórico de radicados.</div>` : ''}`,
@@ -230,7 +230,7 @@ function renderHist() {
       .map(
         r => `<tr class="click" data-act="histDetail" data-i="${r.i}">
     <td class="mono">${r.v}</td><td class="mono">${esc(r.rad || '—')}</td><td class="mono" style="font-size:.76rem">${esc(r.orfE || '—')}</td><td style="min-width:210px">${esc(r.org)}</td>
-    <td class="right mono">${r.term == null ? '—' : r.term + ' d'}</td><td>${fmtD(r.fmax)}</td><td>${fmtD(r.fresp)}</td><td class="mono" style="font-size:.76rem">${esc(r.orfR || '—')}</td>
+    <td class="right mono">${r.term == null ? '—' : r.term + ' d'}</td><td class="fecha">${fmtD(r.fmax)}</td><td class="fecha">${fmtD(r.fresp)}</td><td class="mono" style="font-size:.76rem">${esc(r.orfR || '—')}</td>
     <td>${yn(r.resp)}</td><td>${r.opo === 5 ? '—' : r.opo === 1 ? 'Sí' : r.opo === 0 || r.opo === 2 ? 'No' : '—'}</td>
     <td class="right mono">${r.ret == null ? '—' : r.ret + ' d'}</td><td><span class="pill ${OPO_PILL[r.opo][0]}">${OPO_PILL[r.opo][1]}</span></td></tr>`
       )
