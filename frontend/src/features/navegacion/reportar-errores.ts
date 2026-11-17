@@ -6,6 +6,12 @@ import { VERSION_APP } from '../../shared/lib';
 
 const MAXIMO_POR_SESION = 5;
 
+/** Ruta de la pantalla sin parámetros: los enlaces de invitación y recuperación traen tokens que no deben guardarse. */
+export function vistaSegura(hash: string): string {
+  const v = hash.replace(/^#\/?/, '');
+  return /token|[?&=]/i.test(v) ? (v.split(/[?&=]|access_token|token/i)[0] ?? '') : v;
+}
+
 /** Devuelve la función que registra un error; además escucha los errores no atrapados del navegador. */
 export function useReportarErrores(sistema: RepositorioSistema, demo: boolean) {
   const reportar = useMemo(() => {
@@ -17,7 +23,7 @@ export function useReportarErrores(sistema: RepositorioSistema, demo: boolean) {
       sistema
         .registrarError(String(mensaje || 'Error').slice(0, 500), {
           ...detalle,
-          vista: (g.location?.hash ?? '').replace(/^#\/?/, ''),
+          vista: vistaSegura(g.location?.hash ?? ''),
           version: VERSION_APP,
           navegador: (g.navigator?.userAgent ?? '').slice(0, 160)
         })
