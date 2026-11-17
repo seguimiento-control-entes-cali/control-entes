@@ -16,6 +16,11 @@ describe('CSV sin fórmulas (inyección en Excel)', () => {
     expect(neutralizarFormula(null)).toBe('');
   });
   it('el archivo conserva BOM, separador y comillas', () => {
-    expect(textoCsv([['a', '=1'], [2, 'b"c']])).toBe('﻿"a";"\'=1"\r\n"2";"b""c"');
+    expect(
+      textoCsv([
+        ['a', '=1'],
+        [2, 'b"c']
+      ])
+    ).toBe('﻿"a";"\'=1"\r\n"2";"b""c"');
   });
 });
