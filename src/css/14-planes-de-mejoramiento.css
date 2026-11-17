@@ -850,3 +850,48 @@ label.pm-checks {
 .pm-cal {
   color: var(--ink2, inherit);
 }
+/* Plazos de la Resolución Reglamentaria (presentación del plan e informes semestrales) */
+.pm-norma {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+.pm-norma-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin-bottom: 4px;
+}
+.pm-norma-h .muted {
+  font-size: 0.72rem;
+}
+.pm-norma-r {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 8px 0 2px;
+  border-top: 1px solid var(--line);
+}
+.pm-norma-r > span:first-child {
+  flex: 1;
+  min-width: 220px;
+}
+.pm-norma-r small {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.pm-inf {
+  display: block;
+  margin-top: 4px;
+}
+.pm-inf .pill {
+  margin-right: 6px;
+}
