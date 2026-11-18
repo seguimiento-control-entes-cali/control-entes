@@ -12,7 +12,6 @@ import {
   llave,
   metaTxt,
   pct,
-  pctTxt,
   semanas,
   txt,
   type Accion,
@@ -117,8 +116,22 @@ function escritor(ws: Hoja) {
   };
 }
 
-/** pmSheetPM01: Formato PM_01 CGSC versión 2020 (misma estructura, títulos y fórmulas de la plantilla). */
-export function hojaPM01(X: SheetJS, p: Plan, corte: string, ctx: ContextoExport): Hoja {
+/**
+ * pmSheetPM01: Formato PM_01 CGSC versión 2020, igual a la plantilla oficial de la Contraloría
+ * (FORMATO_202001_PM_CGSC plantilla.xlsx, 17-nov-2026): columna A angosta y vacía, el plan de la B a la S,
+ * el cuadro de evaluación de la U a la Y, con las mismas uniones, títulos, fórmulas y anchos.
+ * Por defecto sale SOLO LA FORMULACIÓN (B a K): es el archivo que la dependencia sube al SIA Contralorías después
+ * de que Control Interno lo valida. El seguimiento (L a S: avance, cumplimiento, efectividad, estado, observación,
+ * corte y %) se informa con el formato de avance; la calificación oficial la hace la Contraloría (18-nov-2026).
+ * Con { conAvance: true } se llenan también L a S.
+ */
+export function hojaPM01(
+  X: SheetJS,
+  p: Plan,
+  corte: string,
+  ctx: ContextoExport,
+  opts: { conAvance?: boolean } = {}
+): Hoja {
   const datos = datosDelPlan(p, ctx.d);
   const ws: Hoja = {};
   const merges: Rango[] = [];
@@ -126,52 +139,59 @@ export function hojaPM01(X: SheetJS, p: Plan, corte: string, ctx: ContextoExport
   const cumpl: number[] = [],
     efect: number[] = [];
   const M = (r: string) => merges.push(X.utils.decode_range(r));
-  put('A1', 'CONTRALORÍA GENERAL DE SANTIAGO DE CALI');
-  M('A1:J1');
-  put('A2', 'FORMATO PM_01 CGSC - PLAN DE MEJORAMIENTO');
-  M('A2:J2');
-  M('Q2:S2');
-  put('Q3', 'RESULTADO EVALUACIÓN PLAN DE MEJORAMIENTO');
-  M('Q3:S3');
-  put('Q4', 'VARIABLES A EVALUAR');
-  M('Q4:R4');
-  put('S4', 'Calificación Parcial');
-  put('A5', 'Entidad auditada (1): ');
-  M('A5:F5');
-  put('G5', (p.entidad || 'DISTRITO DE SANTIAGO DE CALI').toUpperCase());
-  M('G5:J5');
-  put('Q5', 'Cumplimiento del Plan de Mejoramiento ');
-  M('Q5:R5');
-  put('S5', { f: '+L9' });
-  put('A6', 'Nombre de la actuación de control fiscal (2): ');
-  M('A6:F6');
-  put('G6', p.ejercicio || '');
-  M('G6:J6');
-  put('A7', 'Tipo de actuación de control fiscal (3):');
-  M('A7:F7');
-  put('G7', p.tipo_ejercicio || '');
-  M('G7:J7');
-  put('Q7', 'Efectividad de las acciones');
-  M('Q7:R7');
-  put('S7', { f: '+M9' });
-  put('A8', 'Fecha de suscripción (4): ' + fechaLarga(p.fecha_suscripcion));
-  M('A8:F8');
-  put('G8', 'Vigencia PVCFT (5)');
-  M('G8:H8');
-  put('I8', p.vigencia_pvcft || '');
-  M('I8:J8');
-  put('L8', { f: '+L9*0.2+M9*0.8' });
-  M('L8:M8');
-  put('Q8', ' CUMPLIMIENTO PLAN DE MEJORAMIENTO');
-  M('Q8:S8');
-  put('L9', { f: 'IF(COUNT(L12:L668)>0,AVERAGE(L12:L668)*100/2,0)' });
-  put('M9', { f: 'IF(COUNT(M12:M668)>0,AVERAGE(M12:M668)*100/2,0)' });
-  put('Q9', 'Concepto a emitir cumplimiento Plan de Mejoramiento');
-  M('Q9:S9');
-  put('A10', 'FORMULACIÓN DEL PLAN DE MEJORAMIENTO');
-  M('A10:J10');
-  put('K10', 'AVANCE DEL PLAN DE MEJORAMIENTO');
-  M('K10:O10');
+  put('B1', 'CONTRALORÍA GENERAL DE SANTIAGO DE CALI');
+  M('B1:G1');
+  put('B2', 'FORMATO PM_01 CGSC - PLAN ');
+  M('B2:G2');
+  M('U2:Y2');
+  put('U3', 'RESULTADO EVALUACIÓN PLAN DE MEJORAMIENTO');
+  M('U3:Y3');
+  put('U4', 'VARIABLES A EVALUAR');
+  M('U4:V4');
+  put('W4', 'Calificación Parcial');
+  put('X4', 'Ponderación');
+  put('Y4', 'Puntaje Atribuido');
+  put('B5', 'Entidad auditada (1): ');
+  put('D5', (p.entidad || 'DISTRITO DE SANTIAGO DE CALI').toUpperCase());
+  M('D5:E5');
+  M('H5:J5');
+  put('U5', 'Cumplimiento del Plan de Mejoramiento ');
+  M('U5:V5');
+  put('W5', { f: '+M9' });
+  put('X5', 0.2);
+  put('Y5', { f: 'W5*X5' });
+  put('B6', 'Nombre de la actuación de control fiscal (2): ' + (p.ejercicio || ''));
+  M('B6:E6');
+  put('B7', 'Tipo de actuación de control fiscal (3):');
+  M('B7:C7');
+  put('D7', p.tipo_ejercicio || '');
+  M('D7:E7');
+  M('H7:J7');
+  put('U7', 'Efectividad de las acciones');
+  M('U7:V7');
+  put('W7', { f: '+N9' });
+  put('X7', 0.8);
+  put('Y7', { f: 'W7*X7' });
+  put('B8', 'Fecha de suscripción (4): ' + fechaLarga(p.fecha_suscripcion));
+  M('B8:C8');
+  put('D8', 'Vigencia PVCFT (5)');
+  put('E8', p.vigencia_pvcft || '');
+  put('M8', { f: '+M9*0.2+N9*0.8' });
+  M('M8:N8');
+  put('U8', ' CUMPLIMIENTO PLAN DE MEJORAMIENTO');
+  M('U8:W8');
+  put('X8', { f: 'SUM(X5:X7)' });
+  put('Y8', { f: 'SUM(Y5:Y7)' });
+  put('M9', { f: 'IF(COUNT(M12:M696)>0,AVERAGE(M12:M696)*100/2,0)' });
+  put('N9', { f: 'IF(COUNT(N12:N696)>0,AVERAGE(N12:N696)*100/2,0)' });
+  put('U9', 'Concepto a emitir cumplimiento Plan de Mejoramiento');
+  M('U9:W9');
+  put('X9', { f: 'IF(AND((Y8)<=100,(Y8)>=80),W13,IF(AND((Y8)<80,(Y8)>=0),W14,W13))' });
+  M('X9:Y9');
+  put('B10', 'FORMULACIÓN DEL PLAN DE MEJORAMIENTO');
+  M('B10:K10');
+  put('L10', 'AVANCE DEL PLAN DE MEJORAMIENTO');
+  M('L10:S10');
   [
     'N° hallazgo (6)',
     'Descripción de la condición y causa del hallazgo \n(7)',
@@ -188,14 +208,32 @@ export function hojaPM01(X: SheetJS, p: Plan, corte: string, ctx: ContextoExport
     'EFECTIVIDAD\n80%',
     'ESTADO DE LA ACCIÓN\n(Cerrada-C / Abierta-A)',
     'DIRECCIÓN TECNICA RESPONSABLE',
-    'Observaciones DACI'
-  ].forEach((t, c) => put(X.utils.encode_cell({ r: 10, c }), t));
+    'OBSERVACIÓN SEGUIMIENTO',
+    'Fecha de Corte del Avance \n(17)',
+    '% de Avance\n(18)'
+  ].forEach((t, i) => put(X.utils.encode_cell({ r: 10, c: i + 1 }), t));
+  // Rangos de calificación (al lado de las primeras filas del plan, como en la plantilla)
+  put('U12', 'RANGOS DE CALIFICACIÓN ');
+  M('U12:V12');
+  put('W12', 'Concepto');
+  put('U13', '80 o más puntos');
+  M('U13:V13');
+  put('W13', 'Cumple');
+  put('U14', 'Menos de 80 puntos');
+  M('U14:V14');
+  put('W14', 'No Cumple');
+  const FECHA = 9, // J: fecha de terminación
+    CORTE = 17, // R: fecha de corte del avance
+    PCT = 18; // S: % de avance
+  const formato = (c: number): Record<string, unknown> | null =>
+    c === FECHA || c === CORTE ? { t: 'n', z: 'dd/mm/yyyy' } : c === PCT ? { t: 'n', z: '0%' } : null;
   let r = 11;
   datos.forEach(({ h, acc }) => {
     const r0 = r;
     (acc.length ? acc : [null]).forEach(a => {
-      const av = a ? avanceAl(a, corte, ctx.d.avances) : null;
-      const cal = a && ctx.v19 !== false ? calificacionAccion(a, corte, ctx.d.avances) : null;
+      const av = a && opts.conAvance ? avanceAl(a, corte, ctx.d.avances) : null;
+      const cal =
+        a && opts.conAvance && ctx.v19 !== false ? calificacionAccion(a, corte, ctx.d.avances) : null;
       if (cal && typeof cal.c === 'number') cumpl.push(cal.c);
       if (cal && typeof cal.e === 'number') efect.push(cal.e);
       const fila: Valor[] = [
@@ -209,54 +247,101 @@ export function hojaPM01(X: SheetJS, p: Plan, corte: string, ctx: ContextoExport
         a ? a.lugar_verificacion || '' : '',
         a && fechaPlan(a.fecha_fin) ? serieExcel(a.fecha_fin) : '',
         a ? responsableTxt(a, ctx) : '',
-        av && a
-          ? [
-              (av as { descripcion?: string }).descripcion || '',
-              `(Avance validado ${pctTxt(pct(a, av.cantidad))} con corte ${formatoCorto(av.fecha_corte)})`
-            ]
-              .filter(Boolean)
-              .join(' ')
-          : '',
+        av ? (av as { descripcion?: string }).descripcion || '' : '',
         cal && cal.c != null ? cal.c : '',
         cal && cal.e != null ? cal.e : '',
         cal && (cal.c != null || cal.e != null) ? cal.estado : '',
-        p.direccion_tecnica || '',
-        a && a.obs_ci ? a.obs_ci + (a.obs_ci_estado === 'atendida' ? ' (atendida)' : '') : ''
+        opts.conAvance ? p.direccion_tecnica || '' : '',
+        a && opts.conAvance && a.obs_ci
+          ? a.obs_ci + (a.obs_ci_estado === 'atendida' ? ' (atendida)' : '')
+          : '',
+        av && fechaPlan(av.fecha_corte) ? serieExcel(av.fecha_corte) : '',
+        av && a ? pct(a, av.cantidad) : ''
       ];
-      fila.forEach((v, c) =>
-        put(X.utils.encode_cell({ r, c }), v, c === 8 && v !== '' ? { t: 'n', z: 'dd/mm/yyyy' } : null)
-      );
+      fila.forEach((v, i) => put(X.utils.encode_cell({ r, c: i + 1 }), v, formato(i + 1)));
       r++;
     });
-    if (r - r0 > 1) for (let c = 0; c <= 3; c++) merges.push({ s: { r: r0, c }, e: { r: r - 1, c } });
+    if (r - r0 > 1) for (let c = 1; c <= 4; c++) merges.push({ s: { r: r0, c }, e: { r: r - 1, c } });
   });
   // valor calculado de cada fórmula (el mismo que da Excel): el archivo queda correcto aunque no se recalcule
-  const L9 = promedioCal(cumpl),
-    M9 = promedioCal(efect);
+  const M9 = promedioCal(cumpl),
+    N9 = promedioCal(efect),
+    Y8 = M9 * 0.2 + N9 * 0.8;
   (
     [
-      ['S5', L9],
-      ['S7', M9],
-      ['L8', L9 * 0.2 + M9 * 0.8],
-      ['L9', L9],
-      ['M9', M9]
+      ['W5', M9],
+      ['Y5', M9 * 0.2],
+      ['W7', N9],
+      ['Y7', N9 * 0.8],
+      ['X8', 1],
+      ['Y8', Y8],
+      ['M8', Y8],
+      ['M9', M9],
+      ['N9', N9]
     ] as const
   ).forEach(([ref, v]) => ((ws[ref] as XLSX.CellObject).v = v));
-  r += 3;
-  put(X.utils.encode_cell({ r, c: 0 }), '______________________________');
-  put(X.utils.encode_cell({ r, c: 6 }), '______________________________');
-  put(X.utils.encode_cell({ r: r + 1, c: 0 }), p.representante_legal || '');
-  put(X.utils.encode_cell({ r: r + 1, c: 6 }), p.ordenador_gasto || '');
+  Object.assign(ws['X9'] as XLSX.CellObject, { t: 's', v: Y8 < 80 && Y8 >= 0 ? 'No Cumple' : 'Cumple' });
+  r = Math.max(r, 14) + 3;
+  put(X.utils.encode_cell({ r, c: 1 }), '______________________________');
+  put(X.utils.encode_cell({ r, c: 7 }), '______________________________');
+  put(X.utils.encode_cell({ r: r + 1, c: 1 }), p.representante_legal || '');
+  put(X.utils.encode_cell({ r: r + 1, c: 7 }), p.ordenador_gasto || '');
   put(
-    X.utils.encode_cell({ r: r + 2, c: 0 }),
+    X.utils.encode_cell({ r: r + 2, c: 1 }),
     'Nombre y firma del Representante Legal del Sujeto de Vigilancia de Control Fiscal'
   );
-  put(X.utils.encode_cell({ r: r + 2, c: 6 }), 'Nombre y firma del Ordenador del Gasto del Punto de Control');
-  ws['!ref'] = X.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: r + 2, c: 18 } });
+  put(X.utils.encode_cell({ r: r + 2, c: 7 }), 'Nombre y firma del Ordenador del Gasto del Punto de Control');
+  ws['!ref'] = X.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: r + 2, c: 24 } });
   ws['!merges'] = merges;
-  ws['!cols'] = [10, 60, 22, 18, 45, 28, 28, 22, 14, 32, 50, 12, 12, 14, 28, 40, 4, 24, 14].map(w => ({
-    wch: w
-  }));
+  // Anchos de la plantilla (A=1 … Y=17)
+  ws['!cols'] = [
+    1, 13, 53, 25, 34, 34, 11, 18, 15, 15, 32, 38, 16, 16, 23, 21, 42, 30, 12, 12, 26, 21, 17, 14, 17
+  ].map(w => ({ wch: w }));
+  return ws;
+}
+
+/** Hoja LISTA de la plantilla: las listas oficiales (incidencia, macroproceso, ejercicio y sujetos de control). */
+export const LISTA_PM_CGSC: readonly (readonly string[])[] = [
+  ['INCIDENCIA', 'MACROPROCESO', 'Ejercicio de fiscalización', 'SUJETOS DE CONTROL '],
+  [
+    'Administrativa',
+    'Financiero',
+    'Auditoría Financiera de Gestión y Resultados - AFGR',
+    'DISTRITO DE SANTIAGO DE CALI'
+  ],
+  [
+    'Administrativa fiscal',
+    'Presupuestal',
+    'Auditoría de Desempeño - AD',
+    'EMPRESA DE SERVICIOS PÚBLICOS EMCALI EICE ESP'
+  ],
+  ['Administrativa penal', 'Criterio de evaluación', 'Auditoría de Cumplimiento - AC', 'METROCALI '],
+  [
+    'Administrativa disciplinaria',
+    'Otro',
+    'Actuación Especial de Fiscalización - AEF',
+    'EMPRESA DE RENOVACIÓN URBANA - EMRU'
+  ],
+  ['Administrativa fiscal y disciplinaria', '', 'Informe de Cierre Fiscal ', 'PERSONERÍA MUNICIPAL'],
+  ['Administrativa fiscal y penal', '', 'Otro ', 'RED DE SALUD DEL NORTE'],
+  ['Administrativa, Disciplinaria y Penal', '', '', 'RED DE SALUD DEL ORIENTE'],
+  ['Administrativa, Fiscal, Penal y Disciplinaria ', '', '', 'RED DE SALUD DE SUR ORIENTE'],
+  ['Sancionatorio', '', '', 'RED DE SALUD DEL LADERA'],
+  ['Otra', '', '', 'RED DE SALUD DEL CENTRO'],
+  ['', '', '', 'RED DE SALUD DEL HOSPITAL GERIATRICO Y ANCIANATO SAN MIGUEL'],
+  ['', '', '', 'CORPORACIÓN DE EVENTOS, FERIAS Y ESPECTACULOS - CORFECALI'],
+  ['', '', '', 'ESCUELA NACIONAL DEL DEPORTE - END'],
+  ['', '', '', 'FONDO ESPECIAL DE VIVIENDA'],
+  ['', '', '', 'EMPRESA DE SERVICIOS VARIOS EMSIVA EN LIQUIDACIÓN'],
+  ['', '', '', 'INSTITUCIÓN UNIVESITARIA ANTONIO JOSÉ CAMACHO - UNIAJC'],
+  ['', '', '', 'INSTITUTO POPULAR DE CULTURA - IPC EN LIQUIDACIÓN'],
+  ['', '', '', 'CENTRO DE DIAGNÓSTICO AUTOMOTOR DEL VALLE - CDAV'],
+  ['', '', '', 'INSTITUCIÓN UNIVESITARIA DE LAS CULTURAS Y LAS ARTES - IPC'],
+  ['', '', '', 'AUTORIDAD REGIONAL DE TRANSPORTE RPG - ART - ASOVC']
+];
+export function hojaListaPM(X: SheetJS): Hoja {
+  const ws = X.utils.aoa_to_sheet(LISTA_PM_CGSC.map(f => f.map(v => (v === '' ? null : v))));
+  ws['!cols'] = [40, 24, 52, 62].map(w => ({ wch: w }));
   return ws;
 }
 

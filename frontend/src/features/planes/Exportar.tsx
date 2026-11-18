@@ -8,17 +8,45 @@ import { fechaPlan, type Accion, type DatosPlanes, type Plan } from '../../domin
 import {
   faltantesExport,
   hojaAvanceSemestral,
+  hojaListaPM,
   hojaPM01,
-  hojaPM02,
   hojasF14,
   nombreF14,
   nombreSIA
 } from '../../dominio/planes-exportar';
+import { llenarPlantillaPM01 } from '../../dominio/plantilla-cgsc';
+import plantillaPM01Url from '../../../plantillas/FORMATO_202001_PM_CGSC_base.xlsx?url';
 import { Icono, Modal, useAvisos } from '../../shared/ui';
 import { cargarSheetJS } from '../configuracion/leer-excel';
 import { useCopiaDocumento } from './Memoria';
 
 const corto = (t: string) => (t.length > 70 ? t.slice(0, 70) + '…' : t);
+
+/** Plantilla oficial del Formato PM_01 CGSC llena con los datos; null si no se pudo cargar (sin conexión). */
+async function plantillaOficial(
+  X: Awaited<ReturnType<typeof cargarSheetJS>>,
+  ws: ReturnType<typeof hojaPM01>
+): Promise<Uint8Array | null> {
+  try {
+    const r = await fetch(plantillaPM01Url);
+    if (!r.ok) return null;
+    return llenarPlantillaPM01(X, new Uint8Array(await r.arrayBuffer()), ws);
+  } catch {
+    return null;
+  }
+}
+/** Descarga un .xlsx en el navegador. */
+function bajar(bin: ArrayBuffer, nombre: string) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(
+    new Blob([bin], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  );
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
 
 export function VentanaExportar({
   p,
@@ -61,9 +89,10 @@ export function VentanaExportar({
       } else if (fmt === 'PM_01_AVANCE') {
         X.utils.book_append_sheet(wb, hojaAvanceSemestral(X, p, corte, ctx), 'Formato PM_01 CGSC - AVANCE ');
       } else {
+        // Como la plantilla oficial: el plan (formulación) y las listas. La PM_02 es el papel de trabajo de
+        // evaluación de los auditores de la Contraloría (PT 03-PF): en la plantilla viene oculta y vacía.
         X.utils.book_append_sheet(wb, hojaPM01(X, p, corte, ctx), 'Formato PM_01 CGSC - PLAN ');
-        if (p.formato === 'PM_01_CGSC')
-          X.utils.book_append_sheet(wb, hojaPM02(X, p, corte, ctx), 'Formato PM_02 CGSC - AVANCE ');
+        X.utils.book_append_sheet(wb, hojaListaPM(X), 'LISTA');
       }
       // CGSC: nombre exigido por el SIA Contralorías (manual «Subida de planes de mejoramiento»)
       const nom =
@@ -73,9 +102,13 @@ export function VentanaExportar({
               avance: fmt === 'PM_01_AVANCE',
               corte: fmt === 'PM_01_AVANCE' ? corte : null
             });
-      X.writeFile(wb, nom, { compression: true });
+      // PM_01 CGSC: se llena la plantilla oficial (mismo diseño); si no se puede cargar, el libro de siempre
+      const conDiseno = fmt === 'PM_01_CGSC' ? await plantillaOficial(X, hojaPM01(X, p, corte, ctx)) : null;
+      const bin: ArrayBuffer = conDiseno
+        ? (conDiseno.slice().buffer as ArrayBuffer)
+        : (X.write(wb, { type: 'array', bookType: 'xlsx', compression: true }) as ArrayBuffer);
+      bajar(bin, nom);
       if (d.v20 && edita && archivar) {
-        const bin = X.write(wb, { type: 'array', bookType: 'xlsx', compression: true }) as ArrayBuffer;
         await copia(
           { name: nom, size: bin.byteLength, arrayBuffer: () => Promise.resolve(bin) },
           {
