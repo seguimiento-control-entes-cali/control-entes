@@ -2653,7 +2653,7 @@
       "seguridad_definidor": true
     },
     {
-      "md5": "31a195287b055e243f208e14843af796",
+      "md5": "d190fd683f35846892ba4ea759e52a10",
       "nombre": "current_rol",
       "devuelve": "text",
       "argumentos": "",
