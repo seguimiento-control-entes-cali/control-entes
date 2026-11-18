@@ -48,13 +48,8 @@ const nivelSesion = (jwt: string) => {
     return 'aal1';
   }
 };
-// deno-lint-ignore no-explicit-any
-const exigeCodigo = async (admin: any, userId: string, jwt: string) => {
-  if (nivelSesion(jwt) === 'aal2') return false;
-  const { data } = await admin.auth.admin.mfa.listFactors({ userId });
-  // deno-lint-ignore no-explicit-any
-  return (data?.factors ?? []).some((f: any) => f.status === 'verified');
-};
+// Script 27: el Super administrador (único que llega aquí) SIEMPRE necesita el código, lo haya activado o no.
+const exigeCodigo = (jwt: string) => nivelSesion(jwt) !== 'aal2';
 const sello = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 16).replace('T', '_').replace(':', '');
 
 async function gzip(texto: string): Promise<Uint8Array> {
@@ -83,7 +78,7 @@ Deno.serve(async req => {
     const { data: perfil } = await db.from('profiles').select('rol, activo, email').eq('id', quien.user.id).maybeSingle();
     if (!perfil || perfil.rol !== 'admin' || !perfil.activo)
       return responder({ error: 'Solo el Super administrador puede crear copias de seguridad.' }, 403);
-    if (await exigeCodigo(db, quien.user.id, jwt))
+    if (exigeCodigo(jwt))
       return responder({ error: 'Ingrese con su código de verificación en dos pasos.' }, 403);
     usuario = String(perfil.email || quien.user.email || '');
   }

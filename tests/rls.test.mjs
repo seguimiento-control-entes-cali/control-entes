@@ -81,12 +81,14 @@ await db.exec(`
 `);
 
 // ---- Actuar como una cuenta: rol authenticated y auth.uid() de la cuenta, en una transacción que se deshace
-async function como(quien, sql, params = []) {
+// Por defecto la sesión trae el código de dos pasos (aal2), como entra el Super administrador (script 27).
+async function como(quien, sql, params = [], aal = 'aal2') {
   await db.exec('begin');
   try {
     if (quien === 'anon') await db.exec(`set local role anon`);
     else {
       await db.query(`select set_config('request.jwt.claim.sub', $1, true)`, [U[quien][0]]);
+      await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ aal })]);
       await db.exec(`set local role authenticated`);
     }
     const r = await db.query(sql, params);
@@ -169,6 +171,13 @@ for (const t of ['requerimientos', 'audit_log', 'profiles', 'pm_acciones', 'conf
   // verificar_cadena_auditoria: exige una cuenta activa
   assert.ok((await como('inactivo', `select * from public.verificar_cadena_auditoria()`)).error); ok();
   assert.strictEqual((await como('admin', `select ok from public.verificar_cadena_auditoria()`)).filas[0].ok, true); ok();
+  // Script 27: el Super administrador sin código (aal1) no tiene rol, aunque nunca haya activado la verificación
+  assert.strictEqual((await como('admin', `select public.current_rol() as r`, [], 'aal1')).filas[0].r, null, 'admin sin código: sin rol'); ok();
+  assert.strictEqual((await como('admin', `update public.config set dias_rojo = 9 where id = 1`, [], 'aal1')).cambiadas, 0, 'admin sin código no cambia la configuración'); ok();
+  assert.strictEqual((await como('admin', `select count(*)::int as n from public.profiles`, [], 'aal1')).filas[0].n, 1, 'admin sin código solo ve su propio perfil'); ok();
+  assert.strictEqual((await como('admin', `select public.current_rol() as r`)).filas[0].r, 'admin', 'admin con código: rol admin'); ok();
+  // Control Interno sin verificación activada sigue trabajando sin código (recomendada, no obligatoria)
+  assert.strictEqual((await como('ci', `select public.current_rol() as r`, [], 'aal1')).filas[0].r, 'control_interno', 'CI sin verificación activada conserva su rol'); ok();
 }
 
 await db.close();
