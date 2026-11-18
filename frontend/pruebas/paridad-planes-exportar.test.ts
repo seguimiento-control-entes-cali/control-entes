@@ -11,7 +11,6 @@ import type { Accion, DatosPlanes, Hallazgo, Plan } from '../src/dominio/planes'
 import {
   faltantesExport,
   hojaAvanceSemestral,
-  hojaPM01,
   hojaPM02,
   hojasF14,
   nombreF14,
@@ -124,10 +123,12 @@ const plano = (x: unknown) => JSON.parse(JSON.stringify(x)) as unknown;
 const CORTES = [HOY, '2025-12-31', '2026-06-30', '2027-06-30'];
 
 describe('paridad con la 2.x · exportar planes en el formato de la contraloría', () => {
-  it('PM_01 y PM_02 de la CGSC iguales celda por celda', () => {
+  // PM_01: desde el 18-nov-2026 la 3.0 sigue la PLANTILLA OFICIAL de la Contraloría (FORMATO_202001_PM_CGSC,
+  // columnas B a S, evaluación U a Y) y no la distribución de la 2.x: diferencia intencional, pedida por la usuaria.
+  // La PM_01 se prueba contra la plantilla en src/datos/demo/plantilla-pm01.test.ts y plantilla-cgsc.test.ts.
+  it('PM_02 de la CGSC igual celda por celda', () => {
     for (const p of st.planes)
       for (const c of CORTES) {
-        expect(plano(hojaPM01(X, p, c, ctx)), `PM_01 ${p.id} ${c}`).toEqual(plano(d2.pmSheetPM01(X, p, c)));
         expect(plano(hojaPM02(X, p, c, ctx)), `PM_02 ${p.id} ${c}`).toEqual(plano(d2.pmSheetPM02(X, p, c)));
       }
   });
@@ -173,7 +174,6 @@ describe('paridad con la 2.x · exportar planes en el formato de la contraloría
     try {
       for (const p of st.planes) {
         const c = { ...ctx, v19: false };
-        expect(plano(hojaPM01(X, p, HOY, c)), p.id).toEqual(plano(d2.pmSheetPM01(X, p, HOY)));
         expect(plano(hojaPM02(X, p, HOY, c)), p.id).toEqual(plano(d2.pmSheetPM02(X, p, HOY)));
       }
     } finally {
