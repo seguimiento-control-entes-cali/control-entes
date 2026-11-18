@@ -98,7 +98,7 @@ function estiloConFormato(estilos: string, base: number, numFmtId: number): { xm
  */
 export function llenarPlantillaPM01(X: SheetJS, base: Uint8Array, ws: Hoja): Uint8Array {
   const z = X.CFB.read(base, { type: 'array' });
-  const indice = (p: string) => z.FullPaths.findIndex(x => x.endsWith('/' + p));
+  const indice = (p: string) => z.FullPaths.findIndex((x: string) => x.endsWith('/' + p));
   const entrada = (p: string) => {
     const e = z.FileIndex[indice(p)];
     if (!e) throw new Error('La plantilla del Formato PM_01 está incompleta: falta ' + p);

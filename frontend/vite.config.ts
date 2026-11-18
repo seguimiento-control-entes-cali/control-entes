@@ -18,6 +18,9 @@ export default defineConfig({
   },
   // El diseño viene de los estilos, fuentes e íconos de la 2.x (src/css y vendor/web, fuera de frontend/)
   server: { fs: { allow: ['..'] } },
+  // La plantilla oficial del Formato PM_01 CGSC (plantillas/*.xlsx) es un archivo: la app la pide con ?url
+  // y las pruebas la leen con ?inline
+  assetsInclude: ['**/*.xlsx'],
   plugins: [
     react(),
     VitePWA({

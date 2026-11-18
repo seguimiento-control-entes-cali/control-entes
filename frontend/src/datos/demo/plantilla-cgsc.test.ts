@@ -1,32 +1,32 @@
 // La exportación del Formato PM_01 llena la plantilla oficial (diseño de la Contraloría) con los datos del plan.
-import fs from 'node:fs';
-import path from 'node:path';
 import * as XLSX from 'xlsx';
 import { describe, expect, it } from 'vitest';
 import { semillaPlanes } from './planes-semilla';
+import plantillaBase from '../../../plantillas/FORMATO_202001_PM_CGSC_base.xlsx?inline';
 import { hojaPM01 } from '../../dominio/planes-exportar';
 import { llenarPlantillaPM01 } from '../../dominio/plantilla-cgsc';
 
-const BASE = path.join(__dirname, '..', '..', '..', 'plantillas', 'FORMATO_202001_PM_CGSC_base.xlsx');
+/** La plantilla base llega como data URL (base64): se convierte a bytes sin usar Node. */
+const bytes = Uint8Array.from(atob(plantillaBase.split(',')[1] ?? ''), ch => ch.charCodeAt(0));
 const d = semillaPlanes('2026-06-30');
 const plan = d.planes.find(p => p.formato === 'PM_01_CGSC') ?? d.planes[0];
 if (!plan) throw new Error('La demo no trae planes');
 const ctx = { d, dep: () => 'Dependencia demo', usuario: 'demo', v19: true };
 const ws = hojaPM01(XLSX, plan, '2026-06-30', ctx);
-const bin = llenarPlantillaPM01(XLSX, new Uint8Array(fs.readFileSync(BASE)), ws);
+const bin = llenarPlantillaPM01(XLSX, bytes, ws);
 const libro = XLSX.read(bin, { type: 'array', cellFormula: true, cellStyles: true });
 const hoja = libro.Sheets['Formato PM_01 CGSC - PLAN '];
 const v = (ref: string) => (hoja?.[ref] as XLSX.CellObject | undefined)?.v;
 const zip = XLSX.CFB.read(bin, { type: 'array' });
 const xml = (p: string) => {
-  const e = zip.FileIndex[zip.FullPaths.findIndex(x => x.endsWith('/' + p))];
+  const e = zip.FileIndex[zip.FullPaths.findIndex((x: string) => x.endsWith('/' + p))];
   return e ? new TextDecoder().decode(e.content as Uint8Array) : '';
 };
 
 describe('Formato PM_01 con el diseño oficial', () => {
   it('conserva las hojas de la plantilla (sin «Ppto») y el logo', () => {
     expect(libro.SheetNames).toEqual(['Formato PM_01 CGSC - PLAN ', 'LISTA', 'Formato PM_02 CGSC - AVANCE ']);
-    expect(zip.FullPaths.some(p => p.endsWith('xl/media/image1.png'))).toBe(true);
+    expect(zip.FullPaths.some((p: string) => p.endsWith('xl/media/image1.png'))).toBe(true);
     expect(xml('xl/worksheets/sheet1.xml')).toContain('<dataValidation ');
   });
 
@@ -64,9 +64,5 @@ describe('Formato PM_01 con el diseño oficial', () => {
 
   it('sin nombres de personas en los metadatos', () => {
     expect(xml('docProps/core.xml')).not.toMatch(/Erika|Torres|GRISALES/i);
-  });
-
-  it('muestra para revisar (solo si se pide con MUESTRA_SALIDA)', () => {
-    if (process.env.MUESTRA_SALIDA) fs.writeFileSync(process.env.MUESTRA_SALIDA, bin);
   });
 });
