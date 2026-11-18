@@ -46,7 +46,8 @@ function Inicio({ llegadaClave, demo }: { llegadaClave: boolean; demo: boolean }
 
   const salir = async () => {
     await datos.auth.salir();
-    cliente.removeQueries({ queryKey: ['verificacion'] });
+    // Se borra todo lo consultado por la cuenta que sale (en un equipo compartido no debe verlo quien entre después)
+    cliente.removeQueries({ predicate: q => q.queryKey[0] !== 'perfil' });
     await recargar();
   };
 

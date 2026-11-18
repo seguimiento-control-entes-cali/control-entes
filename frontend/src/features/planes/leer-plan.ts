@@ -32,7 +32,7 @@ export async function leerLibroExcel(bytes: ArrayBuffer): Promise<HojaPlan[]> {
 
 interface PdfJs {
   GlobalWorkerOptions: { workerSrc: string };
-  getDocument(o: { data: Uint8Array }): {
+  getDocument(o: { data: Uint8Array; isEvalSupported?: boolean }): {
     promise: Promise<{
       numPages: number;
       getPage(i: number): Promise<{
@@ -81,7 +81,8 @@ function cargarPdfJs(): Promise<PdfJs> {
 /** pmLeerPdf: texto de cada página con su posición, para rearmar las líneas. */
 export async function leerPdf(bytes: ArrayBuffer): Promise<TrozoPdf[][]> {
   const lib = await cargarPdfJs();
-  const doc = await lib.getDocument({ data: new Uint8Array(bytes) }).promise;
+  // isEvalSupported: false cierra CVE-2024-4367 (un PDF malicioso podía ejecutar código en pdf.js 3.x)
+  const doc = await lib.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false }).promise;
   const paginas: TrozoPdf[][] = [];
   for (let i = 1; i <= doc.numPages; i++) {
     const tc = await (await doc.getPage(i)).getTextContent();
