@@ -177,7 +177,7 @@ describe('memoria · Supabase simulado', () => {
   it('sube al depósito «archivo» y registra con el correo de quien sube', async () => {
     const s = simulado();
     expect(
-      await s.p.subirDocumento(archivo('Plan.xlsx', 'xlsx'), { plan_id: 'pm-9', tipo: 'plan_excel' })
+      await s.p.subirDocumento(archivo('Plan.xlsx', 'PK-xlsx'), { plan_id: 'pm-9', tipo: 'plan_excel' })
     ).toBe('doc-1');
     expect(s.log[0]).toMatch(/^upload archivo\/pm-9\/\d{4}\/[0-9a-z]+-Plan\.xlsx$/);
     expect(s.log[1]).toMatch(/^insert archivo_documentos pm-9\/.*Plan\.xlsx ci@cali\.gov\.co$/);
@@ -185,7 +185,7 @@ describe('memoria · Supabase simulado', () => {
   it('si el registro falla, borra el archivo subido', async () => {
     const s = simulado(true);
     await expect(
-      s.p.subirDocumento(archivo('a.pdf', 'x'), { plan_id: 'pm-9', tipo: 'otro' })
+      s.p.subirDocumento(archivo('a.pdf', '%PDF-x'), { plan_id: 'pm-9', tipo: 'otro' })
     ).rejects.toThrow();
     expect(s.log.at(-1)).toMatch(/^remove archivo\/pm-9\//);
   });

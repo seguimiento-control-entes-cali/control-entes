@@ -12,7 +12,12 @@ import type { Requerimiento } from '../../dominio/requerimientos';
 import type { Database, Json } from './tipos.generados';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
-import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
+import {
+  contenidoNoCoincide,
+  revisarDocumento,
+  rutaDocumento,
+  type ElementoPapelera
+} from '../../dominio/planes-memoria';
 import type { ArchivoInventario } from '../../dominio/respaldo-archivos';
 import { rutaSoporte } from '../../dominio/requerimientos';
 import type {
@@ -632,6 +637,8 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         const r = revisarDocumento(nombre, archivo.size);
         if ('error' in r) throw new ErrorDatos('otro', r.error);
         const buf = await archivo.arrayBuffer();
+        const malo = contenidoNoCoincide(nombre, new Uint8Array(buf.slice(0, 4096)));
+        if (malo) throw new ErrorDatos('otro', malo);
         const sha = await huellaArchivo({ arrayBuffer: () => Promise.resolve(buf) });
         const path = rutaDocumento(meta.plan_id, fechaColombia(new Date()), Date.now(), nombre);
         const up = await sb.storage.from('archivo').upload(path, buf, { contentType: r.mime, upsert: false });

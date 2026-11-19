@@ -55,12 +55,20 @@ export function puedeFormular(
 export const puedeRevisarFormulacion = (h: Pick<Hallazgo, 'formulacion_estado'>, rol: string) =>
   ['admin', 'control_interno'].includes(rol) && estadoDe(h) === 'enviado';
 
-/** ¿Puede enviarla a Control Interno? (la dependencia dueña, o el admin) */
+/** ¿Puede enviarla a Control Interno? (la dependencia dueña, o el admin, solo en borrador o devuelto) */
 export const puedeEnviar = (
   h: Pick<Hallazgo, 'dependencia_id' | 'formulacion_estado'>,
   rol: string,
   depPropia: number | null
-) => puedeFormular(h, rol, depPropia);
+) => ['borrador', 'devuelto'].includes(estadoDe(h)) && puedeFormular(h, rol, depPropia);
+
+/**
+ * ¿El hallazgo es del flujo de formulación? Los de planes anteriores al script 28 quedaron «validados» sin haber
+ * pasado por la app (sin análisis ni revisión): para ellos no se muestra el bloque de formulación.
+ */
+export const enFlujoFormulacion = (
+  h: Pick<Hallazgo, 'formulacion_estado' | 'formulacion_revisado_at' | 'causa_metodo'>
+) => estadoDe(h) !== 'validado' || !!h.formulacion_revisado_at || !!h.causa_metodo;
 
 /** Lo que falta para enviar (vacío: se puede enviar). Mismos requisitos que pm_enviar_formulacion. */
 export function faltaParaEnviar(

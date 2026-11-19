@@ -28,7 +28,12 @@ import {
 } from '../../dominio/planes';
 import { requisitosProrroga } from '../../dominio/planes-norma';
 import { enviar, puedeFormular, revisar } from '../../dominio/formulacion';
-import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
+import {
+  contenidoNoCoincide,
+  revisarDocumento,
+  rutaDocumento,
+  type ElementoPapelera
+} from '../../dominio/planes-memoria';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
 import { textoCorto } from '../../dominio/actividad';
@@ -800,6 +805,8 @@ export function datosDemo(): Datos {
         const r = revisarDocumento(nombre, archivo.size);
         if ('error' in r) throw new ErrorDatos('otro', r.error);
         const buf = await archivo.arrayBuffer();
+        const malo = contenidoNoCoincide(nombre, new Uint8Array(buf.slice(0, 4096)));
+        if (malo) throw new ErrorDatos('otro', malo);
         const sha256 = await huellaArchivo({ arrayBuffer: () => Promise.resolve(buf) });
         const path = rutaDocumento(meta.plan_id, fechaColombia(new Date()), Date.now(), nombre);
         archivos.set(path, buf);

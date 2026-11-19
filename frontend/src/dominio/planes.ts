@@ -666,7 +666,7 @@ export function validarAccion(
 }
 export function validarAvance(
   o: { fecha_corte: string; cantidad: number; descripcion: string; radicado_orfeo: string },
-  archivo: { nombre: string; tipo: string; tamano: number } | null,
+  archivo: { nombre: string; tipo: string; tamano: number; cabecera?: string } | null,
   hoy: string
 ) {
   if (!fechaPlan(o.fecha_corte)) return 'Indica la fecha de corte';
@@ -679,6 +679,9 @@ export function validarAvance(
   if (archivo && archivo.tipo && archivo.tipo !== 'application/pdf' && !/\.pdf$/i.test(archivo.nombre))
     return 'El soporte debe ser un archivo PDF';
   if (archivo && archivo.tamano > 10 * 1024 * 1024) return 'El PDF supera 10 MB';
+  // Los primeros bytes de un PDF son «%PDF-» (igual que la carga de la respuesta ORFEO): un archivo renombrado no pasa
+  if (archivo && archivo.cabecera !== undefined && archivo.cabecera !== '%PDF-')
+    return 'El archivo no parece ser un PDF válido';
   return null;
 }
 export const validarDevolucion = (estado: string, obs: string) =>

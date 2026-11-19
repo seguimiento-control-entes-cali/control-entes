@@ -57,7 +57,7 @@ import {
 } from './Formularios';
 import { VentanaExportar } from './Exportar';
 import { BloqueFormulacion } from './Formulacion';
-import { ESTADOS_FORMULACION, estadoDe, puedeFormular } from '../../dominio/formulacion';
+import { enFlujoFormulacion, ESTADOS_FORMULACION, estadoDe, puedeFormular } from '../../dominio/formulacion';
 import { VentanaImportar } from './Importar';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
 import { TrasladosHallazgo, VentanaTraslado } from './Traslados';
@@ -1457,7 +1457,7 @@ function SeccionHallazgo({
           <Icono nombre="fa-building-columns" /> {ctx.dep(h.dependencia_id) || h.dependencia_texto}
         </div>
       )}
-      {ctx.d.v28 && (
+      {ctx.d.v28 && enFlujoFormulacion(h) && (
         <BloqueFormulacion
           h={h}
           acciones={l}

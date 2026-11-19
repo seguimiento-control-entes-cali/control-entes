@@ -102,6 +102,7 @@ export function BloqueFormulacion({
   };
   const puedeSia =
     estado === 'validado' &&
+    !!h.formulacion_revisado_at &&
     !h.sia_cargado_at &&
     (['admin', 'control_interno'].includes(rol) ||
       (['secretario', 'enlace'].includes(rol) && String(h.dependencia_id ?? '') === String(depPropia)));
@@ -136,7 +137,7 @@ export function BloqueFormulacion({
             <Icono nombre="fa-file-excel" /> Formato de Calidad
           </button>
         )}
-        {formula && (
+        {formula && rol !== 'admin' && (
           <button type="button" className="btn sm" onClick={nuevaAccion}>
             <Icono nombre="fa-plus" /> Acción
           </button>

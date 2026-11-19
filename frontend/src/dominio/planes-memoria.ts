@@ -42,6 +42,30 @@ export function revisarDocumento(nombre: string, tamano: number): { mime: string
   if (tamano > MAX_DOCUMENTO) return { error: 'El archivo supera 50 MB' };
   return { mime };
 }
+/**
+ * ¿El contenido corresponde a la extensión? Un archivo renombrado (p. ej. un texto con «.pdf») no pasa:
+ * PDF empieza por «%PDF-»; Excel y Word modernos (.xlsx, .docx) son ZIP («PK»); .xls es OLE (D0 CF 11 E0);
+ * CSV debe ser texto (sin bytes nulos). Devuelve el mensaje de error o null.
+ */
+export function contenidoNoCoincide(nombre: string, bytes: Uint8Array): string | null {
+  const ext = (nombre.split('.').pop() || '').toLowerCase();
+  const b = (i: number) => bytes[i] ?? -1;
+  const ok =
+    ext === 'pdf'
+      ? b(0) === 0x25 && b(1) === 0x50 && b(2) === 0x44 && b(3) === 0x46 && b(4) === 0x2d
+      : ext === 'xlsx' || ext === 'docx'
+        ? b(0) === 0x50 && b(1) === 0x4b
+        : ext === 'xls'
+          ? b(0) === 0xd0 && b(1) === 0xcf && b(2) === 0x11 && b(3) === 0xe0
+          : ext === 'csv'
+            ? !bytes.subarray(0, 4096).includes(0)
+            : true;
+  return ok
+    ? null
+    : 'El contenido del archivo no corresponde a un ' +
+        ext.toUpperCase() +
+        ' válido. Ábralo en su computador para comprobarlo y vuelva a intentarlo.';
+}
 /** Ruta en el depósito «archivo»: <plan>/<año>/<marca de tiempo>-<nombre seguro> (pmDocSubir). */
 export const rutaDocumento = (
   planId: string | null | undefined,
