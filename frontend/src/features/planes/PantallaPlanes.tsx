@@ -57,6 +57,13 @@ import {
 } from './Formularios';
 import { VentanaExportar } from './Exportar';
 import { BloqueFormulacion } from './Formulacion';
+import {
+  filasInformeIncumplimiento,
+  incumplimientoPorDependencia,
+  pctIncumplimientoTxt,
+  totalIncumplimiento
+} from '../../dominio/incumplimiento';
+import { descargarCsv } from '../../shared/lib';
 import { enFlujoFormulacion, ESTADOS_FORMULACION, estadoDe, puedeFormular } from '../../dominio/formulacion';
 import { VentanaImportar } from './Importar';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
@@ -501,6 +508,7 @@ function Resumen({
           </div>
         )}
       </div>
+      {SUPERVISION.includes(ctx.rol) && <AlertaIncumplimiento ctx={ctx} acciones={acc} />}
       <div className="grid g-kpi" style={{ marginBottom: 14 }}>
         <div className="card kpi">
           <small>Planes</small>
@@ -727,7 +735,107 @@ function Resumen({
           )}
         </div>
       </div>
+      {SUPERVISION.includes(ctx.rol) && <InformeIncumplimiento ctx={ctx} acciones={acc} />}
     </>
+  );
+}
+
+/** Alertas de Control Interno (y supervisión): dependencias con acciones vencidas sin cumplir o por vencer. */
+function AlertaIncumplimiento({ ctx, acciones }: { ctx: Ctx; acciones: readonly Accion[] }) {
+  const filas = incumplimientoPorDependencia(acciones, ctx.d.avances, ctx.hoy, id => ctx.dep(id));
+  const t = totalIncumplimiento(filas);
+  if (!t.vencidas && !t.proximas) return null;
+  const peores = filas.filter(f => f.vencidas > 0).slice(0, 3);
+  return (
+    <div className="hint err" role="alert" style={{ marginBottom: 14 }}>
+      <b>
+        <Icono nombre="fa-triangle-exclamation" /> Alertas de cumplimiento:
+      </b>{' '}
+      {t.vencidas > 0 && (
+        <>
+          {nf(t.conVencidas)} {t.conVencidas === 1 ? 'dependencia tiene' : 'dependencias tienen'}{' '}
+          {nf(t.vencidas)} {t.vencidas === 1 ? 'acción vencida' : 'acciones vencidas'} sin cumplir
+          {peores.length > 0 && (
+            <>
+              {' '}
+              (más:{' '}
+              {peores.map(f => `${nombreCorto(f.dependencia) || f.dependencia} ${f.vencidas}`).join(', ')})
+            </>
+          )}
+          {t.proximas > 0 ? '; ' : '.'}
+        </>
+      )}
+      {t.proximas > 0 && (
+        <>
+          {nf(t.proximas)} {t.proximas === 1 ? 'acción vence' : 'acciones vencen'} en los próximos{' '}
+          {ALERTA_DIAS} días en {nf(t.conProximas)} {t.conProximas === 1 ? 'dependencia' : 'dependencias'}.
+        </>
+      )}{' '}
+      Vea el detalle en «Informe de incumplimiento por dependencia».
+    </div>
+  );
+}
+
+/** Informe de incumplimiento por dependencia, de mayor a menor, en número y porcentaje (descargable). */
+function InformeIncumplimiento({ ctx, acciones }: { ctx: Ctx; acciones: readonly Accion[] }) {
+  const filas = incumplimientoPorDependencia(acciones, ctx.d.avances, ctx.hoy, id => ctx.dep(id));
+  const t = totalIncumplimiento(filas);
+  if (!filas.length) return null;
+  return (
+    <div className="card" style={{ marginTop: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <h3 style={{ margin: 0, flex: 1 }}>Informe de incumplimiento por dependencia</h3>
+        <button
+          type="button"
+          className="btn sm"
+          onClick={() =>
+            descargarCsv(
+              `informe_incumplimiento_planes_${ctx.hoy}.csv`,
+              filasInformeIncumplimiento(filas, ctx.hoy)
+            )
+          }
+        >
+          <Icono nombre="fa-file-excel" /> Descargar (Excel)
+        </button>
+      </div>
+      <div className="sub">
+        De mayor a menor incumplimiento. % de incumplimiento = acciones vencidas sin cumplir ÷ acciones cuyo
+        plazo ya terminó. Administración: {nf(t.vencidas)} vencidas de {nf(t.plazoVencido)} con plazo
+        terminado ({pctIncumplimientoTxt(t.pctIncumplimiento)}).
+      </div>
+      <div className="tbl-wrap" style={{ marginTop: 8 }}>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Dependencia</th>
+              <th>Acciones</th>
+              <th>Cumplidas</th>
+              <th>Vencidas sin cumplir</th>
+              <th>% incumplimiento</th>
+              <th>Vencen en {ALERTA_DIAS} días</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((f, i) => (
+              <tr key={String(f.dependencia_id)}>
+                <td className="mono">{i + 1}</td>
+                <td>{nombreCorto(f.dependencia) || f.dependencia}</td>
+                <td className="mono">{nf(f.acciones)}</td>
+                <td className="mono">{nf(f.cumplidas)}</td>
+                <td className="mono">
+                  {f.vencidas > 0 ? <span className="pill rojo">{nf(f.vencidas)}</span> : '0'}
+                </td>
+                <td className="mono">{pctIncumplimientoTxt(f.pctIncumplimiento)}</td>
+                <td className="mono">
+                  {f.proximas > 0 ? <span className="pill amarillo">{nf(f.proximas)}</span> : '0'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -765,6 +873,26 @@ function MisAcciones({
           </div>
         </div>
       </div>
+      {(cn.vencida > 0 || cn.proxima > 0) && (
+        <div className="hint err" role="alert" style={{ marginBottom: 14 }}>
+          <b>
+            <Icono nombre="fa-triangle-exclamation" /> Alerta de su dependencia:
+          </b>{' '}
+          {cn.vencida > 0 && (
+            <>
+              {nf(cn.vencida)} {cn.vencida === 1 ? 'acción vencida' : 'acciones vencidas'} sin cumplir
+              {cn.proxima > 0 ? ' y ' : '. '}
+            </>
+          )}
+          {cn.proxima > 0 && (
+            <>
+              {nf(cn.proxima)} {cn.proxima === 1 ? 'acción vence' : 'acciones vencen'} en los próximos{' '}
+              {ALERTA_DIAS} días.{' '}
+            </>
+          )}
+          Reporte el avance con su soporte para evitar el incumplimiento ante la Contraloría.
+        </div>
+      )}
       <div className="grid g-kpi" style={{ marginBottom: 14 }}>
         {(
           [
