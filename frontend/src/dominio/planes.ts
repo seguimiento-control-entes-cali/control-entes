@@ -66,6 +66,9 @@ export interface Plan {
   requerimiento_id?: string | null;
   /** Dirección técnica responsable (columna del PM_01 que se importa del archivo). */
   direccion_tecnica?: string;
+  /** Script 28: evaluación oficial de la Contraloría (la registra Control Interno). */
+  puntaje_cgsc?: number | null;
+  eval_cgsc_fecha?: string | null;
 }
 export interface Hallazgo {
   id: string;

@@ -3,7 +3,7 @@
 // El archivo original queda en el archivo documental (script 20). Pendiente para la entrega 4c: sugerir el oficio de
 // remisión (en la 2.x solo cuando están instalados los scripts 19 y 20).
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { textoCorto } from '../../dominio/actividad';
 import { nombreCorto } from '../../dominio/directorio';
 import { fechaColombia, formatoCorto } from '../../dominio/fechas';
@@ -37,13 +37,19 @@ export function VentanaImportar({
   deps,
   entes,
   alCerrar,
-  alImportar
+  alImportar,
+  depPropia = null,
+  supervisa = true
 }: {
   d: DatosPlanes;
   deps: readonly Dep[];
   entes: readonly { id: number; nombre: string }[];
   alCerrar: () => void;
   alImportar: (id: string) => void;
+  /** Script 29: si importa una dependencia, su id (sus hallazgos y acciones van a ella; el plan queda en formulación). */
+  depPropia?: number | null;
+  /** Super administrador o Control Interno: el informe duplicado se puede importar si es versión nueva. */
+  supervisa?: boolean;
 }) {
   const { planes } = useDatos();
   const avisar = useAvisos();
@@ -58,6 +64,20 @@ export function VentanaImportar({
   const copia = useCopiaDocumento();
   const [, setVersion] = useState(0);
   const cambio = () => setVersion(v => v + 1);
+  // Informe ya cargado (mismo número y contraloría): la base lo busca aunque el plan sea de otra dependencia
+  const [duplicado, setDuplicado] = useState<{ ejercicio: string; creado_por: string }[]>([]);
+  const [versionNueva, setVersionNueva] = useState(false);
+  const buscarDuplicado = async (x: Importacion) => {
+    setDuplicado([]);
+    setVersionNueva(false);
+    const n = txt(x.plan.numero_informe);
+    if (!n) return;
+    try {
+      setDuplicado(await planes.buscarInforme(txt(x.plan.contraloria), n));
+    } catch {
+      // sin la búsqueda se sigue: la base igual rechaza el duplicado cuando importa una dependencia
+    }
+  };
   const previos = { planes: d.planes, hallazgos: d.hallazgos };
   const ordenadas = deps.slice().sort((x, y) => x.nombre.localeCompare(y.nombre));
 
@@ -69,11 +89,17 @@ export function VentanaImportar({
     setLeyendo(true);
     try {
       const bytes = await f.arrayBuffer();
-      setImp(
+      const leido =
         /\.pdf$/i.test(f.name) || f.type === 'application/pdf'
           ? leerInformePdf(await leerPdf(bytes), f.name, deps)
-          : leerLibroPlan(await leerLibroExcel(bytes), f.name, deps, previos)
-      );
+          : leerLibroPlan(await leerLibroExcel(bytes), f.name, deps, previos);
+      if (depPropia != null)
+        for (const h of leido.hall) {
+          // Lo que carga la dependencia: sus hallazgos (puede cambiar los que sean de otra) y todas las acciones suyas
+          if (h.dependencia_id == null) h.dependencia_id = depPropia;
+          for (const a of h.acciones) a.dependencia_id = depPropia;
+        }
+      setImp(leido);
     } catch (e) {
       setFallo((e as Error).message);
     } finally {
@@ -93,6 +119,15 @@ export function VentanaImportar({
       representante_legal: txt(x.plan.representante_legal)
     }
   });
+  // Se revisa al leer el archivo y cada vez que cambia el número del informe o la contraloría
+  const numeroInforme = imp ? txt(imp.plan.numero_informe) : '';
+  const contraloriaInforme = imp ? txt(imp.plan.contraloria) : '';
+  useEffect(() => {
+    if (imp) void buscarDuplicado(imp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imp, numeroInforme, contraloriaInforme]);
+  // Script 29: la dependencia debe escribir el número del informe (el PM_01 de la Contraloría no lo trae)
+  const faltaNumero = depPropia != null && !!imp && !numeroInforme;
   const k = imp ? revisarImportacion(normal(imp), previos, hoy) : null;
   const importar = async () => {
     if (!imp || !k || k.err.length) return;
@@ -163,7 +198,13 @@ export function VentanaImportar({
           <button
             type="button"
             className="btn primary"
-            disabled={!k || k.err.length > 0 || ocupado}
+            disabled={
+              !k ||
+              k.err.length > 0 ||
+              ocupado ||
+              faltaNumero ||
+              (duplicado.length > 0 && (!supervisa || !versionNueva))
+            }
             onClick={() => void importar()}
           >
             <Icono nombre={ocupado ? 'fa-spinner fa-spin' : 'fa-file-import'} />{' '}
@@ -196,6 +237,41 @@ export function VentanaImportar({
       {fallo && (
         <div className="pm-note r">
           <Icono nombre="fa-circle-exclamation" /> {fallo}
+        </div>
+      )}
+      {duplicado.length > 0 && (
+        <div className="pm-note r" role="alert">
+          <Icono nombre="fa-circle-exclamation" /> <b>Este informe ya fue cargado</b> (n.º{' '}
+          {txt(imp?.plan.numero_informe)}): «{duplicado[0]?.ejercicio}»
+          {duplicado[0]?.creado_por ? <>, por {duplicado[0].creado_por}</> : null}.{' '}
+          {supervisa ? (
+            <label style={{ display: 'block', marginTop: 6 }}>
+              <input
+                type="checkbox"
+                checked={versionNueva}
+                onChange={e => setVersionNueva(e.target.checked)}
+              />{' '}
+              Es una versión nueva o una reformulación: importarlo de todas formas
+            </label>
+          ) : (
+            <>
+              No se carga dos veces: pida a Control Interno que le asigne sus hallazgos en el plan que ya
+              existe.
+            </>
+          )}
+        </div>
+      )}
+      {faltaNumero && (
+        <div className="pm-note r" role="alert">
+          <Icono nombre="fa-circle-exclamation" /> Escriba el <b>N.º del informe final</b> de la Contraloría
+          (abajo): con él se comprueba que el informe no lo haya cargado ya otra dependencia.
+        </div>
+      )}
+      {depPropia != null && imp && (
+        <div className="pm-note">
+          <Icono nombre="fa-circle-info" /> El plan queda <b>en formulación</b>: su dependencia formula el
+          análisis de causa y las acciones de cada hallazgo y los envía a Control Interno. Solo se importan
+          las acciones de su dependencia; los avances del archivo no se importan (se reportan con su soporte).
         </div>
       )}
       {imp && p && k && (

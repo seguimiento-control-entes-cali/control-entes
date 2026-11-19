@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ErrorDatos, type InscripcionVerificacion } from '../../datos/contratos';
 import { errorClaveNueva } from '../../dominio/seguridad';
-import { Aviso, Boton, Campo } from '../../shared/ui';
+import { Aviso, Boton, Campo, CampoClave } from '../../shared/ui';
 import { MarcoIngreso } from './MarcoIngreso';
 import { useDatos } from './contexto';
 
@@ -40,10 +40,9 @@ export function DefinirClave({ alGuardar }: { alGuardar: () => void }) {
       subtitulo="Bienvenido(a). Defina la contraseña con la que ingresará de ahora en adelante."
     >
       <form onSubmit={guardar} noValidate>
-        <Campo
+        <CampoClave
           etiqueta="Contraseña nueva"
           id="clave-nueva"
-          type="password"
           autoComplete="new-password"
           value={a}
           onChange={e => setA(e.target.value)}
@@ -51,10 +50,9 @@ export function DefinirClave({ alGuardar }: { alGuardar: () => void }) {
         <p className="hint" style={{ margin: '-8px 0 12px' }}>
           Mínimo 10 caracteres, con letras y números.
         </p>
-        <Campo
+        <CampoClave
           etiqueta="Repita la contraseña"
           id="clave-repetida"
-          type="password"
           autoComplete="new-password"
           value={b}
           onChange={e => setB(e.target.value)}

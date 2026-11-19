@@ -57,6 +57,7 @@ import {
 } from './Formularios';
 import { VentanaExportar } from './Exportar';
 import { BloqueFormulacion } from './Formulacion';
+import { EtiquetaEvaluacion, EvaluacionContraloria } from './Evaluacion';
 import {
   filasInformeIncumplimiento,
   incumplimientoPorDependencia,
@@ -872,6 +873,13 @@ function MisAcciones({
             contralorías. Reporta el avance con su soporte antes de la fecha de terminación.
           </div>
         </div>
+        {ctx.d.v28 && depId != null && (
+          <div className="pm-hero-b">
+            <button type="button" className="btn primary" onClick={() => ctx.abrir({ t: 'importar' })}>
+              <Icono nombre="fa-file-import" /> Cargar informe de la Contraloría
+            </button>
+          </div>
+        )}
       </div>
       {(cn.vencida > 0 || cn.proxima > 0) && (
         <div className="hint err" role="alert" style={{ marginBottom: 14 }}>
@@ -1467,6 +1475,13 @@ function DetallePlan({
           </div>
         </div>
         <CalificacionCgsc p={p} acc={accAll} ctx={ctx} fev={fev} />
+        {d.v28 && (
+          <EvaluacionContraloria
+            p={p}
+            hallazgos={hall}
+            registra={['admin', 'control_interno'].includes(ctx.rol)}
+          />
+        )}
         <AvisoBajo100 p={p} d={d} edita={ctx.edita} fev={fev} abrir={ctx.abrir} />
         <TarjetaOficio p={p} d={d} edita={ctx.edita} hoy={ctx.hoy} />
         <TarjetaNorma p={p} d={d} edita={ctx.edita} hoy={ctx.hoy} abrir={ctx.abrir} />
@@ -1527,6 +1542,7 @@ function SeccionHallazgo({
           </span>
         ))}
         {h.cuantia ? <span className="pm-conn c-fiscal">$ {numTxt(h.cuantia)}</span> : null}
+        {ctx.d.v28 && <EtiquetaEvaluacion h={h} />}
         <span style={{ flex: 1 }} />
         {ctx.edita && (
           <>
@@ -1797,6 +1813,8 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
         d={datos.data}
         deps={deps.data ?? []}
         entes={entes.data ?? []}
+        depPropia={['secretario', 'enlace'].includes(perfil.rol) ? perfil.dependenciaId : null}
+        supervisa={['admin', 'control_interno'].includes(perfil.rol)}
         alCerrar={cerrarVentana}
         alImportar={id => {
           cerrarVentana();
