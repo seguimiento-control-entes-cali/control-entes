@@ -118,8 +118,11 @@ export function BloqueFormulacion({
           {info.texto}
         </span>
         {h.sia_cargado_at && (
-          <span className="pill verde" title="Fecha en que la dependencia lo cargó en el SIA Contralorías">
-            Cargado en SIA {formatoCorto(h.sia_cargado_at)}
+          <span
+            className="pill verde"
+            title="Fecha que anotó la dependencia: el plan se sube en el SIA Contralorías, el sistema de la Contraloría"
+          >
+            Subido al SIA (anotado) {formatoCorto(h.sia_cargado_at)}
           </span>
         )}
         <span style={{ flex: 1 }} />
@@ -169,7 +172,7 @@ export function BloqueFormulacion({
               onClick={() =>
                 void ejecutar(
                   () => planes.revisarFormulacion(h.id, 'validado', ''),
-                  'Formulación validada: la dependencia ya puede cargarla en el SIA'
+                  'Formulación validada: la dependencia ya puede subirla al SIA Contralorías'
                 )
               }
             >
@@ -187,7 +190,7 @@ export function BloqueFormulacion({
         )}
         {puedeSia && (
           <button type="button" className="btn sm" onClick={() => setVentana('sia')}>
-            <Icono nombre="fa-cloud-arrow-up" /> Registrar cargue en SIA
+            <Icono nombre="fa-pen-to-square" /> Anotar que ya se subió al SIA
           </button>
         )}
       </div>
@@ -254,7 +257,7 @@ export function BloqueFormulacion({
           alRegistrar={async fecha => {
             const ok = await ejecutar(
               () => planes.marcarSia(h.plan_id, fecha),
-              'Cargue en el SIA registrado para los hallazgos validados del plan'
+              'Quedó anotado que los hallazgos validados del plan ya se subieron al SIA'
             );
             if (ok) setVentana(null);
           }}
@@ -680,7 +683,7 @@ function VentanaSia({
   return (
     <Modal
       abierto
-      titulo="Registrar cargue en el SIA Contralorías"
+      titulo="Anotar que ya se subió al SIA"
       alCerrar={alCerrar}
       pie={
         <>
@@ -699,7 +702,12 @@ function VentanaSia({
       }
     >
       <div className="field">
-        <label htmlFor="pm-sia-fecha">Fecha en que se cargó en el SIA</label>
+        <div className="hint" style={{ marginBottom: 10 }}>
+          El plan se sube en el <b>SIA Contralorías</b>, el sistema de la Contraloría, con el usuario de la
+          dependencia. Esta aplicación no sube nada al SIA: aquí solo se anota la fecha en que ya se hizo,
+          para el seguimiento de Control Interno.
+        </div>
+        <label htmlFor="pm-sia-fecha">Fecha en que se subió al SIA</label>
         <input
           id="pm-sia-fecha"
           type="date"
@@ -708,7 +716,7 @@ function VentanaSia({
           onChange={e => setFecha(e.target.value)}
         />
         <div className="hint">
-          Se registra para todos los hallazgos validados de su dependencia en este plan.
+          Se anota para todos los hallazgos validados de su dependencia en este plan.
         </div>
       </div>
     </Modal>

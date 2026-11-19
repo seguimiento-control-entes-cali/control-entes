@@ -103,5 +103,12 @@ describe('3.0 · Planes: la dependencia formula, Control Interno valida (script 
     await entrar('control.interno.demo@cali.gov.co');
     fireEvent.click((await hallazgo('2')).getByRole('button', { name: /Validar/ }));
     expect(await (await hallazgo('2')).findByText('Validado por Control Interno')).toBeTruthy();
+    // El SIA es el sistema de la Contraloría: la app solo anota la fecha en que ya se subió
+    const h2 = await hallazgo('2');
+    fireEvent.click(h2.getByRole('button', { name: /Anotar que ya se subió al SIA/ }));
+    const v = within(await screen.findByRole('dialog'));
+    expect(v.getByText(/no sube nada al SIA/)).toBeTruthy();
+    fireEvent.click(v.getByRole('button', { name: /Registrar/ }));
+    expect(await (await hallazgo('2')).findByText(/Subido al SIA \(anotado\)/)).toBeTruthy();
   });
 });
