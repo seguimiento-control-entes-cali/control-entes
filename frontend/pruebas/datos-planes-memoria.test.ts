@@ -86,7 +86,7 @@ describe('memoria · demostración', () => {
       plan_id: 'pm-demo-3',
       tipo: 'informe_final'
     });
-    expect((await e.planes.datos()).documentos.map(x => x.nombre)).toEqual(['informe.pdf']);
+    expect(((await e.planes.datos()).documentos ?? []).map(x => x.nombre)).toEqual(['informe.pdf']);
   });
 
   it('papelera: una acción eliminada vuelve; un hallazgo exige que exista su plan', async () => {
