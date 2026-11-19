@@ -221,12 +221,108 @@ export function semillaPlanes(hoy: string): DatosPlanes {
 /** pmDemoView: secretario y enlace solo ven las acciones de su dependencia (y sus planes y hallazgos). */
 export function vistaPorDependencia(st: DatosPlanes, dep: number | null): DatosPlanes {
   const acciones = st.acciones.filter(a => String(a.dependencia_id) === String(dep));
-  const hid = new Set(acciones.map(a => a.hallazgo_id)),
-    pid = new Set(acciones.map(a => a.plan_id));
+  // Script 28: también los hallazgos asignados a la dependencia aunque aún no tengan acciones (para formularlos)
+  const propios = st.hallazgos.filter(h => String(h.dependencia_id ?? '') === String(dep));
+  const hid = new Set([...acciones.map(a => a.hallazgo_id), ...propios.map(h => h.id)]),
+    pid = new Set([...acciones.map(a => a.plan_id), ...propios.map(h => h.plan_id)]);
   return {
     planes: st.planes.filter(p => pid.has(p.id)),
     hallazgos: st.hallazgos.filter(h => hid.has(h.id)),
     acciones,
     avances: st.avances.filter(v => String(v.dependencia_id) === String(dep))
   };
+}
+
+/**
+ * Script 28 (quién hace qué): un plan FICTICIO en formulación con hallazgos de Salud (la dependencia de las cuentas
+ * de secretaría y enlace de la demo), para probar el flujo: uno en borrador (la dependencia formula el análisis de
+ * causa y las acciones) y otro ya enviado (Control Interno lo valida o lo devuelve). Va aparte de semillaPlanes, que
+ * se compara con la 2.x.
+ */
+export function semillaFormulacion(hoy: string): Pick<DatosPlanes, 'planes' | 'hallazgos' | 'acciones'> {
+  const dia = (n: number) => sumarDias(hoy, n);
+  const p: Plan = {
+    id: 'pm-demo-3',
+    formato: 'PM_01_CGSC',
+    contraloria: 'Contraloría General de Santiago de Cali',
+    entidad: 'Distrito Especial de Santiago de Cali',
+    nit: '',
+    representante_legal: '',
+    ordenador_gasto: '',
+    ejercicio: 'Actuación especial de fiscalización a la contratación en salud (DATOS DE EJEMPLO)',
+    tipo_ejercicio: 'Actuación Especial de Fiscalización',
+    modalidad: '',
+    vigencia_pvcft: hoy.slice(0, 4),
+    periodo_auditado: '',
+    numero_informe: 'EJEMPLO-003',
+    radicado_orfeo: '',
+    fecha_informe: dia(-10),
+    fecha_suscripcion: dia(5),
+    estado: 'formulacion',
+    observaciones: 'Plan ficticio en formulación: la dependencia formula, Control Interno valida.'
+  };
+  const base = {
+    plan_id: p.id,
+    causa: '',
+    efecto: '',
+    cuantia: null,
+    macroproceso: 'Gestión contractual',
+    dependencia_id: DEPS[0] ?? null
+  };
+  const h1: Hallazgo = {
+    ...base,
+    id: 'h-pm-demo-3-1',
+    numero: '1',
+    descripcion:
+      'Los informes de supervisión de los contratos de prestación de servicios se publicaron en el SECOP fuera del término legal (DATOS DE EJEMPLO).',
+    connotaciones: ['administrativa', 'disciplinaria'],
+    orden: 1,
+    formulacion_estado: 'borrador'
+  };
+  const h2: Hallazgo = {
+    ...base,
+    id: 'h-pm-demo-3-2',
+    numero: '2',
+    descripcion:
+      'No se evidenció el seguimiento a las pólizas de cumplimiento de los contratos de suministro (DATOS DE EJEMPLO).',
+    connotaciones: ['administrativa'],
+    orden: 2,
+    causa_metodo: 'cinco_porques',
+    causa_raiz: 'No existe un control periódico de vigencia de las pólizas en la supervisión',
+    causa_detalle: {
+      no_conformidad: 'Sin seguimiento a las pólizas de cumplimiento',
+      cinco_porques: [
+        {
+          problema: 'Pólizas sin seguimiento',
+          porques: [
+            'El supervisor no revisa las pólizas',
+            'No hay alerta de vencimiento',
+            'No existe un control periódico',
+            '',
+            ''
+          ],
+          resultado: 'No existe un control periódico de vigencia de las pólizas'
+        }
+      ]
+    },
+    formulacion_estado: 'enviado',
+    formulacion_enviado_por: 'secretario.demo@cali.gov.co',
+    formulacion_enviado_at: dia(-1) + 'T15:00:00.000Z'
+  };
+  const a: Accion = {
+    id: 'a-demo-3-1',
+    plan_id: p.id,
+    hallazgo_id: h2.id,
+    dependencia_id: DEPS[0] ?? null,
+    responsable: 'Supervisores de contratos de suministro',
+    accion: 'Implementar un control mensual de vigencia de pólizas con alerta de vencimiento',
+    meta: '12 controles mensuales',
+    unidad_medida: 'Controles',
+    cantidad: 12,
+    fecha_inicio: dia(10),
+    fecha_fin: dia(375),
+    avance: 0,
+    fecha_corte: null
+  } as Accion;
+  return { planes: [p], hallazgos: [h1, h2], acciones: [a] };
 }

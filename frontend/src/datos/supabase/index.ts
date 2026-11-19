@@ -12,7 +12,12 @@ import type { Requerimiento } from '../../dominio/requerimientos';
 import type { Database, Json } from './tipos.generados';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
-import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
+import {
+  contenidoNoCoincide,
+  revisarDocumento,
+  rutaDocumento,
+  type ElementoPapelera
+} from '../../dominio/planes-memoria';
 import type { ArchivoInventario } from '../../dominio/respaldo-archivos';
 import { rutaSoporte } from '../../dominio/requerimientos';
 import type {
@@ -519,7 +524,21 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         } catch {
           v20 = false;
         }
-        return { planes, hallazgos, acciones, avances, traslados, v19, v20, prorrogas, informes, documentos };
+        // Script 28 (quién hace qué): si falta, la pantalla funciona como antes
+        const v28 = !(await sb.from('pm_hallazgos').select('formulacion_estado').limit(1)).error;
+        return {
+          planes,
+          hallazgos,
+          acciones,
+          avances,
+          traslados,
+          v19,
+          v20,
+          v28,
+          prorrogas,
+          informes,
+          documentos
+        };
       },
       async guardar(tipo, o, id) {
         const tabla = TABLA_PLANES[tipo];
@@ -583,12 +602,43 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         });
         if (error) throw errorPlanes(error);
       },
+      async enviarFormulacion(hallazgoId) {
+        const { error } = await sb.rpc('pm_enviar_formulacion', { p_hallazgo: hallazgoId });
+        if (error) throw errorPlanes(error);
+      },
+      async revisarFormulacion(hallazgoId, estado, observacion) {
+        const { error } = await sb.rpc('pm_revisar_formulacion', {
+          p_hallazgo: hallazgoId,
+          p_estado: estado,
+          p_observacion: observacion || ''
+        });
+        if (error) throw errorPlanes(error);
+      },
+      async marcarSia(planId, fecha) {
+        const { data, error } = await sb.rpc('pm_marcar_sia', { p_plan: planId, p_fecha: fecha });
+        if (error) throw errorPlanes(error);
+        return Number(data ?? 0);
+      },
+      async buscarInforme(contraloria, numero) {
+        const { data, error } = await sb.rpc('pm_buscar_informe', {
+          p_contraloria: contraloria,
+          p_numero: numero
+        });
+        if (error) return []; // sin el script 28 no se puede comprobar: se sigue como antes
+        return (data ?? []).map(r => ({
+          plan_id: String(r.plan_id),
+          ejercicio: String(r.ejercicio ?? ''),
+          creado_por: String(r.creado_por ?? '')
+        }));
+      },
       // pmDocSubir: el archivo va al depósito privado «archivo»; si el registro falla, se borra
       async subirDocumento(archivo, meta) {
         const nombre = meta.nombre || archivo.name || 'documento';
         const r = revisarDocumento(nombre, archivo.size);
         if ('error' in r) throw new ErrorDatos('otro', r.error);
         const buf = await archivo.arrayBuffer();
+        const malo = contenidoNoCoincide(nombre, new Uint8Array(buf.slice(0, 4096)));
+        if (malo) throw new ErrorDatos('otro', malo);
         const sha = await huellaArchivo({ arrayBuffer: () => Promise.resolve(buf) });
         const path = rutaDocumento(meta.plan_id, fechaColombia(new Date()), Date.now(), nombre);
         const up = await sb.storage.from('archivo').upload(path, buf, { contentType: r.mime, upsert: false });

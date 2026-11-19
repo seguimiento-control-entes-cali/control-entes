@@ -5,6 +5,7 @@
 // como dato. Paridad comprobada en pruebas/paridad-planes.test.ts.
 import { textoCorto } from './actividad';
 import { diasEntre } from './fechas';
+import type { DetalleCausas } from './detalle-causas';
 
 export const ALERTA_DIAS = 30;
 export const FORMATOS: Readonly<Record<string, { corto: string; nombre: string; contraloria: string }>> = {
@@ -79,6 +80,21 @@ export interface Hallazgo {
   orden?: number | null;
   dependencia_id?: number | null;
   dependencia_texto?: string;
+  // Script 28: análisis de causa que formula la dependencia y flujo de validación de Control Interno
+  causa_metodo?: string;
+  causa_raiz?: string;
+  causa_documento?: string;
+  causa_detalle?: DetalleCausas | null;
+  formulacion_estado?: string;
+  formulacion_obs?: string;
+  formulacion_enviado_por?: string;
+  formulacion_enviado_at?: string | null;
+  formulacion_revisado_por?: string;
+  formulacion_revisado_at?: string | null;
+  sia_cargado_at?: string | null;
+  eval_cgsc?: string;
+  eval_cgsc_obs?: string;
+  eval_cgsc_fecha?: string | null;
 }
 export interface Accion {
   id: string;
@@ -147,6 +163,8 @@ export interface DatosPlanes {
   v19?: boolean;
   /** Script 20 instalado (prórrogas, informes semestrales y archivo documental): PM.v20 de la 2.x. */
   v20?: boolean;
+  /** Script 28 instalado (quién hace qué: la dependencia formula, Control Interno valida). */
+  v28?: boolean;
   prorrogas?: Prorroga[];
   informes?: InformeAvance[];
   documentos?: DocumentoArchivo[];
@@ -648,7 +666,7 @@ export function validarAccion(
 }
 export function validarAvance(
   o: { fecha_corte: string; cantidad: number; descripcion: string; radicado_orfeo: string },
-  archivo: { nombre: string; tipo: string; tamano: number } | null,
+  archivo: { nombre: string; tipo: string; tamano: number; cabecera?: string } | null,
   hoy: string
 ) {
   if (!fechaPlan(o.fecha_corte)) return 'Indica la fecha de corte';
@@ -661,6 +679,9 @@ export function validarAvance(
   if (archivo && archivo.tipo && archivo.tipo !== 'application/pdf' && !/\.pdf$/i.test(archivo.nombre))
     return 'El soporte debe ser un archivo PDF';
   if (archivo && archivo.tamano > 10 * 1024 * 1024) return 'El PDF supera 10 MB';
+  // Los primeros bytes de un PDF son «%PDF-» (igual que la carga de la respuesta ORFEO): un archivo renombrado no pasa
+  if (archivo && archivo.cabecera !== undefined && archivo.cabecera !== '%PDF-')
+    return 'El archivo no parece ser un PDF válido';
   return null;
 }
 export const validarDevolucion = (estado: string, obs: string) =>
@@ -682,7 +703,28 @@ export const TIPOS_EJERCICIO = [
 ];
 
 /** pmSavePlan: las columnas de los scripts 19 y 20 solo se envían si están instalados (si no, guardar fallaría). */
-export function columnasInstaladas(o: Record<string, unknown>, v: Pick<DatosPlanes, 'v19' | 'v20'>) {
+/** Columnas del script 28 (quién hace qué): no se envían si la base aún no lo tiene. */
+export const COLUMNAS_V28 = [
+  'causa_metodo',
+  'causa_raiz',
+  'causa_documento',
+  'causa_detalle',
+  'eval_cgsc',
+  'eval_cgsc_obs',
+  'eval_cgsc_fecha',
+  'puntaje_cgsc'
+] as const;
+export function columnasInstaladas(o: Record<string, unknown>, v: Pick<DatosPlanes, 'v19' | 'v20' | 'v28'>) {
+  if (!v.v28) {
+    delete o.causa_metodo;
+    delete o.causa_raiz;
+    delete o.causa_documento;
+    delete o.causa_detalle;
+    delete o.eval_cgsc;
+    delete o.eval_cgsc_obs;
+    delete o.eval_cgsc_fecha;
+    delete o.puntaje_cgsc;
+  }
   if (!v.v19) {
     delete o.direccion_tecnica;
     delete o.requerimiento_id;

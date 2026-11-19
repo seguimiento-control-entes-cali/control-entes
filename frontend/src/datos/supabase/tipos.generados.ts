@@ -747,6 +747,20 @@ export interface Database {
           updated_at: string;
           dependencia_id: number | null;
           dependencia_texto: string;
+          causa_metodo: string;
+          causa_raiz: string;
+          causa_documento: string;
+          causa_detalle: Json;
+          formulacion_estado: string;
+          formulacion_obs: string;
+          formulacion_enviado_por: string;
+          formulacion_enviado_at: string | null;
+          formulacion_revisado_por: string;
+          formulacion_revisado_at: string | null;
+          sia_cargado_at: string | null;
+          eval_cgsc: string;
+          eval_cgsc_obs: string;
+          eval_cgsc_fecha: string | null;
         };
         Insert: {
           id?: string;
@@ -763,6 +777,20 @@ export interface Database {
           updated_at?: string;
           dependencia_id?: number | null;
           dependencia_texto?: string;
+          causa_metodo?: string;
+          causa_raiz?: string;
+          causa_documento?: string;
+          causa_detalle?: Json;
+          formulacion_estado?: string;
+          formulacion_obs?: string;
+          formulacion_enviado_por?: string;
+          formulacion_enviado_at?: string | null;
+          formulacion_revisado_por?: string;
+          formulacion_revisado_at?: string | null;
+          sia_cargado_at?: string | null;
+          eval_cgsc?: string;
+          eval_cgsc_obs?: string;
+          eval_cgsc_fecha?: string | null;
         };
         Update: {
           id?: string;
@@ -779,6 +807,20 @@ export interface Database {
           updated_at?: string;
           dependencia_id?: number | null;
           dependencia_texto?: string;
+          causa_metodo?: string;
+          causa_raiz?: string;
+          causa_documento?: string;
+          causa_detalle?: Json;
+          formulacion_estado?: string;
+          formulacion_obs?: string;
+          formulacion_enviado_por?: string;
+          formulacion_enviado_at?: string | null;
+          formulacion_revisado_por?: string;
+          formulacion_revisado_at?: string | null;
+          sia_cargado_at?: string | null;
+          eval_cgsc?: string;
+          eval_cgsc_obs?: string;
+          eval_cgsc_fecha?: string | null;
         };
         Relationships: [];
       };
@@ -847,6 +889,8 @@ export interface Database {
           resolucion: string;
           fecha_radicacion_informe: string | null;
           plan_origen_id: string | null;
+          puntaje_cgsc: number | null;
+          eval_cgsc_fecha: string | null;
         };
         Insert: {
           id?: string;
@@ -876,6 +920,8 @@ export interface Database {
           resolucion?: string;
           fecha_radicacion_informe?: string | null;
           plan_origen_id?: string | null;
+          puntaje_cgsc?: number | null;
+          eval_cgsc_fecha?: string | null;
         };
         Update: {
           id?: string;
@@ -905,6 +951,8 @@ export interface Database {
           resolucion?: string;
           fecha_radicacion_informe?: string | null;
           plan_origen_id?: string | null;
+          puntaje_cgsc?: number | null;
+          eval_cgsc_fecha?: string | null;
         };
         Relationships: [];
       };
@@ -1264,9 +1312,22 @@ export interface Database {
         };
         Returns: string;
       };
+      pm_buscar_informe: {
+        Args: {
+          p_contraloria: string;
+          p_numero: string;
+        };
+        Returns: { plan_id: string; ejercicio: string; creado_por: string; fecha_suscripcion: string }[];
+      };
       pm_eliminar_plan: {
         Args: {
           p_id: string;
+        };
+        Returns: undefined;
+      };
+      pm_enviar_formulacion: {
+        Args: {
+          p_hallazgo: string;
         };
         Returns: undefined;
       };
@@ -1275,6 +1336,17 @@ export interface Database {
           p: Json;
         };
         Returns: string;
+      };
+      pm_interno: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
+      pm_marcar_sia: {
+        Args: {
+          p_plan: string;
+          p_fecha: string;
+        };
+        Returns: number;
       };
       pm_misma_operacion: {
         Args: {
@@ -1342,6 +1414,14 @@ export interface Database {
       pm_revisar_avance: {
         Args: {
           p_id: string;
+          p_estado: string;
+          p_observacion: string;
+        };
+        Returns: undefined;
+      };
+      pm_revisar_formulacion: {
+        Args: {
+          p_hallazgo: string;
           p_estado: string;
           p_observacion: string;
         };

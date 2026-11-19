@@ -698,9 +698,12 @@ export function VentanaAvance({
       radicado_orfeo: txt(orfeo).replace(/\s+/g, ''),
       validar: validar && edita
     };
+    const cabecera = archivo
+      ? String.fromCharCode(...new Uint8Array(await archivo.slice(0, 5).arrayBuffer()))
+      : '';
     const err = validarAvance(
       o,
-      archivo ? { nombre: archivo.name, tipo: archivo.type, tamano: archivo.size } : null,
+      archivo ? { nombre: archivo.name, tipo: archivo.type, tamano: archivo.size, cabecera } : null,
       hoy
     );
     if (err) return avisar(err, 'error');

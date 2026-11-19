@@ -381,6 +381,11 @@
     },
     {
       "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_dep_idx",
+      "definicion": "CREATE INDEX pm_hall_dep_idx ON public.pm_hallazgos USING btree (dependencia_id)"
+    },
+    {
+      "tabla": "pm_hallazgos",
       "nombre": "pm_hallazgos_numero_unq",
       "definicion": "CREATE UNIQUE INDEX pm_hallazgos_numero_unq ON public.pm_hallazgos USING btree (plan_id, numero)"
     },
@@ -1811,6 +1816,34 @@
     },
     {
       "nula": false,
+      "tipo": "jsonb",
+      "tabla": "pm_hallazgos",
+      "columna": "causa_detalle",
+      "defecto": "'{}'::jsonb"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "causa_documento",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "causa_metodo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "causa_raiz",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
       "tipo": "text[]",
       "tabla": "pm_hallazgos",
       "columna": "connotaciones",
@@ -1860,6 +1893,69 @@
     },
     {
       "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "eval_cgsc",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_hallazgos",
+      "columna": "eval_cgsc_fecha",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "eval_cgsc_obs",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_hallazgos",
+      "columna": "formulacion_enviado_at",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "formulacion_enviado_por",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "formulacion_estado",
+      "defecto": "'borrador'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "formulacion_obs",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "timestamp with time zone",
+      "tabla": "pm_hallazgos",
+      "columna": "formulacion_revisado_at",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_hallazgos",
+      "columna": "formulacion_revisado_por",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
       "tipo": "uuid",
       "tabla": "pm_hallazgos",
       "columna": "id",
@@ -1891,6 +1987,13 @@
       "tipo": "uuid",
       "tabla": "pm_hallazgos",
       "columna": "plan_id",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_hallazgos",
+      "columna": "sia_cargado_at",
       "defecto": null
     },
     {
@@ -2023,6 +2126,13 @@
       "nula": true,
       "tipo": "date",
       "tabla": "pm_planes",
+      "columna": "eval_cgsc_fecha",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "date",
+      "tabla": "pm_planes",
       "columna": "fecha_informe",
       "defecto": null
     },
@@ -2101,6 +2211,13 @@
       "tipo": "uuid",
       "tabla": "pm_planes",
       "columna": "plan_origen_id",
+      "defecto": null
+    },
+    {
+      "nula": true,
+      "tipo": "numeric(6,2)",
+      "tabla": "pm_planes",
+      "columna": "puntaje_cgsc",
       "defecto": null
     },
     {
@@ -2749,12 +2866,30 @@
       "seguridad_definidor": false
     },
     {
+      "md5": "1169a143a16836433189a5be6c94434e",
+      "nombre": "pm_acciones_rol_guard",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
       "md5": "d42a18f51ddf3bed91719ad0af6b8699",
       "nombre": "pm_borrado_guard",
       "devuelve": "trigger",
       "argumentos": "",
       "configuracion": [],
       "seguridad_definidor": false
+    },
+    {
+      "md5": "1fde0bd1f88b481ae553c3323f8708fe",
+      "nombre": "pm_buscar_informe",
+      "devuelve": "TABLE(plan_id uuid, ejercicio text, creado_por text, fecha_suscripcion date)",
+      "argumentos": "p_contraloria text, p_numero text",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
     },
     {
       "md5": "a028930582ebc24b79f94c2405bdf30b",
@@ -2775,10 +2910,46 @@
       "seguridad_definidor": true
     },
     {
+      "md5": "de0c4046d23fb5a08b74602002e8a613",
+      "nombre": "pm_enviar_formulacion",
+      "devuelve": "void",
+      "argumentos": "p_hallazgo uuid",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "3877332cb8c8710cf0e98f93fcf25462",
+      "nombre": "pm_hallazgos_rol_guard",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
       "md5": "8f435ff76254ac77537872ec69821448",
       "nombre": "pm_importar",
       "devuelve": "uuid",
       "argumentos": "p jsonb",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "f0b0ea8714ad53b9c0b26a91ad164de9",
+      "nombre": "pm_interno",
+      "devuelve": "boolean",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
+    },
+    {
+      "md5": "18e30a082efe2205b57bcb9292d7e4e6",
+      "nombre": "pm_marcar_sia",
+      "devuelve": "integer",
+      "argumentos": "p_plan uuid, p_fecha date",
       "configuracion": [
         "search_path=public"
       ],
@@ -2801,6 +2972,14 @@
         "search_path=public"
       ],
       "seguridad_definidor": true
+    },
+    {
+      "md5": "322e92019769bbce6b7f77f0c87eee2a",
+      "nombre": "pm_planes_rol_guard",
+      "devuelve": "trigger",
+      "argumentos": "",
+      "configuracion": [],
+      "seguridad_definidor": false
     },
     {
       "md5": "ad7f1702c40e57e626b40101d1e726a8",
@@ -2855,6 +3034,16 @@
       "nombre": "pm_revisar_avance",
       "devuelve": "void",
       "argumentos": "p_id uuid, p_estado text, p_observacion text",
+      "configuracion": [
+        "search_path=public"
+      ],
+      "seguridad_definidor": true
+    },
+    {
+      "md5": "a7550573cd7ffc912805f6d79adf153b",
+      "nombre": "pm_revisar_formulacion",
+      "devuelve": "void",
+      "argumentos": "p_hallazgo uuid, p_estado text, p_observacion text",
       "configuracion": [
         "search_path=public"
       ],
@@ -3241,6 +3430,28 @@
       "verificando": null
     },
     {
+      "orden": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_acciones",
+      "nombre": "pm_acc_del",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep()) AND (EXISTS ( SELECT 1\n   FROM pm_hallazgos h\n  WHERE ((h.id = pm_acciones.hallazgo_id) AND (h.formulacion_estado = ANY (ARRAY['borrador'::text, 'devuelto'::text])))))))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_acciones",
+      "nombre": "pm_acc_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep()) AND (EXISTS ( SELECT 1\n   FROM pm_hallazgos h\n  WHERE ((h.id = pm_acciones.hallazgo_id) AND (h.dependencia_id = current_dep()) AND (h.formulacion_estado = ANY (ARRAY['borrador'::text, 'devuelto'::text])))))))"
+    },
+    {
       "orden": "SELECT",
       "roles": [
         "authenticated"
@@ -3252,15 +3463,15 @@
       "verificando": null
     },
     {
-      "orden": "ALL",
+      "orden": "UPDATE",
       "roles": [
         "authenticated"
       ],
       "tabla": "pm_acciones",
-      "nombre": "pm_acc_write",
-      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "nombre": "pm_acc_upd",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep()) AND (EXISTS ( SELECT 1\n   FROM pm_hallazgos h\n  WHERE ((h.id = pm_acciones.hallazgo_id) AND (h.formulacion_estado = ANY (ARRAY['borrador'::text, 'devuelto'::text])))))))",
       "permisiva": "PERMISSIVE",
-      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+      "verificando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep())))"
     },
     {
       "orden": "SELECT",
@@ -3285,26 +3496,48 @@
       "verificando": null
     },
     {
+      "orden": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_del",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep()) AND (formulacion_estado = ANY (ARRAY['borrador'::text, 'devuelto'::text]))))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep())))"
+    },
+    {
       "orden": "SELECT",
       "roles": [
         "authenticated"
       ],
       "tabla": "pm_hallazgos",
       "nombre": "pm_hall_read",
-      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (EXISTS ( SELECT 1\n   FROM pm_acciones a\n  WHERE ((a.hallazgo_id = pm_hallazgos.id) AND (a.dependencia_id = current_dep()))))))",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND ((dependencia_id = current_dep()) OR (EXISTS ( SELECT 1\n   FROM pm_acciones a\n  WHERE ((a.hallazgo_id = pm_hallazgos.id) AND (a.dependencia_id = current_dep())))))))",
       "permisiva": "PERMISSIVE",
       "verificando": null
     },
     {
-      "orden": "ALL",
+      "orden": "UPDATE",
       "roles": [
         "authenticated"
       ],
       "tabla": "pm_hallazgos",
-      "nombre": "pm_hall_write",
-      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "nombre": "pm_hall_upd",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep())))",
       "permisiva": "PERMISSIVE",
-      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+      "verificando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (dependencia_id = current_dep())))"
     },
     {
       "orden": "SELECT",
@@ -3329,26 +3562,48 @@
       "verificando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
     },
     {
+      "orden": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_del",
+      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_ins",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text, 'secretario'::text, 'enlace'::text]))"
+    },
+    {
       "orden": "SELECT",
       "roles": [
         "authenticated"
       ],
       "tabla": "pm_planes",
       "nombre": "pm_planes_read",
-      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (EXISTS ( SELECT 1\n   FROM pm_acciones a\n  WHERE ((a.plan_id = pm_planes.id) AND (a.dependencia_id = current_dep()))))))",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'alcalde'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND ((created_by = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM pm_hallazgos h\n  WHERE ((h.plan_id = pm_planes.id) AND (h.dependencia_id = current_dep())))) OR (EXISTS ( SELECT 1\n   FROM pm_acciones a\n  WHERE ((a.plan_id = pm_planes.id) AND (a.dependencia_id = current_dep())))))))",
       "permisiva": "PERMISSIVE",
       "verificando": null
     },
     {
-      "orden": "ALL",
+      "orden": "UPDATE",
       "roles": [
         "authenticated"
       ],
       "tabla": "pm_planes",
-      "nombre": "pm_planes_write",
-      "usando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))",
+      "nombre": "pm_planes_upd",
+      "usando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (created_by = auth.uid()) AND (estado = 'formulacion'::text)))",
       "permisiva": "PERMISSIVE",
-      "verificando": "(current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+      "verificando": "((current_rol() = ANY (ARRAY['admin'::text, 'control_interno'::text])) OR ((current_rol() = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (created_by = auth.uid())))"
     },
     {
       "orden": "SELECT",
@@ -3576,6 +3831,11 @@
     },
     {
       "tabla": "pm_acciones",
+      "nombre": "trg_pm_acciones_rol_guard",
+      "definicion": "CREATE TRIGGER trg_pm_acciones_rol_guard BEFORE INSERT OR DELETE OR UPDATE ON public.pm_acciones FOR EACH ROW EXECUTE FUNCTION pm_acciones_rol_guard()"
+    },
+    {
+      "tabla": "pm_acciones",
       "nombre": "trg_pm_calificacion_guard",
       "definicion": "CREATE TRIGGER trg_pm_calificacion_guard BEFORE INSERT OR UPDATE OF cal_cumplimiento, cal_efectividad ON public.pm_acciones FOR EACH ROW EXECUTE FUNCTION pm_calificacion_guard()"
     },
@@ -3605,6 +3865,11 @@
       "definicion": "CREATE TRIGGER trg_pm_hall_touch BEFORE UPDATE ON public.pm_hallazgos FOR EACH ROW EXECUTE FUNCTION pm_touch()"
     },
     {
+      "tabla": "pm_hallazgos",
+      "nombre": "trg_pm_hallazgos_rol_guard",
+      "definicion": "CREATE TRIGGER trg_pm_hallazgos_rol_guard BEFORE INSERT OR UPDATE ON public.pm_hallazgos FOR EACH ROW EXECUTE FUNCTION pm_hallazgos_rol_guard()"
+    },
+    {
       "tabla": "pm_informes_avance",
       "nombre": "trg_audit_pm_inf",
       "definicion": "CREATE TRIGGER trg_audit_pm_inf AFTER INSERT OR DELETE OR UPDATE ON public.pm_informes_avance FOR EACH ROW EXECUTE FUNCTION audit_trigger()"
@@ -3618,6 +3883,11 @@
       "tabla": "pm_planes",
       "nombre": "trg_pm_plan_del",
       "definicion": "CREATE TRIGGER trg_pm_plan_del BEFORE DELETE ON public.pm_planes FOR EACH ROW EXECUTE FUNCTION pm_borrado_guard()"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "trg_pm_planes_rol_guard",
+      "definicion": "CREATE TRIGGER trg_pm_planes_rol_guard BEFORE INSERT OR UPDATE ON public.pm_planes FOR EACH ROW EXECUTE FUNCTION pm_planes_rol_guard()"
     },
     {
       "tabla": "pm_planes",
@@ -3953,8 +4223,28 @@
     },
     {
       "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_causa_detalle_ok",
+      "definicion": "CHECK (((jsonb_typeof(causa_detalle) = 'object'::text) AND (pg_column_size(causa_detalle) < 200000)))"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_causa_metodo_ok",
+      "definicion": "CHECK ((causa_metodo = ANY (ARRAY[''::text, 'cinco_porques'::text, 'espina_pescado'::text, 'arbol_problema'::text, 'otro'::text])))"
+    },
+    {
+      "tabla": "pm_hallazgos",
       "nombre": "pm_hall_conn_ok",
       "definicion": "CHECK ((connotaciones <@ ARRAY['administrativa'::text, 'disciplinaria'::text, 'fiscal'::text, 'penal'::text, 'sancionatoria'::text, 'otra'::text]))"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_eval_cgsc_ok",
+      "definicion": "CHECK ((eval_cgsc = ANY (ARRAY[''::text, 'efectiva'::text, 'parcialmente_efectiva'::text, 'no_efectiva'::text])))"
+    },
+    {
+      "tabla": "pm_hallazgos",
+      "nombre": "pm_hall_formulacion_ok",
+      "definicion": "CHECK ((formulacion_estado = ANY (ARRAY['borrador'::text, 'enviado'::text, 'validado'::text, 'devuelto'::text])))"
     },
     {
       "tabla": "pm_hallazgos",
@@ -4045,6 +4335,11 @@
       "tabla": "pm_planes",
       "nombre": "pm_planes_plan_origen_id_fkey",
       "definicion": "FOREIGN KEY (plan_origen_id) REFERENCES pm_planes(id) ON DELETE SET NULL"
+    },
+    {
+      "tabla": "pm_planes",
+      "nombre": "pm_planes_puntaje_ok",
+      "definicion": "CHECK (((puntaje_cgsc IS NULL) OR ((puntaje_cgsc >= (0)::numeric) AND (puntaje_cgsc <= (100)::numeric))))"
     },
     {
       "tabla": "pm_planes",
@@ -4817,6 +5112,21 @@
     },
     {
       "rol": "anon",
+      "funcion": "pm_acciones_rol_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_acciones_rol_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_acciones_rol_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
       "funcion": "pm_borrado_guard",
       "argumentos": ""
     },
@@ -4829,6 +5139,11 @@
       "rol": "service_role",
       "funcion": "pm_borrado_guard",
       "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_buscar_informe",
+      "argumentos": "p_contraloria text, p_numero text"
     },
     {
       "rol": "anon",
@@ -4852,8 +5167,48 @@
     },
     {
       "rol": "authenticated",
+      "funcion": "pm_enviar_formulacion",
+      "argumentos": "p_hallazgo uuid"
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_hallazgos_rol_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_hallazgos_rol_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_hallazgos_rol_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
       "funcion": "pm_importar",
       "argumentos": "p jsonb"
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_interno",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_interno",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_interno",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_marcar_sia",
+      "argumentos": "p_plan uuid, p_fecha date"
     },
     {
       "rol": "anon",
@@ -4873,6 +5228,21 @@
     {
       "rol": "authenticated",
       "funcion": "pm_papelera",
+      "argumentos": ""
+    },
+    {
+      "rol": "anon",
+      "funcion": "pm_planes_rol_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_planes_rol_guard",
+      "argumentos": ""
+    },
+    {
+      "rol": "service_role",
+      "funcion": "pm_planes_rol_guard",
       "argumentos": ""
     },
     {
@@ -4909,6 +5279,11 @@
       "rol": "authenticated",
       "funcion": "pm_revisar_avance",
       "argumentos": "p_id uuid, p_estado text, p_observacion text"
+    },
+    {
+      "rol": "authenticated",
+      "funcion": "pm_revisar_formulacion",
+      "argumentos": "p_hallazgo uuid, p_estado text, p_observacion text"
     },
     {
       "rol": "anon",

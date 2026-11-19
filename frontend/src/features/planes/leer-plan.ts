@@ -82,7 +82,18 @@ function cargarPdfJs(): Promise<PdfJs> {
 export async function leerPdf(bytes: ArrayBuffer): Promise<TrozoPdf[][]> {
   const lib = await cargarPdfJs();
   // isEvalSupported: false cierra CVE-2024-4367 (un PDF malicioso podía ejecutar código en pdf.js 3.x)
-  const doc = await lib.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false }).promise;
+  let doc: Awaited<ReturnType<PdfJs['getDocument']>['promise']>;
+  try {
+    doc = await lib.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false }).promise;
+  } catch (e) {
+    // Los mensajes de pdf.js vienen en inglés («Invalid PDF structure», «No password given»…)
+    const m = String((e as Error)?.message ?? '');
+    throw new Error(
+      /password/i.test(m)
+        ? 'El PDF tiene contraseña: guárdelo sin contraseña e inténtelo de nuevo.'
+        : 'El archivo no es un PDF válido o está dañado. Ábralo en su computador para comprobarlo y vuelva a intentarlo.'
+    );
+  }
   const paginas: TrozoPdf[][] = [];
   for (let i = 1; i <= doc.numPages; i++) {
     const tc = await (await doc.getPage(i)).getTextContent();

@@ -326,6 +326,18 @@ export interface RepositorioPlanes {
   inventarioArchivos(): Promise<ArchivoInventario[]>;
   /** Contenido de un archivo del inventario, o null si no está en el depósito. */
   descargarArchivo(it: ArchivoInventario): Promise<ArrayBuffer | null>;
+  // ---- Script 28: quién hace qué (la dependencia formula, Control Interno valida) ----
+  /** La dependencia envía el análisis de causa y las acciones de un hallazgo a Control Interno. */
+  enviarFormulacion(hallazgoId: string): Promise<void>;
+  /** Control Interno valida o devuelve (con observación) la formulación de un hallazgo. */
+  revisarFormulacion(hallazgoId: string, estado: 'validado' | 'devuelto', observacion: string): Promise<void>;
+  /** Registra la fecha en que se cargaron en el SIA los hallazgos validados del plan; devuelve cuántos. */
+  marcarSia(planId: string, fecha: string): Promise<number>;
+  /** ¿Ya se cargó un informe con ese número en esa contraloría? (aunque el plan sea de otra dependencia) */
+  buscarInforme(
+    contraloria: string,
+    numero: string
+  ): Promise<{ plan_id: string; ejercicio: string; creado_por: string }[]>;
   /** Planes, hallazgos, acciones y traslados eliminados que se pueden restaurar (pm_papelera). */
   papelera(): Promise<ElementoPapelera[]>;
   /** Restaura un elemento con lo que se eliminó junto con él (pm_restaurar); devuelve el resumen. */

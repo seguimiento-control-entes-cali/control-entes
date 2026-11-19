@@ -56,6 +56,15 @@ import {
   VentanaRevision
 } from './Formularios';
 import { VentanaExportar } from './Exportar';
+import { BloqueFormulacion } from './Formulacion';
+import {
+  filasInformeIncumplimiento,
+  incumplimientoPorDependencia,
+  pctIncumplimientoTxt,
+  totalIncumplimiento
+} from '../../dominio/incumplimiento';
+import { descargarCsv } from '../../shared/lib';
+import { enFlujoFormulacion, ESTADOS_FORMULACION, estadoDe, puedeFormular } from '../../dominio/formulacion';
 import { VentanaImportar } from './Importar';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
 import { TrasladosHallazgo, VentanaTraslado } from './Traslados';
@@ -317,7 +326,7 @@ function FilaAccion({
               <Icono nombre="fa-user-shield" />
             </button>
           )}
-          {ctx.edita && h && (
+          {h && (ctx.d.v28 ? puedeFormular(h, ctx.rol, ctx.depPropia) : ctx.edita) && (
             <>
               <button
                 type="button"
@@ -499,6 +508,7 @@ function Resumen({
           </div>
         )}
       </div>
+      {SUPERVISION.includes(ctx.rol) && <AlertaIncumplimiento ctx={ctx} acciones={acc} />}
       <div className="grid g-kpi" style={{ marginBottom: 14 }}>
         <div className="card kpi">
           <small>Planes</small>
@@ -725,11 +735,119 @@ function Resumen({
           )}
         </div>
       </div>
+      {SUPERVISION.includes(ctx.rol) && <InformeIncumplimiento ctx={ctx} acciones={acc} />}
     </>
   );
 }
 
-function MisAcciones({ ctx, depId }: { ctx: Ctx; depId: number | null }) {
+/** Alertas de Control Interno (y supervisión): dependencias con acciones vencidas sin cumplir o por vencer. */
+function AlertaIncumplimiento({ ctx, acciones }: { ctx: Ctx; acciones: readonly Accion[] }) {
+  const filas = incumplimientoPorDependencia(acciones, ctx.d.avances, ctx.hoy, id => ctx.dep(id));
+  const t = totalIncumplimiento(filas);
+  if (!t.vencidas && !t.proximas) return null;
+  const peores = filas.filter(f => f.vencidas > 0).slice(0, 3);
+  return (
+    <div className="hint err" role="alert" style={{ marginBottom: 14 }}>
+      <b>
+        <Icono nombre="fa-triangle-exclamation" /> Alertas de cumplimiento:
+      </b>{' '}
+      {t.vencidas > 0 && (
+        <>
+          {nf(t.conVencidas)} {t.conVencidas === 1 ? 'dependencia tiene' : 'dependencias tienen'}{' '}
+          {nf(t.vencidas)} {t.vencidas === 1 ? 'acción vencida' : 'acciones vencidas'} sin cumplir
+          {peores.length > 0 && (
+            <>
+              {' '}
+              (más:{' '}
+              {peores.map(f => `${nombreCorto(f.dependencia) || f.dependencia} ${f.vencidas}`).join(', ')})
+            </>
+          )}
+          {t.proximas > 0 ? '; ' : '.'}
+        </>
+      )}
+      {t.proximas > 0 && (
+        <>
+          {nf(t.proximas)} {t.proximas === 1 ? 'acción vence' : 'acciones vencen'} en los próximos{' '}
+          {ALERTA_DIAS} días en {nf(t.conProximas)} {t.conProximas === 1 ? 'dependencia' : 'dependencias'}.
+        </>
+      )}{' '}
+      Vea el detalle en «Informe de incumplimiento por dependencia».
+    </div>
+  );
+}
+
+/** Informe de incumplimiento por dependencia, de mayor a menor, en número y porcentaje (descargable). */
+function InformeIncumplimiento({ ctx, acciones }: { ctx: Ctx; acciones: readonly Accion[] }) {
+  const filas = incumplimientoPorDependencia(acciones, ctx.d.avances, ctx.hoy, id => ctx.dep(id));
+  const t = totalIncumplimiento(filas);
+  if (!filas.length) return null;
+  return (
+    <div className="card" style={{ marginTop: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <h3 style={{ margin: 0, flex: 1 }}>Informe de incumplimiento por dependencia</h3>
+        <button
+          type="button"
+          className="btn sm"
+          onClick={() =>
+            descargarCsv(
+              `informe_incumplimiento_planes_${ctx.hoy}.csv`,
+              filasInformeIncumplimiento(filas, ctx.hoy)
+            )
+          }
+        >
+          <Icono nombre="fa-file-excel" /> Descargar (Excel)
+        </button>
+      </div>
+      <div className="sub">
+        De mayor a menor incumplimiento. % de incumplimiento = acciones vencidas sin cumplir ÷ acciones cuyo
+        plazo ya terminó. Administración: {nf(t.vencidas)} vencidas de {nf(t.plazoVencido)} con plazo
+        terminado ({pctIncumplimientoTxt(t.pctIncumplimiento)}).
+      </div>
+      <div className="tbl-wrap" style={{ marginTop: 8 }}>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Dependencia</th>
+              <th>Acciones</th>
+              <th>Cumplidas</th>
+              <th>Vencidas sin cumplir</th>
+              <th>% incumplimiento</th>
+              <th>Vencen en {ALERTA_DIAS} días</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((f, i) => (
+              <tr key={String(f.dependencia_id)}>
+                <td className="mono">{i + 1}</td>
+                <td>{nombreCorto(f.dependencia) || f.dependencia}</td>
+                <td className="mono">{nf(f.acciones)}</td>
+                <td className="mono">{nf(f.cumplidas)}</td>
+                <td className="mono">
+                  {f.vencidas > 0 ? <span className="pill rojo">{nf(f.vencidas)}</span> : '0'}
+                </td>
+                <td className="mono">{pctIncumplimientoTxt(f.pctIncumplimiento)}</td>
+                <td className="mono">
+                  {f.proximas > 0 ? <span className="pill amarillo">{nf(f.proximas)}</span> : '0'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function MisAcciones({
+  ctx,
+  depId,
+  abrirPlan
+}: {
+  ctx: Ctx;
+  depId: number | null;
+  abrirPlan: (id: string) => void;
+}) {
   const { d, hoy } = ctx;
   if (!depId)
     return (
@@ -755,6 +873,26 @@ function MisAcciones({ ctx, depId }: { ctx: Ctx; depId: number | null }) {
           </div>
         </div>
       </div>
+      {(cn.vencida > 0 || cn.proxima > 0) && (
+        <div className="hint err" role="alert" style={{ marginBottom: 14 }}>
+          <b>
+            <Icono nombre="fa-triangle-exclamation" /> Alerta de su dependencia:
+          </b>{' '}
+          {cn.vencida > 0 && (
+            <>
+              {nf(cn.vencida)} {cn.vencida === 1 ? 'acción vencida' : 'acciones vencidas'} sin cumplir
+              {cn.proxima > 0 ? ' y ' : '. '}
+            </>
+          )}
+          {cn.proxima > 0 && (
+            <>
+              {nf(cn.proxima)} {cn.proxima === 1 ? 'acción vence' : 'acciones vencen'} en los próximos{' '}
+              {ALERTA_DIAS} días.{' '}
+            </>
+          )}
+          Reporte el avance con su soporte para evitar el incumplimiento ante la Contraloría.
+        </div>
+      )}
       <div className="grid g-kpi" style={{ marginBottom: 14 }}>
         {(
           [
@@ -783,6 +921,7 @@ function MisAcciones({ ctx, depId }: { ctx: Ctx; depId: number | null }) {
           <Medidor label="Avance de mis acciones" v={ind.ap} color="var(--neo, #4c8dff)" />
         </div>
       </div>
+      {ctx.d.v28 && <HallazgosPorFormular ctx={ctx} depId={depId} abrirPlan={abrirPlan} />}
       {acc.length ? (
         Object.entries(porPlan).map(([pid, l]) => {
           const p = d.planes.find(x => x.id === pid);
@@ -811,6 +950,58 @@ function MisAcciones({ ctx, depId }: { ctx: Ctx; depId: number | null }) {
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Script 28: hallazgos de la dependencia que aún no están validados (en formulación, enviados o devueltos). Sin esta
+ * tarjeta un hallazgo recién asignado, sin acciones, no aparecería en «Mis acciones de mejora».
+ */
+function HallazgosPorFormular({
+  ctx,
+  depId,
+  abrirPlan
+}: {
+  ctx: Ctx;
+  depId: number | null;
+  abrirPlan: (id: string) => void;
+}) {
+  const l = ctx.d.hallazgos.filter(
+    h => String(h.dependencia_id ?? '') === String(depId) && estadoDe(h) !== 'validado'
+  );
+  if (!l.length) return null;
+  return (
+    <section className="card" style={{ marginBottom: 14 }}>
+      <h3 style={{ margin: '0 0 6px' }}>Hallazgos por formular</h3>
+      <div className="hint" style={{ marginBottom: 8 }}>
+        Su dependencia formula el análisis de causa y las acciones de cada hallazgo y los envía a Control
+        Interno para su validación.
+      </div>
+      {l.map(h => {
+        const p = ctx.d.planes.find(x => x.id === h.plan_id);
+        const e = ESTADOS_FORMULACION[estadoDe(h)];
+        return (
+          <div
+            key={h.id}
+            style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', padding: '6px 0' }}
+          >
+            <span className="pm-num">Hallazgo {h.numero}</span>
+            <span className={'pill ' + e.clase}>{e.texto}</span>
+            <span className="muted" style={{ fontSize: '.8rem', flex: 1, minWidth: 180 }}>
+              {textoCorto(p?.ejercicio || '', 90)}
+            </span>
+            <button
+              type="button"
+              className="btn sm"
+              aria-label={'Formular hallazgo ' + h.numero + ' de ' + (p?.ejercicio || 'el plan')}
+              onClick={() => abrirPlan(h.plan_id)}
+            >
+              <Icono nombre="fa-pen" /> Formular
+            </button>
+          </div>
+        );
+      })}
+    </section>
   );
 }
 
@@ -1339,9 +1530,12 @@ function SeccionHallazgo({
         <span style={{ flex: 1 }} />
         {ctx.edita && (
           <>
-            <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
-              <Icono nombre="fa-plus" /> Acción
-            </button>
+            {/* Script 28: las acciones las formula la dependencia (botón en «Formulación»); el admin corrige */}
+            {(!ctx.d.v28 || ctx.rol === 'admin') && (
+              <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
+                <Icono nombre="fa-plus" /> Acción
+              </button>
+            )}
             <button
               type="button"
               className="icon-btn"
@@ -1391,6 +1585,15 @@ function SeccionHallazgo({
           <Icono nombre="fa-building-columns" /> {ctx.dep(h.dependencia_id) || h.dependencia_texto}
         </div>
       )}
+      {ctx.d.v28 && enFlujoFormulacion(h) && (
+        <BloqueFormulacion
+          h={h}
+          acciones={l}
+          rol={ctx.rol}
+          depPropia={ctx.depPropia}
+          nuevaAccion={() => ctx.abrir({ t: 'acc', a: null, h })}
+        />
+      )}
       <TrasladosHallazgo
         h={h}
         d={ctx.d}
@@ -1403,7 +1606,7 @@ function SeccionHallazgo({
         ) : (
           <div className="muted" style={{ fontSize: '.82rem', padding: '8px 0' }}>
             Este hallazgo aún no tiene acciones.
-            {ctx.edita && (
+            {(ctx.d.v28 ? puedeFormular(h, ctx.rol, ctx.depPropia) : ctx.edita) && (
               <>
                 {' '}
                 <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
@@ -1627,7 +1830,7 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
           quitarPlan={quitarPlan}
         />
       ) : propio ? (
-        <MisAcciones ctx={ctx} depId={perfil.dependenciaId} />
+        <MisAcciones ctx={ctx} depId={perfil.dependenciaId} abrirPlan={id => setPlan(id)} />
       ) : (
         <Resumen ctx={ctx} abrir={id => setPlan(id)} abrirAccion={abrirAccion} />
       )}

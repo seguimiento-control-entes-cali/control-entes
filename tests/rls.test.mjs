@@ -180,5 +180,109 @@ for (const t of ['requerimientos', 'audit_log', 'profiles', 'pm_acciones', 'conf
   assert.strictEqual((await como('ci', `select public.current_rol() as r`, [], 'aal1')).filas[0].r, 'control_interno', 'CI sin verificación activada conserva su rol'); ok();
 }
 
+// ---- 4. Planes: quién hace qué (script 28). Varios pasos con distintas cuentas en UNA transacción que se deshace.
+async function flujo(pasos) {
+  const res = [];
+  await db.exec('begin');
+  try {
+    for (const [quien, sql, params = []] of pasos) {
+      await db.exec('savepoint paso');
+      try {
+        await db.query(`select set_config('request.jwt.claim.sub', $1, true)`, [U[quien][0]]);
+        await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ aal: 'aal2' })]);
+        await db.exec('set local role authenticated');
+        const r = await db.query(sql, params);
+        res.push({ filas: r.rows, cambiadas: r.affectedRows ?? 0 });
+        await db.exec('reset role');
+        await db.exec('release savepoint paso');
+      } catch (e) {
+        await db.exec('rollback to savepoint paso');
+        await db.exec('reset role');
+        res.push({ error: e.message });
+      }
+    }
+  } finally {
+    await db.exec('rollback');
+  }
+  return res;
+}
+{
+  const P = '00000000-0000-4000-8000-0000000000e1', H = '00000000-0000-4000-8000-0000000000e2';
+  const acc = (id) => [`insert into public.pm_acciones (id, plan_id, hallazgo_id, dependencia_id, accion, fecha_inicio, fecha_fin)
+    values ($1, $2, $3, $4, 'PRUEBA · acción formulada', '2026-12-01', '2027-06-30')`, [id, P, H, DEP.A.id]];
+  const est = ['select formulacion_estado as e from public.pm_hallazgos where id = $1', [H]];
+  const r = await flujo([
+    /* 0 */ ['secA', `insert into public.pm_planes (id, formato, contraloria, ejercicio, fecha_suscripcion, numero_informe, estado)
+              values ($1, 'PM_01_CGSC', 'Contraloría ficticia', 'PRUEBA · plan cargado por A', '2026-11-01', 'INF-77', 'en_ejecucion')`, [P]],
+    /* 1 */ ['secA', 'select estado from public.pm_planes where id = $1', [P]],
+    /* 2 */ ['secA', `insert into public.pm_hallazgos (id, plan_id, numero, descripcion, dependencia_id) values ($1, $2, '1', 'PRUEBA · hallazgo de A', $3)`, [H, P, DEP.A.id]],
+    /* 3 */ ['secA', `insert into public.pm_hallazgos (plan_id, numero, descripcion, dependencia_id) values ($1, '2', 'PRUEBA · hallazgo ajeno', $2)`, [P, DEP.B.id]],
+    /* 4 */ ['secA', ...est],
+    /* 5 */ ['ci', `update public.pm_hallazgos set causa_raiz = 'Control Interno no formula' where id = $1`, [H]],
+    /* 6 */ ['ci', ...acc('00000000-0000-4000-8000-0000000000e3')],
+    /* 7 */ ['secA', 'select public.pm_enviar_formulacion($1)', [H]],
+    /* 8 */ ['secA', `update public.pm_hallazgos set causa_metodo = 'cinco_porques', causa_raiz = 'Falta de lista de chequeo en la supervisión',
+              causa_detalle = '{"cinco_porques":[{"problema":"Publicación tardía","porques":["a","b","c","d","e"],"resultado":"Falta lista de chequeo"}]}' where id = $1`, [H]],
+    /* 9 */ ['secA', ...acc('00000000-0000-4000-8000-0000000000e4')],
+    /* 10 */ ['secA', `update public.pm_hallazgos set formulacion_estado = 'validado' where id = $1`, [H]],
+    /* 11 */ ['secA', 'select public.pm_enviar_formulacion($1)', [H]],
+    /* 12 */ ['secA', `update public.pm_hallazgos set causa_raiz = 'Cambio después de enviar' where id = $1`, [H]],
+    /* 13 */ ['secB', `select public.pm_revisar_formulacion($1, 'validado')`, [H]],
+    /* 14 */ ['ci', `select public.pm_revisar_formulacion($1, 'devuelto', '')`, [H]],
+    /* 15 */ ['ci', `select public.pm_revisar_formulacion($1, 'devuelto', 'Ajustar la meta de la acción')`, [H]],
+    /* 16 */ ['secA', `update public.pm_acciones set meta = 'Meta ajustada' where id = $1`, ['00000000-0000-4000-8000-0000000000e4']],
+    /* 17 */ ['secA', 'select public.pm_enviar_formulacion($1)', [H]],
+    /* 18 */ ['ci', `select public.pm_revisar_formulacion($1, 'validado', 'Bien formulado')`, [H]],
+    /* 19 */ ['secA', ...acc('00000000-0000-4000-8000-0000000000e5')],
+    /* 20 */ ['secA', `select public.pm_marcar_sia($1, '2026-11-10') as n`, [P]],
+    /* 21 */ ['ci', `update public.pm_acciones set obs_ci = 'Revisar soporte' where id = $1`, ['00000000-0000-4000-8000-0000000000e4']],
+    /* 22 */ ['ci', `update public.pm_acciones set accion = 'Reescrita por CI' where id = $1`, ['00000000-0000-4000-8000-0000000000e4']],
+    /* 23 */ ['secB', `select * from public.pm_buscar_informe('contraloría ficticia', ' inf-77 ')`],
+    /* 24 */ ['secB', 'select count(*)::int as n from public.pm_planes where id = $1', [P]],
+    /* 25 */ ['ci', `update public.pm_hallazgos set eval_cgsc = 'efectiva', eval_cgsc_fecha = '2027-08-01' where id = $1`, [H]],
+    /* 26 */ ['secA', `update public.pm_planes set puntaje_cgsc = 95 where id = $1`, [P]],
+    /* 27 */ ['alcalde', ...acc('00000000-0000-4000-8000-0000000000e6')],
+    /* 28 */ ['secA', ...est],
+    /* 29 */ ['ci', `update public.pm_hallazgos set causa_detalle = '{}' where id = $1`, [H]],
+    /* 30 */ ['ci', `select causa_detalle->'cinco_porques'->0->>'resultado' as r from public.pm_hallazgos where id = $1`, [H]]
+  ]);
+  const err = (i, re, msg) => { assert.ok(r[i].error && (!re || re.test(r[i].error)), `${msg} (paso ${i}: ${JSON.stringify(r[i])})`); ok(); };
+  const bien = (i, msg) => { assert.ok(!r[i].error, `${msg} (paso ${i}: ${r[i].error})`); ok(); };
+  bien(0, 'la dependencia carga el informe (crea el plan)');
+  assert.strictEqual(r[1].filas[0].estado, 'formulacion', 'el plan creado por la dependencia queda en formulación'); ok();
+  bien(2, 'la dependencia carga su hallazgo');
+  err(3, null, 'la dependencia no carga hallazgos de otra dependencia');
+  assert.strictEqual(r[4].filas[0].e, 'borrador', 'el hallazgo nuevo empieza en borrador'); ok();
+  err(5, /análisis de causa lo formula la dependencia/, 'Control Interno no escribe el análisis de causa');
+  err(6, /las formula la dependencia/, 'Control Interno no crea acciones');
+  err(7, /Falta el análisis de causa/, 'no se envía sin análisis de causa');
+  bien(8, 'la dependencia escribe el análisis de causa');
+  bien(9, 'la dependencia formula la acción');
+  err(10, /cambia al enviarla/, 'nadie se valida a sí mismo');
+  bien(11, 'la dependencia envía a Control Interno');
+  err(12, /ya fue enviado/, 'enviado: la dependencia ya no lo cambia');
+  err(13, /Solo Control Interno/, 'otra dependencia no revisa');
+  err(14, /escriba la observación/, 'devolver exige observación');
+  bien(15, 'Control Interno devuelve con observación');
+  bien(16, 'devuelto: la dependencia ajusta la acción');
+  bien(17, 'la dependencia reenvía');
+  bien(18, 'Control Interno valida');
+  err(19, null, 'validado: la dependencia ya no agrega acciones');
+  assert.strictEqual(r[20].filas?.[0]?.n, 1, `la dependencia registra el cargue en el SIA (${JSON.stringify(r[20])})`); ok();
+  bien(21, 'Control Interno deja su observación en la acción');
+  err(22, /no modifica la acción \(accion\)/, 'Control Interno no reescribe la acción');
+  assert.strictEqual(r[23].filas?.length, 1, `otra dependencia sabe que el informe ya fue cargado (${JSON.stringify(r[23])})`); ok();
+  assert.strictEqual(r[24].filas[0].n, 0, 'pero no ve el plan ajeno'); ok();
+  bien(25, 'Control Interno registra la evaluación de la Contraloría');
+  assert.ok(r[26].error || r[26].cambiadas === 0, `la dependencia no registra el puntaje de la Contraloría (${JSON.stringify(r[26])})`); ok();
+  err(27, null, 'el Alcalde no formula');
+  assert.strictEqual(r[28].filas[0].e, 'validado', 'al final queda validado'); ok();
+  err(29, /análisis de causa lo formula la dependencia/, 'Control Interno no cambia el formato de análisis de causas');
+  assert.strictEqual(r[30].filas[0].r, 'Falta lista de chequeo', 'Control Interno sí ve lo que diligenció la dependencia'); ok();
+  // Los hallazgos que ya existían (plan en ejecución) quedaron validados
+  const viejos = await db.query(`select count(*)::int as n from public.pm_hallazgos where formulacion_estado <> 'validado'`);
+  assert.strictEqual(viejos.rows[0].n, 0, 'los hallazgos existentes quedan validados'); ok();
+}
+
 await db.close();
 console.log(`OK: ${n} verificaciones de permisos (RLS) rol por rol en PostgreSQL`);
