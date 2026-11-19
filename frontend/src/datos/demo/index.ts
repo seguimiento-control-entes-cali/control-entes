@@ -12,7 +12,7 @@ import {
 } from '../contratos';
 import { DEPENDENCIAS_DEMO, ENTES_DEMO } from './catalogos-semilla';
 import { semillaRequerimientos } from './requerimientos-semilla';
-import { semillaPlanes, vistaPorDependencia } from './planes-semilla';
+import { semillaFormulacion, semillaPlanes, vistaPorDependencia } from './planes-semilla';
 import {
   puedeEditarPlanes,
   puedeReportar,
@@ -27,6 +27,7 @@ import {
   type Traslado
 } from '../../dominio/planes';
 import { requisitosProrroga } from '../../dominio/planes-norma';
+import { enviar, puedeFormular, revisar } from '../../dominio/formulacion';
 import { revisarDocumento, rutaDocumento, type ElementoPapelera } from '../../dominio/planes-memoria';
 import { huellaArchivo } from '../../dominio/huella-archivo';
 import { fechaColombia } from '../../dominio/fechas';
@@ -124,6 +125,13 @@ export function datosDemo(): Datos {
   const alertasLog: { requerimiento_id: string; canal: string }[] = [];
   // Planes de mejoramiento de la demostración (los mismos de la 2.x, ficticios)
   const planes = semillaPlanes(fechaColombia(new Date()));
+  {
+    // Script 28: plan en formulación para probar quién hace qué (aparte de la semilla que se compara con la 2.x)
+    const f = semillaFormulacion(fechaColombia(new Date()));
+    planes.planes.push(...f.planes);
+    planes.hallazgos.push(...f.hallazgos);
+    planes.acciones.push(...f.acciones);
+  }
   // Archivo documental y papelera de la demostración (en memoria: el contenido solo existe durante la sesión)
   let documentos: DocumentoArchivo[] = [];
   const prorrogas: Prorroga[] = [];
@@ -184,6 +192,77 @@ export function datosDemo(): Datos {
     const p = actual?.perfil;
     if (!p || !puedeEditarPlanes(p.rol)) throw new ErrorDatos('sin_permiso', mensaje);
     return p.correo;
+  };
+  // Script 28 (quién hace qué): la dependencia formula lo suyo; Control Interno no formula, solo observa.
+  const CI_ACCION = [
+    'obs_ci',
+    'obs_ci_estado',
+    'obs_ci_at',
+    'cal_cumplimiento',
+    'cal_efectividad',
+    'dependencia_id'
+  ];
+  const CAUSA = ['causa_metodo', 'causa_raiz', 'causa_documento', 'causa_detalle'];
+  const cambia = (antes: Record<string, unknown> | undefined, o: Record<string, unknown>, k: string) =>
+    k in o && JSON.stringify(o[k] ?? null) !== JSON.stringify(antes?.[k] ?? null);
+  const guardadoPermitido = (tipo: string, o: Record<string, unknown>, id?: string | null) => {
+    const p = actual?.perfil;
+    if (!p) throw new ErrorDatos('sin_permiso', 'Inicia sesión');
+    const hallDe = (hid: unknown) => planes.hallazgos.find(h => h.id === hid);
+    if (p.rol === 'admin') return p.correo;
+    if (p.rol === 'control_interno') {
+      if (tipo === 'acc') {
+        if (!id)
+          throw new ErrorDatos(
+            'sin_permiso',
+            'Las acciones las formula la dependencia; Control Interno las valida o las devuelve'
+          );
+        const antes = planes.acciones.find(a => a.id === id) as unknown as
+          | Record<string, unknown>
+          | undefined;
+        const otros = Object.keys(o).filter(k => !CI_ACCION.includes(k) && cambia(antes, o, k));
+        if (otros.length)
+          throw new ErrorDatos(
+            'sin_permiso',
+            'Control Interno no modifica la acción: déjelo en la observación'
+          );
+      }
+      if (tipo === 'hall' && id) {
+        const antes = hallDe(id) as unknown as Record<string, unknown> | undefined;
+        if (CAUSA.some(k => cambia(antes, o, k)))
+          throw new ErrorDatos(
+            'sin_permiso',
+            'El análisis de causa lo formula la dependencia; Control Interno lo valida o lo devuelve'
+          );
+      }
+      return p.correo;
+    }
+    if (['secretario', 'enlace'].includes(p.rol)) {
+      const h =
+        tipo === 'hall'
+          ? id
+            ? hallDe(id)
+            : (o as never)
+          : tipo === 'acc'
+            ? hallDe(o.hallazgo_id ?? planes.acciones.find(a => a.id === id)?.hallazgo_id)
+            : null;
+      if (tipo === 'plan' && !id) {
+        o.estado = 'formulacion';
+        o.creado_por = p.correo; // como created_by en Supabase: quien lo crea lo ve aunque aún no tenga hallazgos
+        return p.correo;
+      }
+      if ((tipo === 'hall' || tipo === 'acc') && h && puedeFormular(h, p.rol, p.dependenciaId)) {
+        if (tipo === 'acc' && String(o.dependencia_id ?? p.dependenciaId) !== String(p.dependenciaId))
+          throw new ErrorDatos('sin_permiso', 'Solo formula acciones de su dependencia');
+        if (tipo === 'hall' && !id) o.formulacion_estado = 'borrador';
+        return p.correo;
+      }
+      throw new ErrorDatos(
+        'sin_permiso',
+        'Solo puede formular los hallazgos de su dependencia mientras no estén enviados o validados'
+      );
+    }
+    throw new ErrorDatos('sin_permiso', 'Tu rol no puede modificar planes de mejoramiento');
   };
   // pmRevisar de la 2.x: al validar, la acción toma el último avance validado (por corte y por revisión)
   async function revisarDemo(id: string, estado: 'validado' | 'devuelto', obs: string) {
@@ -485,21 +564,32 @@ export function datosDemo(): Datos {
       async datos() {
         const p = actual?.perfil;
         // pmDemoView de la 2.x: secretario y enlace solo ven lo de su dependencia y no ven traslados
-        if (p && ['secretario', 'enlace'].includes(p.rol))
+        if (p && ['secretario', 'enlace'].includes(p.rol)) {
+          const vista = vistaPorDependencia(planes, p.dependenciaId);
+          // Script 28: también los planes que la dependencia creó (carga del informe), aunque aún no tengan hallazgos
+          for (const x of planes.planes)
+            if (
+              (x as { creado_por?: string }).creado_por === p.correo &&
+              !vista.planes.some(v => v.id === x.id)
+            )
+              vista.planes.push(x);
           return {
-            ...JSON.parse(JSON.stringify(vistaPorDependencia(planes, p.dependenciaId))),
+            ...JSON.parse(JSON.stringify(vista)),
             traslados: [],
             v19: true,
             v20: true,
+            v28: true,
             prorrogas: [],
             informes: [],
             documentos: []
           };
+        }
         return {
           ...JSON.parse(JSON.stringify(planes)),
           traslados: JSON.parse(JSON.stringify(traslados)) as Traslado[],
           v19: true,
           v20: true,
+          v28: true,
           prorrogas: JSON.parse(JSON.stringify(prorrogas)) as Prorroga[],
           informes: JSON.parse(JSON.stringify(informesAvance)) as InformeAvance[],
           documentos: JSON.parse(JSON.stringify(documentos)) as DocumentoArchivo[]
@@ -507,7 +597,7 @@ export function datosDemo(): Datos {
       },
       // pmSave de la 2.x en la demostración
       async guardar(tipo, o, id) {
-        const usuario = editorPlanes('Tu rol no puede modificar planes de mejoramiento');
+        const usuario = guardadoPermitido(tipo, o, id);
         const lista = (tipo === 'plan'
           ? planes.planes
           : tipo === 'hall'
@@ -569,7 +659,9 @@ export function datosDemo(): Datos {
         return String(nuevo.id);
       },
       async eliminar(tipo, id) {
-        const usuario = editorPlanes('Tu rol no puede eliminar');
+        // Script 28: la dependencia puede quitar una acción de su hallazgo mientras lo formula
+        const usuario =
+          tipo === 'acc' ? guardadoPermitido('acc', {}, id) : editorPlanes('Tu rol no puede eliminar');
         if (tipo === 'tras') {
           traslados = traslados.filter(t => t.id !== id);
           auditar('pm_traslados', 'DELETE', id, { id }, usuario);
@@ -643,6 +735,64 @@ export function datosDemo(): Datos {
       },
       async revisar(id, estado, obs) {
         await revisarDemo(id, estado, obs);
+      },
+      async enviarFormulacion(hid) {
+        const p = actual?.perfil;
+        const h = planes.hallazgos.find(x => x.id === hid);
+        if (!p || !h) throw new ErrorDatos('otro', 'Hallazgo no encontrado');
+        if (!puedeFormular(h, p.rol, p.dependenciaId))
+          throw new ErrorDatos(
+            'sin_permiso',
+            'Solo la dependencia responsable del hallazgo envía su formulación'
+          );
+        try {
+          const antes = { ...h };
+          Object.assign(h, enviar(h, planes.acciones, p.correo, new Date().toISOString()));
+          auditar('pm_hallazgos', 'UPDATE', h.id, h, p.correo, diferencias(antes, { ...h }));
+        } catch (e) {
+          throw new ErrorDatos('otro', (e as Error).message);
+        }
+      },
+      async revisarFormulacion(hid, estado, obs) {
+        const p = actual?.perfil;
+        const h = planes.hallazgos.find(x => x.id === hid);
+        if (!p || !h) throw new ErrorDatos('otro', 'Hallazgo no encontrado');
+        if (!['admin', 'control_interno'].includes(p.rol))
+          throw new ErrorDatos('sin_permiso', 'Solo Control Interno valida o devuelve la formulación');
+        try {
+          const antes = { ...h };
+          Object.assign(h, revisar(h, estado, obs, p.correo, new Date().toISOString()));
+          auditar('pm_hallazgos', 'UPDATE', h.id, h, p.correo, diferencias(antes, { ...h }));
+        } catch (e) {
+          throw new ErrorDatos('otro', (e as Error).message);
+        }
+      },
+      async marcarSia(planId, fecha) {
+        const p = actual?.perfil;
+        if (!p || p.rol === 'alcalde')
+          throw new ErrorDatos('sin_permiso', 'Sin permiso para registrar el cargue en el SIA');
+        const hs = planes.hallazgos.filter(
+          h =>
+            h.plan_id === planId &&
+            h.formulacion_estado === 'validado' &&
+            (['admin', 'control_interno'].includes(p.rol) ||
+              String(h.dependencia_id) === String(p.dependenciaId))
+        );
+        if (!hs.length)
+          throw new ErrorDatos('otro', 'No hay hallazgos validados de su dependencia en este plan');
+        for (const h of hs) h.sia_cargado_at = fecha;
+        return hs.length;
+      },
+      async buscarInforme(contraloria, numero) {
+        const n = txt(numero).toLowerCase();
+        if (!n) return [];
+        return planes.planes
+          .filter(
+            x =>
+              txt(x.numero_informe).toLowerCase() === n &&
+              txt(x.contraloria).toLowerCase() === txt(contraloria).toLowerCase()
+          )
+          .map(x => ({ plan_id: x.id, ejercicio: x.ejercicio, creado_por: '' }));
       },
       async subirDocumento(archivo, meta) {
         const usuario = editorPlanes('Tu rol no puede modificar planes de mejoramiento');

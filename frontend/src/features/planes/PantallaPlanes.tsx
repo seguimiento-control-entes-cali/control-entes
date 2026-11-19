@@ -56,6 +56,8 @@ import {
   VentanaRevision
 } from './Formularios';
 import { VentanaExportar } from './Exportar';
+import { BloqueFormulacion } from './Formulacion';
+import { ESTADOS_FORMULACION, estadoDe, puedeFormular } from '../../dominio/formulacion';
 import { VentanaImportar } from './Importar';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
 import { TrasladosHallazgo, VentanaTraslado } from './Traslados';
@@ -317,7 +319,7 @@ function FilaAccion({
               <Icono nombre="fa-user-shield" />
             </button>
           )}
-          {ctx.edita && h && (
+          {h && (ctx.d.v28 ? puedeFormular(h, ctx.rol, ctx.depPropia) : ctx.edita) && (
             <>
               <button
                 type="button"
@@ -729,7 +731,15 @@ function Resumen({
   );
 }
 
-function MisAcciones({ ctx, depId }: { ctx: Ctx; depId: number | null }) {
+function MisAcciones({
+  ctx,
+  depId,
+  abrirPlan
+}: {
+  ctx: Ctx;
+  depId: number | null;
+  abrirPlan: (id: string) => void;
+}) {
   const { d, hoy } = ctx;
   if (!depId)
     return (
@@ -783,6 +793,7 @@ function MisAcciones({ ctx, depId }: { ctx: Ctx; depId: number | null }) {
           <Medidor label="Avance de mis acciones" v={ind.ap} color="var(--neo, #4c8dff)" />
         </div>
       </div>
+      {ctx.d.v28 && <HallazgosPorFormular ctx={ctx} depId={depId} abrirPlan={abrirPlan} />}
       {acc.length ? (
         Object.entries(porPlan).map(([pid, l]) => {
           const p = d.planes.find(x => x.id === pid);
@@ -811,6 +822,58 @@ function MisAcciones({ ctx, depId }: { ctx: Ctx; depId: number | null }) {
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Script 28: hallazgos de la dependencia que aún no están validados (en formulación, enviados o devueltos). Sin esta
+ * tarjeta un hallazgo recién asignado, sin acciones, no aparecería en «Mis acciones de mejora».
+ */
+function HallazgosPorFormular({
+  ctx,
+  depId,
+  abrirPlan
+}: {
+  ctx: Ctx;
+  depId: number | null;
+  abrirPlan: (id: string) => void;
+}) {
+  const l = ctx.d.hallazgos.filter(
+    h => String(h.dependencia_id ?? '') === String(depId) && estadoDe(h) !== 'validado'
+  );
+  if (!l.length) return null;
+  return (
+    <section className="card" style={{ marginBottom: 14 }}>
+      <h3 style={{ margin: '0 0 6px' }}>Hallazgos por formular</h3>
+      <div className="hint" style={{ marginBottom: 8 }}>
+        Su dependencia formula el análisis de causa y las acciones de cada hallazgo y los envía a Control
+        Interno para su validación.
+      </div>
+      {l.map(h => {
+        const p = ctx.d.planes.find(x => x.id === h.plan_id);
+        const e = ESTADOS_FORMULACION[estadoDe(h)];
+        return (
+          <div
+            key={h.id}
+            style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', padding: '6px 0' }}
+          >
+            <span className="pm-num">Hallazgo {h.numero}</span>
+            <span className={'pill ' + e.clase}>{e.texto}</span>
+            <span className="muted" style={{ fontSize: '.8rem', flex: 1, minWidth: 180 }}>
+              {textoCorto(p?.ejercicio || '', 90)}
+            </span>
+            <button
+              type="button"
+              className="btn sm"
+              aria-label={'Formular hallazgo ' + h.numero + ' de ' + (p?.ejercicio || 'el plan')}
+              onClick={() => abrirPlan(h.plan_id)}
+            >
+              <Icono nombre="fa-pen" /> Formular
+            </button>
+          </div>
+        );
+      })}
+    </section>
   );
 }
 
@@ -1339,9 +1402,12 @@ function SeccionHallazgo({
         <span style={{ flex: 1 }} />
         {ctx.edita && (
           <>
-            <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
-              <Icono nombre="fa-plus" /> Acción
-            </button>
+            {/* Script 28: las acciones las formula la dependencia (botón en «Formulación»); el admin corrige */}
+            {(!ctx.d.v28 || ctx.rol === 'admin') && (
+              <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
+                <Icono nombre="fa-plus" /> Acción
+              </button>
+            )}
             <button
               type="button"
               className="icon-btn"
@@ -1391,6 +1457,15 @@ function SeccionHallazgo({
           <Icono nombre="fa-building-columns" /> {ctx.dep(h.dependencia_id) || h.dependencia_texto}
         </div>
       )}
+      {ctx.d.v28 && (
+        <BloqueFormulacion
+          h={h}
+          acciones={l}
+          rol={ctx.rol}
+          depPropia={ctx.depPropia}
+          nuevaAccion={() => ctx.abrir({ t: 'acc', a: null, h })}
+        />
+      )}
       <TrasladosHallazgo
         h={h}
         d={ctx.d}
@@ -1403,7 +1478,7 @@ function SeccionHallazgo({
         ) : (
           <div className="muted" style={{ fontSize: '.82rem', padding: '8px 0' }}>
             Este hallazgo aún no tiene acciones.
-            {ctx.edita && (
+            {(ctx.d.v28 ? puedeFormular(h, ctx.rol, ctx.depPropia) : ctx.edita) && (
               <>
                 {' '}
                 <button type="button" className="btn sm" onClick={() => ctx.abrir({ t: 'acc', a: null, h })}>
@@ -1627,7 +1702,7 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
           quitarPlan={quitarPlan}
         />
       ) : propio ? (
-        <MisAcciones ctx={ctx} depId={perfil.dependenciaId} />
+        <MisAcciones ctx={ctx} depId={perfil.dependenciaId} abrirPlan={id => setPlan(id)} />
       ) : (
         <Resumen ctx={ctx} abrir={id => setPlan(id)} abrirAccion={abrirAccion} />
       )}

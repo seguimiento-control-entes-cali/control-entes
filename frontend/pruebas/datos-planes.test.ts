@@ -69,8 +69,9 @@ describe('planes · demostración', () => {
     await d.auth.ingresar('enlace.demo@cali.gov.co', CLAVE_DEMO);
     const x = await d.planes.datos();
     expect(x.acciones.every(a => a.dependencia_id === 21)).toBe(true);
-    expect(x.acciones).toHaveLength(2);
-    expect(x.planes).toHaveLength(1);
+    // 2 de la 2.x + 1 del plan ficticio en formulación del script 28 (Salud)
+    expect(x.acciones).toHaveLength(3);
+    expect(x.planes).toHaveLength(2);
     expect(x.avances.every(v => v.dependencia_id === 21)).toBe(true);
   });
 });

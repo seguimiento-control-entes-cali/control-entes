@@ -93,9 +93,11 @@ describe('planes · escritura en la demostración', () => {
     );
   });
 
-  it('Enlace: no formula ni valida, reporta solo en su dependencia y una vez hasta que lo revisen', async () => {
+  it('Enlace: carga el informe (el plan queda en formulación), no valida, reporta solo en su dependencia y una vez hasta que lo revisen', async () => {
     const d = await demo('enlace.demo@cali.gov.co');
-    await expect(d.planes.guardar('plan', plan)).rejects.toMatchObject({ codigo: 'sin_permiso' });
+    // Script 28: la dependencia carga el informe con sus hallazgos; el plan queda en formulación
+    const nuevo = await d.planes.guardar('plan', { ...plan, estado: 'en_ejecucion' });
+    expect((await d.planes.datos()).planes.find(p => p.id === nuevo)?.estado).toBe('formulacion');
     const ajena = semillaPlanes(HOY).acciones.find(a => a.dependencia_id !== 21);
     if (!ajena) throw new Error('la semilla debe traer acciones de otras dependencias');
     const x = await d.planes.datos();

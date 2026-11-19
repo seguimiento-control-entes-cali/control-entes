@@ -41,8 +41,9 @@ describe('3.0 · Planes de mejoramiento (demo, consulta)', () => {
     ).toBeTruthy();
     fireEvent.click(menu.getByRole('link', { name: 'Planes de mejoramiento' }));
     await screen.findByText(/^Formulación, avance y cumplimiento frente a la Contraloría/);
-    expect(kpi('Planes')).toBe(2);
-    expect(kpi('Acciones')).toBe(6);
+    // 3 planes: los 2 de la 2.x y el ficticio en formulación del script 28 (con 1 acción de Salud)
+    expect(kpi('Planes')).toBe(3);
+    expect(kpi('Acciones')).toBe(7);
     expect(kpi('Avances por validar')).toBe(1);
     expect(screen.getByRole('table', { name: 'Acciones que requieren atención' })).toBeTruthy();
     fireEvent.click(
@@ -71,7 +72,7 @@ describe('3.0 · Planes de mejoramiento (demo, consulta)', () => {
     const menu = await entrar('enlace.demo@cali.gov.co');
     fireEvent.click(menu.getByRole('link', { name: 'Mis acciones de mejora' }));
     expect(await screen.findByRole('heading', { name: 'Mis acciones de mejora' })).toBeTruthy();
-    expect(kpi('Asignadas')).toBe(2);
+    expect(kpi('Asignadas')).toBe(3); // 2 de la 2.x + 1 del plan en formulación (script 28)
     expect(screen.getByText(/Secretaría de Salud Pública · acciones asignadas/)).toBeTruthy();
   });
 });
