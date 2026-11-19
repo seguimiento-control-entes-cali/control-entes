@@ -2928,7 +2928,7 @@
       "seguridad_definidor": false
     },
     {
-      "md5": "8f435ff76254ac77537872ec69821448",
+      "md5": "b63c6f87d5f93c6762858d44b1b28d40",
       "nombre": "pm_importar",
       "devuelve": "uuid",
       "argumentos": "p jsonb",
@@ -3144,6 +3144,17 @@
       "verificando": null
     },
     {
+      "orden": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_doc_leer_dep",
+      "usando": "((COALESCE(current_rol(), ''::text) = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (subido_por = auth.uid()))",
+      "permisiva": "PERMISSIVE",
+      "verificando": null
+    },
+    {
       "orden": "UPDATE",
       "roles": [
         "authenticated"
@@ -3175,6 +3186,17 @@
       "usando": null,
       "permisiva": "PERMISSIVE",
       "verificando": "(COALESCE(current_rol(), ''::text) = ANY (ARRAY['admin'::text, 'control_interno'::text]))"
+    },
+    {
+      "orden": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "tabla": "archivo_documentos",
+      "nombre": "archivo_doc_subir_dep",
+      "usando": null,
+      "permisiva": "PERMISSIVE",
+      "verificando": "((COALESCE(current_rol(), ''::text) = ANY (ARRAY['secretario'::text, 'enlace'::text])) AND (subido_por = auth.uid()) AND (plan_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM pm_planes p\n  WHERE (p.id = archivo_documentos.plan_id))))"
     },
     {
       "orden": "SELECT",

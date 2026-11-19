@@ -102,12 +102,16 @@ describe('planes · importar en la demostración', () => {
     expect((await d.planes.datos()).planes.some(p => p.id === id)).toBe(false);
   });
 
-  it('el enlace no puede importar', async () => {
+  it('el enlace importa (script 29), pero debe escribir el número del informe; el Alcalde no importa', async () => {
     const d = crearDatos({ variante: 'demo', supabaseUrl: '', supabaseAnonKey: '' });
     await d.auth.ingresar('enlace.demo@cali.gov.co', CLAVE_DEMO);
-    await expect(d.planes.importar(carga)).rejects.toThrow(
-      'Solo el Super administrador o Control Interno importan planes'
-    );
+    const sinNumero = { ...carga, plan: { ...carga.plan, numero_informe: '' } };
+    await expect(d.planes.importar(sinNumero)).rejects.toThrow('Escriba el número del informe final');
+    const id = await d.planes.importar({ ...carga, plan: { ...carga.plan, numero_informe: 'INF-ENL-9' } });
+    expect((await d.planes.datos()).planes.find(p => p.id === id)?.estado).toBe('formulacion');
+    const a = crearDatos({ variante: 'demo', supabaseUrl: '', supabaseAnonKey: '' });
+    await a.auth.ingresar('despacho.demo@cali.gov.co', CLAVE_DEMO);
+    await expect(a.planes.importar(carga)).rejects.toThrow('Su rol no puede importar planes');
   });
 });
 

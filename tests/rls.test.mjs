@@ -284,5 +284,68 @@ async function flujo(pasos) {
   assert.strictEqual(viejos.rows[0].n, 0, 'los hallazgos existentes quedan validados'); ok();
 }
 
+// ---- 5. Script 29: la dependencia importa el informe desde el archivo
+{
+  const carga = (numero, estado) => JSON.stringify({
+    archivo: 'informe.xlsx',
+    plan: { formato: 'PM_01_CGSC', contraloria: 'Contraloría ficticia', ejercicio: 'PRUEBA · informe importado',
+            fecha_suscripcion: '2026-11-01', numero_informe: numero, estado },
+    hallazgos: [
+      { numero: '1', descripcion: 'PRUEBA · hallazgo de A importado', dependencia_id: DEP.A.id,
+        acciones: [
+          { accion: 'PRUEBA · acción de A', dependencia_id: DEP.A.id, fecha_inicio: '2026-12-01', fecha_fin: '2027-06-30',
+            avance: 50, fecha_corte: '2026-12-15' },
+          { accion: 'PRUEBA · acción de B', dependencia_id: DEP.B.id, fecha_inicio: '2026-12-01', fecha_fin: '2027-06-30' }
+        ] },
+      { numero: '2', descripcion: 'PRUEBA · hallazgo sin dependencia' }
+    ]
+  });
+  const r = await flujo([
+    /* 0 */ ['secA', `select public.pm_importar($1::jsonb) as id`, [carga('INF-IMP-1', 'en_ejecucion')]],
+    /* 1 */ ['admin', `select p.estado, (select count(*)::int from public.pm_hallazgos h where h.plan_id = p.id) as h,
+                      (select count(*)::int from public.pm_acciones a where a.plan_id = p.id) as a,
+                      (select count(*)::int from public.pm_avances v where v.plan_id = p.id) as v,
+                      (select string_agg(distinct a.dependencia_id::text, ',') from public.pm_acciones a where a.plan_id = p.id) as deps,
+                      (select string_agg(h.formulacion_estado, ',' order by h.numero) from public.pm_hallazgos h where h.plan_id = p.id) as est
+                 from public.pm_planes p where p.numero_informe = 'INF-IMP-1'`],
+    /* 2 */ ['secA', `select count(*)::int as n from public.pm_planes where numero_informe = 'INF-IMP-1'`],
+    /* 3 */ ['secB', `select public.pm_importar($1::jsonb)`, [carga('inf-imp-1 ', 'formulacion')]],
+    /* 4 */ ['alcalde', `select public.pm_importar($1::jsonb)`, [carga('INF-IMP-2', 'formulacion')]],
+    /* 5 */ ['ci', `select public.pm_importar($1::jsonb) as id`, [carga('INF-IMP-3', 'en_ejecucion')]],
+    /* 6 */ ['admin', `select p.estado, (select count(*)::int from public.pm_acciones a where a.plan_id = p.id) as a,
+                      (select count(*)::int from public.pm_avances v where v.plan_id = p.id) as v
+                 from public.pm_planes p where p.numero_informe = 'INF-IMP-3'`],
+    /* 7 */ ['enlA', `select public.pm_importar($1::jsonb)`, [carga('', 'formulacion')]],
+    /* 8 */ ['secA', `insert into public.archivo_documentos (plan_id, tipo, nombre, path, sha256, subido_por)
+       select p.id, 'informe_final', 'informe.pdf', p.id || '/2026/x-a.pdf', repeat('a', 64), auth.uid()
+         from public.pm_planes p where p.numero_informe = 'INF-IMP-1'`],
+    /* 9 */ ['secA', `select count(*)::int as n from public.archivo_documentos where nombre = 'informe.pdf'`],
+    /* 10 */ ['secB', `insert into public.archivo_documentos (plan_id, tipo, nombre, path, sha256, subido_por)
+       select id, 'otro', 'ajeno.pdf', id || '/2026/b.pdf', repeat('b', 64), auth.uid() from public.pm_planes where numero_informe = 'INF-IMP-1'`],
+    /* 11 */ ['secB', `select count(*)::int as n from public.archivo_documentos`],
+    /* 12 */ ['ci', `select count(*)::int as n from public.archivo_documentos where nombre = 'informe.pdf'`]
+  ]);
+  const det = (i) => JSON.stringify(r[i]);
+  assert.ok(!r[0].error, 'la dependencia importa el informe: ' + det(0)); ok();
+  assert.strictEqual(r[1].filas?.[0]?.estado, 'formulacion', 'el plan importado por la dependencia queda en formulación'); ok();
+  assert.strictEqual(r[1].filas[0].h, 2, 'trae los 2 hallazgos'); ok();
+  assert.strictEqual(r[1].filas[0].a, 1, 'solo la acción de su dependencia: ' + det(1)); ok();
+  assert.strictEqual(String(r[1].filas[0].deps), String(DEP.A.id), 'la acción queda en su dependencia'); ok();
+  assert.strictEqual(r[1].filas[0].v, 0, 'no importa avances'); ok();
+  assert.strictEqual(r[1].filas[0].est, 'borrador,borrador', 'los hallazgos quedan en borrador para formular'); ok();
+  assert.strictEqual(r[2].filas?.[0]?.n, 1, 'la dependencia ve el plan que cargó'); ok();
+  assert.ok(r[3].error && /ya fue cargado/.test(r[3].error) && /secA/i.test(r[3].error), 'otra dependencia no lo carga dos veces y sabe quién lo cargó: ' + det(3)); ok();
+  assert.ok(r[4].error && /no puede importar/.test(r[4].error), 'el Alcalde no importa: ' + det(4)); ok();
+  assert.ok(!r[5].error, 'Control Interno importa igual que antes: ' + det(5)); ok();
+  assert.deepStrictEqual([r[6].filas?.[0]?.estado, r[6].filas?.[0]?.a, r[6].filas?.[0]?.v], ['en_ejecucion', 2, 1],
+    'para Control Interno trae todas las acciones y los avances: ' + det(6)); ok();
+  assert.ok(r[7].error && /número del informe/.test(r[7].error), 'la dependencia debe escribir el número del informe: ' + det(7)); ok();
+  assert.ok(!r[8].error && r[8].cambiadas === 1, 'la dependencia guarda el informe original en el archivo de su plan: ' + det(8)); ok();
+  assert.strictEqual(r[9].filas?.[0]?.n, 1, 've el documento que ella subió'); ok();
+  assert.ok(r[10].error || r[10].cambiadas === 0, 'otra dependencia no sube documentos a un plan que no ve: ' + det(10)); ok();
+  assert.strictEqual(r[11].filas?.[0]?.n, 0, 'otra dependencia no ve los documentos ajenos'); ok();
+  assert.strictEqual(r[12].filas?.[0]?.n, 1, 'Control Interno ve el documento'); ok();
+}
+
 await db.close();
 console.log(`OK: ${n} verificaciones de permisos (RLS) rol por rol en PostgreSQL`);

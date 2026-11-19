@@ -76,14 +76,17 @@ describe('memoria · demostración', () => {
     expect((await d.planes.datos()).documentos?.some(x => x.id === id)).toBe(false);
   });
 
-  it('el enlace no sube documentos ni ve el archivo documental', async () => {
+  it('el enlace solo sube documentos a planes que ve (script 29) y solo ve los que él subió', async () => {
     const e = await demo('enlace.demo@cali.gov.co');
-    await expect(
-      e.planes.subirDocumento(archivo('a.pdf', 'x'), { plan_id: 'pm-demo-1', tipo: 'otro' })
-    ).rejects.toMatchObject({
-      codigo: 'sin_permiso'
-    });
     expect((await e.planes.datos()).documentos).toEqual([]);
+    await expect(
+      e.planes.subirDocumento(archivo('a.pdf', '%PDF-x'), { plan_id: 'pm-que-no-ve', tipo: 'otro' })
+    ).rejects.toMatchObject({ codigo: 'sin_permiso' });
+    await e.planes.subirDocumento(archivo('informe.pdf', '%PDF-x'), {
+      plan_id: 'pm-demo-3',
+      tipo: 'informe_final'
+    });
+    expect((await e.planes.datos()).documentos.map(x => x.nombre)).toEqual(['informe.pdf']);
   });
 
   it('papelera: una acción eliminada vuelve; un hallazgo exige que exista su plan', async () => {

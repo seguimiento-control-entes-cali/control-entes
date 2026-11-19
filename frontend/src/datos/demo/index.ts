@@ -243,6 +243,13 @@ export function datosDemo(): Datos {
       return p.correo;
     }
     if (['secretario', 'enlace'].includes(p.rol)) {
+      // Como en la base (script 28): la evaluación de la Contraloría la registra Control Interno
+      const EVAL = ['eval_cgsc', 'eval_cgsc_obs', 'eval_cgsc_fecha', 'puntaje_cgsc'];
+      const antesEval = (tipo === 'hall' ? hallDe(id) : planes.planes.find(x => x.id === id)) as unknown as
+        | Record<string, unknown>
+        | undefined;
+      if ((tipo === 'hall' || tipo === 'plan') && EVAL.some(k => cambia(antesEval, o, k)))
+        throw new ErrorDatos('sin_permiso', 'La evaluación de la Contraloría la registra Control Interno');
       const h =
         tipo === 'hall'
           ? id
@@ -586,7 +593,10 @@ export function datosDemo(): Datos {
             v28: true,
             prorrogas: [],
             informes: [],
-            documentos: []
+            // Script 29: la dependencia ve los documentos que ella misma subió
+            documentos: JSON.parse(
+              JSON.stringify(documentos.filter(x => x.subido_email === p.correo))
+            ) as DocumentoArchivo[]
           };
         }
         return {
@@ -800,7 +810,23 @@ export function datosDemo(): Datos {
           .map(x => ({ plan_id: x.id, ejercicio: x.ejercicio, creado_por: '' }));
       },
       async subirDocumento(archivo, meta) {
-        const usuario = editorPlanes('Tu rol no puede modificar planes de mejoramiento');
+        // Script 29: la dependencia sube documentos a los planes que ve (p. ej. el informe original que cargó)
+        const yo = actual?.perfil;
+        const usuario =
+          yo && ['secretario', 'enlace'].includes(yo.rol)
+            ? (() => {
+                const visibles = vistaPorDependencia(planes, yo.dependenciaId).planes.map(x => x.id);
+                const propios = planes.planes
+                  .filter(x => (x as { creado_por?: string }).creado_por === yo.correo)
+                  .map(x => x.id);
+                if (!meta.plan_id || ![...visibles, ...propios].includes(meta.plan_id))
+                  throw new ErrorDatos(
+                    'sin_permiso',
+                    'Solo puede subir documentos a los planes de su dependencia'
+                  );
+                return yo.correo;
+              })()
+            : editorPlanes('Tu rol no puede modificar planes de mejoramiento');
         const nombre = meta.nombre || archivo.name || 'documento';
         const r = revisarDocumento(nombre, archivo.size);
         if ('error' in r) throw new ErrorDatos('otro', r.error);
@@ -928,10 +954,39 @@ export function datosDemo(): Datos {
       },
       // pmImportar de la 2.x en la demostración: los avances con corte entran como validados
       async importar(carga) {
-        const usuario = editorPlanes('Solo el Super administrador o Control Interno importan planes');
+        // Script 29: la dependencia también importa (plan en formulación, solo sus acciones, sin avances)
+        const yo = actual?.perfil;
+        const esDep = !!yo && ['secretario', 'enlace'].includes(yo.rol);
+        if (!yo || !(esDep || puedeEditarPlanes(yo.rol)))
+          throw new ErrorDatos('sin_permiso', 'Su rol no puede importar planes de mejoramiento');
+        if (esDep && yo.dependenciaId == null)
+          throw new ErrorDatos('sin_permiso', 'Su cuenta no tiene dependencia asignada');
+        const usuario = yo.correo;
+        const numero = txt(carga.plan.numero_informe).toLowerCase();
+        if (esDep && !numero)
+          throw new ErrorDatos('otro', 'Escriba el número del informe final de la Contraloría');
+        const dup =
+          esDep && numero
+            ? planes.planes.find(
+                x =>
+                  txt(x.numero_informe).toLowerCase() === numero &&
+                  txt(x.contraloria).toLowerCase() === txt(carga.plan.contraloria).toLowerCase()
+              )
+            : undefined;
+        if (dup)
+          throw new ErrorDatos(
+            'otro',
+            `Este informe ya fue cargado (plan «${dup.ejercicio}»). Pida a Control Interno que le asigne sus hallazgos.`
+          );
         const now = new Date().toISOString();
         const uid = (p: string) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-        const plan = { ...carga.plan, id: uid('p'), created_at: now, updated_at: now } as unknown as Plan;
+        const plan = {
+          ...carga.plan,
+          ...(esDep ? { estado: 'formulacion', creado_por: usuario } : {}),
+          id: uid('p'),
+          created_at: now,
+          updated_at: now
+        } as unknown as Plan;
         const hall: Hallazgo[] = [],
           acc: Accion[] = [],
           av: Avance[] = [];
@@ -945,8 +1000,11 @@ export function datosDemo(): Datos {
             created_at: now,
             updated_at: now
           };
+          if (esDep || plan.estado === 'formulacion') Object.assign(hh, { formulacion_estado: 'borrador' });
           hall.push(hh as unknown as Hallazgo);
           acciones.forEach(a => {
+            if (esDep && a.dependencia_id != null && String(a.dependencia_id) !== String(yo.dependenciaId))
+              return;
             const { descripcion_avance, ...ra } = a;
             const aa = {
               ...ra,
@@ -960,7 +1018,8 @@ export function datosDemo(): Datos {
               created_at: now,
               updated_at: now
             };
-            if (a.avance != null && a.fecha_corte) {
+            if (esDep) Object.assign(aa, { dependencia_id: yo.dependenciaId, obs_ci: '', obs_ci_estado: '' });
+            if (!esDep && a.avance != null && a.fecha_corte) {
               aa.avance = a.avance;
               aa.fecha_corte = a.fecha_corte;
               av.push({
