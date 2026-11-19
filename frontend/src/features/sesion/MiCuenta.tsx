@@ -6,7 +6,7 @@ import { ErrorDatos, type InscripcionVerificacion, type Perfil } from '../../dat
 import { formatoCorto } from '../../dominio/fechas';
 import { NOMBRE_ROL } from '../../dominio/roles';
 import { errorClaveNueva } from '../../dominio/seguridad';
-import { Icono, Modal, useAvisos } from '../../shared/ui';
+import { CampoClave, Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from './contexto';
 
 const mensaje = (e: unknown) =>
@@ -130,27 +130,21 @@ export function VentanaMiCuenta({
         }
       >
         <form id="formMiClave" onSubmit={e => void guardarClave(e)} noValidate>
-          <div className="field">
-            <label htmlFor="ckA">Contraseña nueva</label>
-            <input
-              id="ckA"
-              type="password"
-              autoComplete="new-password"
-              value={a}
-              onChange={e => setA(e.target.value)}
-            />
-            <div className="hint">Mínimo 10 caracteres, con letras y números.</div>
-          </div>
-          <div className="field">
-            <label htmlFor="ckB">Repite la contraseña</label>
-            <input
-              id="ckB"
-              type="password"
-              autoComplete="new-password"
-              value={b}
-              onChange={e => setB(e.target.value)}
-            />
-          </div>
+          <CampoClave
+            etiqueta="Contraseña nueva"
+            id="ckA"
+            autoComplete="new-password"
+            value={a}
+            onChange={e => setA(e.target.value)}
+            ayuda="Mínimo 10 caracteres, con letras y números."
+          />
+          <CampoClave
+            etiqueta="Repite la contraseña"
+            id="ckB"
+            autoComplete="new-password"
+            value={b}
+            onChange={e => setB(e.target.value)}
+          />
           {errClave && <div className="hint err">{errClave}</div>}
         </form>
       </Modal>

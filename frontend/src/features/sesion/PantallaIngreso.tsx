@@ -2,7 +2,7 @@
 // Mismos pasos y mensajes que la 2.x. "¿Olvidaste tu contraseña?" vuelve a la dirección actual de la app.
 import { useState, type FormEvent } from 'react';
 import { ErrorDatos } from '../../datos/contratos';
-import { Aviso, Boton, Campo } from '../../shared/ui';
+import { Aviso, Boton, Campo, CampoClave } from '../../shared/ui';
 import { MarcoIngreso } from './MarcoIngreso';
 import { useDatos } from './contexto';
 
@@ -66,10 +66,9 @@ export function PantallaIngreso({ alIngresar }: { alIngresar: () => void }) {
               value={correo}
               onChange={e => setCorreo(e.target.value)}
             />
-            <Campo
+            <CampoClave
               etiqueta="Contraseña"
               id="clave"
-              type="password"
               autoComplete="current-password"
               value={clave}
               onChange={e => setClave(e.target.value)}
