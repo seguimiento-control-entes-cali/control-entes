@@ -1,15 +1,22 @@
-# Consulta diaria para que el proyecto gratuito de Supabase no se pause por inactividad (una semana sin uso).
+# Consulta para que el proyecto gratuito de Supabase no se pause por inactividad (una semana sin uso).
 # Llama a public.hoy_colombia() con la clave publicable de configuracion.json: solo lectura, sin secretos.
 # Si falla, GitHub avisa por correo. Se puede lanzar a mano en Actions → "Mantener activo Supabase" → Run workflow.
-# Nota: GitHub desactiva las tareas programadas de un repositorio público tras 60 días sin cambios; si eso pasa,
-# se vuelve a activar con el botón "Enable workflow" de la misma pantalla.
+#
+# Dos protecciones (autorizadas por la responsable el 20-nov-2026):
+#   1. Corre DOS veces al día (8:00 a. m. y 8:00 p. m. de Colombia): si una ejecución falla, la otra mantiene activo
+#      el proyecto, y Supabase solo pausa tras siete días seguidos sin uso.
+#   2. Cada ejecución se vuelve a «encender» a sí misma por la API de GitHub. GitHub apaga las tareas programadas de un
+#      repositorio público tras 60 días sin cambios; al reactivarse en cada corrida, ese plazo nunca se cumple.
+#      Solo usa el permiso actions: write del propio repositorio (sin claves externas).
 name: Mantener activo Supabase
 on:
   schedule:
-    - cron: '0 13 * * *' # todos los días a las 8:00 a. m. de Colombia (13:00 UTC)
+    - cron: '0 13 * * *' # 8:00 a. m. de Colombia (13:00 UTC)
+    - cron: '0 1 * * *' # 8:00 p. m. de Colombia (01:00 UTC)
   workflow_dispatch:
 permissions:
   contents: read
+  actions: write
 jobs:
   consulta:
     runs-on: ubuntu-latest
@@ -18,5 +25,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Consulta de solo lectura a Supabase
-        run: node scripts/mantener-activo.mjs
+      - name: Consulta de solo lectura a Supabase (hasta 3 intentos)
+        run: |
+          for i in 1 2 3; do
+            node scripts/mantener-activo.mjs && exit 0
+            echo "Intento $i falló; se reintenta en 60 segundos"
+            sleep 60
+          done
+          exit 1
+      - name: Mantener encendida esta tarea (evita el apagado de GitHub por inactividad)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/mantener-activo.yml/enable"

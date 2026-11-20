@@ -2697,7 +2697,11 @@ function pmPdfJs() {
 /* Texto de cada página con su posición, para rearmar las líneas (pmPdfLineas) */
 async function pmLeerPdf(file) {
   const lib = await pmPdfJs();
-  const doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  // isEvalSupported:false cierra CVE-2024-4367 (un PDF preparado podía ejecutar código); la 3.0 ya lo tenía
+  const doc = await lib.getDocument({
+    data: new Uint8Array(await file.arrayBuffer()),
+    isEvalSupported: false
+  }).promise;
   const paginas = [];
   for (let i = 1; i <= doc.numPages; i++) {
     const tc = await (await doc.getPage(i)).getTextContent();

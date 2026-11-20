@@ -2,6 +2,26 @@
 <html lang="es" data-theme="dark">
 <head>
 <meta charset="UTF-8">
+<script>
+/* RETIRO DE LA 2.x (20-nov-2026, aprobado por la responsable): la aplicación es ahora la 3.0, en /v3/.
+   Quien abra la dirección principal (o la aplicación instalada) pasa a la 3.0 con la misma pantalla.
+   Los enlaces de invitación y de recuperar contraseña (#access_token=...) se conservan tal cual.
+   Salida de emergencia hasta el 5-dic-2026: agregar ?version=2 a la dirección. */
+(function () {
+  var limite = Date.parse('2026-12-05T05:00:00Z');
+  try {
+    if (Date.now() < limite && (/[?&]version=2(&|$)/.test(location.search) || sessionStorage.getItem('ce_v2') === '1')) {
+      sessionStorage.setItem('ce_v2', '1');
+      return;
+    }
+    var h = location.hash || '';
+    if (h && h.indexOf('=') < 0 && h.charAt(1) !== '/') h = '#/' + h.slice(1);
+    location.replace(location.pathname.replace(/[^/]*$/, '') + 'v3/' + h);
+  } catch (e) {
+    location.replace('v3/');
+  }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#040A19">
 <meta name="apple-mobile-web-app-capable" content="yes">

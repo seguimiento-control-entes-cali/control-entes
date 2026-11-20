@@ -12,6 +12,13 @@ jobs:
         with:
           node-version: 22
       - run: npm ci || npm install
+      # PostgreSQL de prueba (PGlite, la misma versión de frontend/package.json) para que las pruebas de permisos
+      # (tests/rls.test.mjs y permisos-sobrantes) también corran aquí y no se omitan (hallazgo de la auditoría, 20-nov-2026).
+      - name: PostgreSQL de prueba para las pruebas de permisos
+        run: |
+          mkdir -p "$RUNNER_TEMP/pglite"
+          npm install --prefix "$RUNNER_TEMP/pglite" --no-save --no-audit --no-fund @electric-sql/pglite@0.5.15
+          echo "CE_PGLITE=$RUNNER_TEMP/pglite" >> "$GITHUB_ENV"
       - name: Formato del código
         run: npm run formato:revisar
       - name: Revisión estática (ESLint)
