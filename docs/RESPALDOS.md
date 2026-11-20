@@ -120,3 +120,22 @@ Lo que se elimina en Planes de mejoramiento (planes, hallazgos, acciones, trasla
 **Planes de mejoramiento → Papelera**, con todo lo que se eliminó junto (un plan vuelve con sus hallazgos,
 acciones y avances). Usa la bitácora de auditoría, que guarda la fila completa de cada eliminación. Los
 documentos del archivo van a la papelera y solo el Super administrador los elimina definitivamente.
+
+
+## Copia externa cifrada (fuera de Supabase, desde el 21-nov-2026)
+Cada lunes, la tarea de GitHub **Copia externa cifrada** (`.github/workflows/copia-externa.yml`) descarga la copia de
+datos más reciente del depósito `respaldos` y **todos los archivos** de `soportes` y `archivo` (con `MANIFIESTO.csv`),
+los empaqueta y los **cifra con AES-256** antes de guardarlos como artefacto de GitHub por 90 días. Si la copia de
+datos tiene más de 9 días o algo falla, GitHub avisa por correo. El plan gratuito de Supabase no tiene copias propias:
+esta es la copia que sobrevive si el proyecto se pierde.
+
+**Secretos** (GitHub → Settings → Secrets and variables → Actions): `SUPABASE_SERVICE_ROLE_KEY` y
+`RESPALDO_CLAVE_CIFRADO` (frase de al menos 20 caracteres; guárdela en lugar seguro: sin ella la copia no se abre).
+
+**Restaurar desde la copia externa:**
+1. GitHub → Actions → «Copia externa cifrada» → la ejecución deseada → descargar el artefacto.
+2. Descifrar y descomprimir:
+   `openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in copia_control_entes_AAAA-MM-DD.tar.gz.enc -out copia.tar.gz -pass pass:'<frase>'`
+   y luego `tar xzf copia.tar.gz`.
+3. Datos: `node scripts/restaurar-respaldo.mjs copia/datos/respaldo_….json.gz` (ver «Restaurar»).
+4. Archivos: `node scripts/restaurar-archivos.mjs copia/archivos --url https://… --clave <service_role>`.

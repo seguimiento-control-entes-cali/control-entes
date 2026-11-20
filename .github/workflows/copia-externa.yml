@@ -1,0 +1,65 @@
+# COPIA DE SEGURIDAD FUERA DE SUPABASE, CIFRADA (autorizada por la responsable el 20-nov-2026).
+# Cada lunes descarga la copia de datos más reciente y todos los archivos PDF (scripts/copia-externa.mjs), los
+# empaqueta y los CIFRA con AES-256 (openssl, clave del secreto RESPALDO_CLAVE_CIFRADO) antes de guardarlos aquí como
+# artefacto por 90 días. El repositorio es público: sin la clave, el archivo cifrado no se puede leer.
+# Si algo falla (o la copia semanal de Supabase tiene más de 9 días), GitHub avisa por correo.
+#
+# Secretos necesarios (GitHub → Settings → Secrets and variables → Actions → New repository secret):
+#   SUPABASE_SERVICE_ROLE_KEY   clave de servicio de Supabase (Project Settings → API Keys → secret)
+#   RESPALDO_CLAVE_CIFRADO      una frase larga que solo conocen la responsable y DATIC (guárdela en lugar seguro:
+#                               sin ella la copia no se puede abrir)
+# Restaurar: descargar el artefacto, descifrar y seguir docs/RESPALDOS.md:
+#   openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in copia.tar.gz.enc -out copia.tar.gz -pass pass:'<frase>'
+#   tar xzf copia.tar.gz
+name: Copia externa cifrada
+on:
+  schedule:
+    - cron: '0 12 * * 1' # lunes 7:00 a. m. de Colombia, después de la copia del domingo
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  copia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Revisar que estén los secretos
+        env:
+          SR: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RC: ${{ secrets.RESPALDO_CLAVE_CIFRADO }}
+        run: |
+          if [ -z "$SR" ] || [ -z "$RC" ]; then
+            echo "::error::Faltan los secretos SUPABASE_SERVICE_ROLE_KEY y/o RESPALDO_CLAVE_CIFRADO (ver el encabezado de este archivo)."
+            exit 1
+          fi
+          if [ ${#RC} -lt 20 ]; then echo "::error::RESPALDO_CLAVE_CIFRADO debe tener al menos 20 caracteres."; exit 1; fi
+      - name: Descargar datos y archivos
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/copia-externa.mjs "$RUNNER_TEMP/copia"
+      - name: Empaquetar y cifrar (AES-256)
+        env:
+          RESPALDO_CLAVE_CIFRADO: ${{ secrets.RESPALDO_CLAVE_CIFRADO }}
+        run: |
+          FECHA=$(TZ=America/Bogota date +%Y-%m-%d)
+          tar czf "$RUNNER_TEMP/copia.tar.gz" -C "$RUNNER_TEMP" copia
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in "$RUNNER_TEMP/copia.tar.gz" \
+            -out "$RUNNER_TEMP/copia_control_entes_$FECHA.tar.gz.enc" -pass env:RESPALDO_CLAVE_CIFRADO
+          rm -rf "$RUNNER_TEMP/copia" "$RUNNER_TEMP/copia.tar.gz"
+          ls -lh "$RUNNER_TEMP"/copia_control_entes_*.enc
+          echo "ARCHIVO=$RUNNER_TEMP/copia_control_entes_$FECHA.tar.gz.enc" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: copia-control-entes-cifrada
+          path: ${{ env.ARCHIVO }}
+          retention-days: 90
+          if-no-files-found: error
+      - name: Mantener encendida esta tarea (evita el apagado de GitHub por inactividad)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/copia-externa.yml/enable"
