@@ -43,7 +43,8 @@ describe('3.0 · Planes de mejoramiento (demo, consulta)', () => {
     await screen.findByText(/^Formulación, avance y cumplimiento frente a la Contraloría/);
     // 3 planes: los 2 de la 2.x y el ficticio en formulación del script 28 (con 1 acción de Salud)
     expect(kpi('Planes')).toBe(3);
-    expect(kpi('Acciones')).toBe(7);
+    // La acción del plan en formulación no cuenta: sus plazos empiezan cuando se suscribe el plan
+    expect(kpi('Acciones')).toBe(6);
     expect(kpi('Avances por validar')).toBe(1);
     expect(screen.getByRole('table', { name: 'Acciones que requieren atención' })).toBeTruthy();
     fireEvent.click(
@@ -53,7 +54,7 @@ describe('3.0 · Planes de mejoramiento (demo, consulta)', () => {
     expect(screen.getAllByText(/^Hallazgo \d$/)).toHaveLength(3);
     fireEvent.click(screen.getByRole('button', { name: /Por validar/ }));
     expect(await screen.findByRole('table', { name: 'Avances por validar' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /Calidad de datos/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Alertas del plan/ }));
     expect(await screen.findByText(/vencida sin cumplir y sin avance en validación/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Hallazgos y acciones/ }));
     fireEvent.click(screen.getAllByRole('button', { name: 'Historial' })[0] as HTMLElement);
@@ -72,7 +73,9 @@ describe('3.0 · Planes de mejoramiento (demo, consulta)', () => {
     const menu = await entrar('enlace.demo@cali.gov.co');
     fireEvent.click(menu.getByRole('link', { name: 'Mis acciones de mejora' }));
     expect(await screen.findByRole('heading', { name: 'Mis acciones de mejora' })).toBeTruthy();
-    expect(kpi('Asignadas')).toBe(3); // 2 de la 2.x + 1 del plan en formulación (script 28)
+    // 2 de la 2.x; la del plan en formulación (script 28) no cuenta hasta que el plan se suscriba
+    expect(kpi('Asignadas')).toBe(2);
+    expect(screen.getByRole('heading', { name: 'Lo que le toca hacer' })).toBeTruthy();
     expect(screen.getByText(/Secretaría de Salud Pública · acciones asignadas/)).toBeTruthy();
   });
 });

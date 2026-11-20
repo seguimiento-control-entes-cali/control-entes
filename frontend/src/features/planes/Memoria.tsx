@@ -109,8 +109,8 @@ export function TabDocumentos({
     <div className="card">
       <div className="toolbar">
         <div className="sub" style={{ flex: 1 }}>
-          Copias de trabajo con su huella digital (SHA-256). El archivo oficial sigue siendo ORFEO; cada
-          documento conserva su radicado.
+          Copias de trabajo con su huella digital, para comprobar que no se alteraron. El archivo oficial
+          sigue siendo ORFEO; cada documento conserva su radicado.
         </div>
         {edita && (
           <button type="button" className="btn sm primary" onClick={subir}>

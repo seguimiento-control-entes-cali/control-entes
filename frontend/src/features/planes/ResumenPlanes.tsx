@@ -8,6 +8,7 @@ import { fechaColombia } from '../../dominio/fechas';
 import { formatoCorto } from '../../dominio/historico';
 import {
   ALERTA_DIAS,
+  accionesEnEjecucion,
   conteos,
   estadoAccion,
   formatoDe,
@@ -60,7 +61,10 @@ export function TarjetaPlanesMando() {
     hoy = fechaColombia(new Date());
   const activos = d.planes.filter(p => p.estado !== 'cerrado'),
     ids = new Set(activos.map(p => p.id)),
-    acc = d.acciones.filter(a => ids.has(a.plan_id)),
+    acc = accionesEnEjecucion(
+      d.acciones.filter(a => ids.has(a.plan_id)),
+      d.planes
+    ),
     cn = conteos(acc, hoy, d.avances),
     ind = indicadores(acc, hoy, d.avances),
     porVal = d.avances.filter(v => v.estado === 'reportado' && ids.has(v.plan_id)).length;
@@ -130,7 +134,7 @@ export function SeccionPlanesInforme({ org, num }: { org: string; num: number })
     p => p.estado !== 'cerrado' && d.acciones.some(a => a.plan_id === p.id && accOrg(a))
   );
   if (!planes.length) return null;
-  const venc = d.acciones
+  const venc = accionesEnEjecucion(d.acciones, d.planes)
     .filter(a => planes.some(p => p.id === a.plan_id) && accOrg(a) && estadoAccion(a, hoy).k === 'vencida')
     .sort((a, b) => String(a.fecha_fin).localeCompare(String(b.fecha_fin)))
     .slice(0, 12);

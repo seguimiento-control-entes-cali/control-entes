@@ -70,6 +70,26 @@ export const enFlujoFormulacion = (
   h: Pick<Hallazgo, 'formulacion_estado' | 'formulacion_revisado_at' | 'causa_metodo'>
 ) => estadoDe(h) !== 'validado' || !!h.formulacion_revisado_at || !!h.causa_metodo;
 
+/**
+ * ¿Ya se pueden reportar avances de las acciones de este hallazgo? Solo cuando su formulación está validada por
+ * Control Interno (orden del proceso: formular → enviar → validar → ejecutar y reportar). Sin hallazgo, sí.
+ */
+export const reportarHabilitado = (h: Pick<Hallazgo, 'formulacion_estado'> | null | undefined) =>
+  !h || estadoDe(h) === 'validado';
+
+export type PasoDependencia = 'formular' | 'corregir' | 'esperar' | 'sia';
+
+/** Lo que le toca hacer a la dependencia con un hallazgo de su flujo de formulación (null: nada pendiente). */
+export function pasoDependencia(
+  h: Pick<Hallazgo, 'formulacion_estado' | 'formulacion_revisado_at' | 'causa_metodo' | 'sia_cargado_at'>
+): PasoDependencia | null {
+  const e = estadoDe(h);
+  if (e === 'borrador') return 'formular';
+  if (e === 'devuelto') return 'corregir';
+  if (e === 'enviado') return 'esperar';
+  return h.formulacion_revisado_at && !h.sia_cargado_at ? 'sia' : null;
+}
+
 /** Lo que falta para enviar (vacío: se puede enviar). Mismos requisitos que pm_enviar_formulacion. */
 export function faltaParaEnviar(
   h: Pick<Hallazgo, 'id' | 'causa_metodo' | 'causa_raiz'>,
