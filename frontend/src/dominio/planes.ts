@@ -697,6 +697,17 @@ export const puedeReportar = (a: Pick<Accion, 'dependencia_id'> | null, rol: str
   (['admin', 'control_interno'].includes(rol) ||
     (['secretario', 'enlace'].includes(rol) && !!dep && String(a.dependencia_id) === String(dep)));
 export const puedeEditarPlanes = (rol: string) => ['admin', 'control_interno'].includes(rol);
+/**
+ * Acciones que cuentan para vencimientos, alertas y cumplimiento: las de planes que ya no están en formulación.
+ * Un plan recién cargado trae las fechas del archivo, pero sus plazos empiezan a correr cuando se suscribe.
+ */
+export function accionesEnEjecucion<A extends Pick<Accion, 'plan_id'>>(
+  acciones: readonly A[],
+  planes: readonly Pick<Plan, 'id' | 'estado'>[]
+): A[] {
+  const enFormulacion = new Set(planes.filter(p => p.estado === 'formulacion').map(p => p.id));
+  return acciones.filter(a => !enFormulacion.has(a.plan_id));
+}
 export const TIPOS_EJERCICIO = [
   'Auditoría financiera y de gestión',
   'Auditoría de cumplimiento',

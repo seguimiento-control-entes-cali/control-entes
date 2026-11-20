@@ -35,6 +35,7 @@ import {
   puntos,
   ultimo,
   UMBRAL_CGSC,
+  accionesEnEjecucion,
   type Accion,
   type Avance,
   type DatosPlanes,
@@ -65,7 +66,14 @@ import {
   totalIncumplimiento
 } from '../../dominio/incumplimiento';
 import { descargarCsv } from '../../shared/lib';
-import { enFlujoFormulacion, ESTADOS_FORMULACION, estadoDe, puedeFormular } from '../../dominio/formulacion';
+import {
+  enFlujoFormulacion,
+  ESTADOS_FORMULACION,
+  estadoDe,
+  pasoDependencia,
+  puedeFormular,
+  reportarHabilitado
+} from '../../dominio/formulacion';
 import { VentanaImportar } from './Importar';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
 import { TrasladosHallazgo, VentanaTraslado } from './Traslados';
@@ -185,8 +193,8 @@ function LineaCalificacion({ a, p, ctx, fev }: { a: Accion; p: Plan | undefined;
   return (
     <div className="pm-a-l pm-cal">
       <Icono nombre="fa-scale-balanced" /> CGSC · Cumplimiento <b>{r.c == null ? '—' : r.c}</b>
-      {r.c != null && !r.manual ? <span className="muted"> (sugerido)</span> : null} · Efectividad{' '}
-      <b>{r.e == null ? '—' : r.e}</b> · Estado <b>{r.estado === 'C' ? 'Cerrada (C)' : 'Abierta (A)'}</b>
+      {r.c != null && !r.manual ? <span className="muted"> (lo sugiere la app)</span> : null} · Efectividad{' '}
+      <b>{r.e == null ? '—' : r.e}</b> · <b>{r.estado === 'C' ? 'Acción cerrada' : 'Acción abierta'}</b>
     </div>
   );
 }
@@ -209,8 +217,15 @@ function FilaAccion({
     h = ctx.d.hallazgos.find(x => x.id === a.hallazgo_id);
   const dev = u && u.estado === 'devuelto' && !pend;
   const plan = ctx.d.planes.find(x => x.id === a.plan_id);
+  // Plan en formulación: sus plazos aún no corren (no se muestra «vencida»)
+  const enForm = plan?.estado === 'formulacion';
+  const reporta =
+    puedeReportar(a, ctx.rol, ctx.depPropia) &&
+    ctx.rol !== 'control_interno' &&
+    !enForm &&
+    (!ctx.d.v28 || reportarHabilitado(h));
   return (
-    <div className={'pm-a s-' + e.k} id={'pmA-' + a.id}>
+    <div className={'pm-a s-' + (enForm ? 'curso' : e.k)} id={'pmA-' + a.id}>
       <div className="pm-a-main">
         {conContexto && h && (
           <div className="pm-a-ctx">
@@ -265,7 +280,13 @@ function FilaAccion({
         )}
       </div>
       <div className="pm-a-side">
-        <span className={'pill ' + e.pill}>{e.k === 'vencida' ? `Vencida hace ${-e.d} d` : e.txt}</span>
+        {enForm ? (
+          <span className="pill neutral" title="Los plazos empiezan a contar cuando se suscribe el plan">
+            Plan en formulación
+          </span>
+        ) : (
+          <span className={'pill ' + e.pill}>{e.k === 'vencida' ? `Vencida hace ${-e.d} d` : e.txt}</span>
+        )}
         <div className="pm-a-f">
           Inicio {formatoCorto(a.fecha_inicio)} · Fin <b>{formatoCorto(a.fecha_fin)}</b>
         </div>
@@ -284,8 +305,15 @@ function FilaAccion({
         <div className="pm-a-f">
           {a.fecha_corte ? 'Validado con corte ' + formatoCorto(a.fecha_corte) : 'Sin avance validado'}
         </div>
+        {!reporta &&
+          !pend &&
+          ['secretario', 'enlace'].includes(ctx.rol) &&
+          ctx.d.v28 &&
+          (enForm || !reportarHabilitado(h)) && (
+            <div className="pm-a-f">Podrá reportar avances cuando Control Interno valide la formulación.</div>
+          )}
         <div className="pm-a-b">
-          {puedeReportar(a, ctx.rol, ctx.depPropia) && !pend && (e.k !== 'cumplida' || ctx.edita) && (
+          {reporta && !pend && (e.k !== 'cumplida' || ctx.edita) && (
             <button type="button" className="btn sm primary" onClick={() => ctx.abrir({ t: 'avance', a })}>
               <Icono nombre="fa-chart-line" /> Reportar avance
             </button>
@@ -367,18 +395,22 @@ function Historial({ a, ctx, demo, alCerrar }: { a: Accion; ctx: Ctx; demo: bool
       alCerrar={alCerrar}
       pie={
         <>
-          {puedeReportar(a, ctx.rol, ctx.depPropia) && !pendiente(a, ctx.d.avances) && (
-            <button
-              type="button"
-              className="btn primary"
-              onClick={() => {
-                alCerrar();
-                ctx.abrir({ t: 'avance', a });
-              }}
-            >
-              <Icono nombre="fa-chart-line" /> Reportar avance
-            </button>
-          )}
+          {puedeReportar(a, ctx.rol, ctx.depPropia) &&
+            ctx.rol !== 'control_interno' &&
+            ctx.d.planes.find(x => x.id === a.plan_id)?.estado !== 'formulacion' &&
+            (!ctx.d.v28 || reportarHabilitado(ctx.d.hallazgos.find(x => x.id === a.hallazgo_id))) &&
+            !pendiente(a, ctx.d.avances) && (
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => {
+                  alCerrar();
+                  ctx.abrir({ t: 'avance', a });
+                }}
+              >
+                <Icono nombre="fa-chart-line" /> Reportar avance
+              </button>
+            )}
           <button type="button" className="btn" onClick={alCerrar}>
             Cerrar
           </button>
@@ -459,7 +491,10 @@ function Resumen({
         String(b.fecha_suscripcion).localeCompare(String(a.fecha_suscripcion))
     );
   const pids = new Set(planes.map(p => p.id));
-  const acc = d.acciones.filter(a => pids.has(a.plan_id));
+  const acc = accionesEnEjecucion(
+    d.acciones.filter(a => pids.has(a.plan_id)),
+    d.planes
+  );
   const cn = conteos(acc, hoy, d.avances),
     ind = indicadores(acc, hoy, d.avances);
   const porVal = d.avances.filter(v => v.estado === 'reportado' && pids.has(v.plan_id)).length;
@@ -509,6 +544,7 @@ function Resumen({
           </div>
         )}
       </div>
+      {ctx.edita && ctx.d.v28 && <PendientesRevision ctx={ctx} abrir={abrir} />}
       {SUPERVISION.includes(ctx.rol) && <AlertaIncumplimiento ctx={ctx} acciones={acc} />}
       <div className="grid g-kpi" style={{ marginBottom: 14 }}>
         <div className="card kpi">
@@ -545,14 +581,14 @@ function Resumen({
             hint={
               ind.cpm == null
                 ? 'Aún no hay metas vencidas a la fecha'
-                : 'Σ PLAVI / Σ PAAVI · metodología Formulario 14.1 CGR'
+                : 'De lo que ya debía estar cumplido, cuánto se cumplió'
             }
           />
           <Medidor
             label="Avance general de los planes"
             v={ind.ap}
             color="var(--neo, #4c8dff)"
-            hint="Σ PLAI / Σ plazo en semanas"
+            hint="Según el tiempo transcurrido de cada acción"
           />
         </div>
       </div>
@@ -603,15 +639,25 @@ function Resumen({
                   Suscrito el {formatoCorto(p.fecha_suscripcion)} · {nf(nh)} hallazgo{nh === 1 ? '' : 's'} ·{' '}
                   {nf(l.length)} acci{l.length === 1 ? 'ón' : 'ones'}
                 </div>
-                <Medidor label="Cumplimiento" v={i.cpm} color="var(--sem-v)" />
-                <Medidor label="Avance" v={i.ap} color="var(--neo, #4c8dff)" />
+                {p.estado === 'formulacion' ? (
+                  <div className="hint" style={{ margin: '8px 0' }}>
+                    En formulación: la calificación y los plazos empiezan a contar cuando se suscribe el plan.
+                  </div>
+                ) : (
+                  <>
+                    <Medidor label="Cumplimiento" v={i.cpm} color="var(--sem-v)" />
+                    <Medidor label="Avance" v={i.ap} color="var(--neo, #4c8dff)" />
+                  </>
+                )}
                 <div className="pm-chips">
-                  {c.vencida > 0 && (
+                  {p.estado !== 'formulacion' && c.vencida > 0 && (
                     <span className="pm-chip r">
                       {c.vencida} vencida{c.vencida === 1 ? '' : 's'}
                     </span>
                   )}
-                  {c.proxima > 0 && <span className="pm-chip y">{c.proxima} por vencer</span>}
+                  {p.estado !== 'formulacion' && c.proxima > 0 && (
+                    <span className="pm-chip y">{c.proxima} por vencer</span>
+                  )}
                   {pv > 0 && <span className="pm-chip b">{pv} por validar</span>}
                   {c.cumplida > 0 && (
                     <span className="pm-chip g">
@@ -859,8 +905,9 @@ function MisAcciones({
       </div>
     );
   const acc = d.acciones.slice().sort((a, b) => String(a.fecha_fin).localeCompare(String(b.fecha_fin)));
-  const cn = conteos(acc, hoy, d.avances),
-    ind = indicadores(acc, hoy, d.avances);
+  const enCurso = accionesEnEjecucion(acc, d.planes);
+  const cn = conteos(enCurso, hoy, d.avances),
+    ind = indicadores(enCurso, hoy, d.avances);
   const porPlan: Record<string, Accion[]> = {};
   for (const a of acc) (porPlan[a.plan_id] ??= []).push(a);
   return (
@@ -881,6 +928,7 @@ function MisAcciones({
           </div>
         )}
       </div>
+      {ctx.d.v28 && <HallazgosPorFormular ctx={ctx} depId={depId} abrirPlan={abrirPlan} />}
       {(cn.vencida > 0 || cn.proxima > 0) && (
         <div className="hint err" role="alert" style={{ marginBottom: 14 }}>
           <b>
@@ -929,7 +977,6 @@ function MisAcciones({
           <Medidor label="Avance de mis acciones" v={ind.ap} color="var(--neo, #4c8dff)" />
         </div>
       </div>
-      {ctx.d.v28 && <HallazgosPorFormular ctx={ctx} depId={depId} abrirPlan={abrirPlan} />}
       {acc.length ? (
         Object.entries(porPlan).map(([pid, l]) => {
           const p = d.planes.find(x => x.id === pid);
@@ -974,37 +1021,117 @@ function HallazgosPorFormular({
   depId: number | null;
   abrirPlan: (id: string) => void;
 }) {
-  const l = ctx.d.hallazgos.filter(
-    h => String(h.dependencia_id ?? '') === String(depId) && estadoDe(h) !== 'validado'
-  );
+  // Cada hallazgo con el paso que le toca a la dependencia (formular, corregir, esperar o anotar el SIA)
+  const l = ctx.d.hallazgos
+    .filter(h => String(h.dependencia_id ?? '') === String(depId) && enFlujoFormulacion(h))
+    .map(h => ({ h, paso: pasoDependencia(h) }))
+    .filter(
+      (x): x is { h: Hallazgo; paso: NonNullable<ReturnType<typeof pasoDependencia>> } => x.paso != null
+    )
+    .sort((a, b) => ORDEN_PASO[a.paso] - ORDEN_PASO[b.paso]);
   if (!l.length) return null;
   return (
     <section className="card" style={{ marginBottom: 14 }}>
-      <h3 style={{ margin: '0 0 6px' }}>Hallazgos por formular</h3>
+      <h3 style={{ margin: '0 0 6px' }}>Lo que le toca hacer</h3>
       <div className="hint" style={{ marginBottom: 8 }}>
         Su dependencia formula el análisis de causa y las acciones de cada hallazgo y los envía a Control
-        Interno para su validación.
+        Interno. Cuando Control Interno valida, se sube al SIA y se anota aquí; después se reportan los
+        avances.
       </div>
-      {l.map(h => {
+      {l.map(({ h, paso }) => {
         const p = ctx.d.planes.find(x => x.id === h.plan_id);
         const e = ESTADOS_FORMULACION[estadoDe(h)];
+        const boton = TEXTO_PASO[paso];
+        return (
+          <div key={h.id} style={{ padding: '6px 0' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span className="pm-num">Hallazgo {h.numero}</span>
+              <span className={'pill ' + e.clase}>
+                {paso === 'sia' ? 'Validado: falta subir al SIA' : e.texto}
+              </span>
+              <span className="muted" style={{ fontSize: '.8rem', flex: 1, minWidth: 180 }}>
+                {textoCorto(p?.ejercicio || '', 90)}
+              </span>
+              {boton ? (
+                <button
+                  type="button"
+                  className={'btn sm' + (paso === 'formular' || paso === 'corregir' ? ' primary' : '')}
+                  aria-label={boton.texto + ' hallazgo ' + h.numero + ' de ' + (p?.ejercicio || 'el plan')}
+                  onClick={() => abrirPlan(h.plan_id)}
+                >
+                  <Icono nombre={boton.icono} /> {boton.texto}
+                </button>
+              ) : (
+                <span className="muted" style={{ fontSize: '.8rem' }}>
+                  <Icono nombre="fa-hourglass-half" /> Esperando a Control Interno
+                </span>
+              )}
+            </div>
+            {paso === 'corregir' && h.formulacion_obs && (
+              <div className="hint err" style={{ marginTop: 4 }}>
+                <b>Observación de Control Interno:</b> {h.formulacion_obs}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+const ORDEN_PASO = { corregir: 0, formular: 1, sia: 2, esperar: 3 } as const;
+const TEXTO_PASO: Record<keyof typeof ORDEN_PASO, { texto: string; icono: string } | null> = {
+  formular: { texto: 'Formular', icono: 'fa-pen' },
+  corregir: { texto: 'Corregir', icono: 'fa-rotate-left' },
+  sia: { texto: 'Anotar subida al SIA', icono: 'fa-pen-to-square' },
+  esperar: null
+};
+
+/** Bandeja de Control Interno: formulaciones enviadas y avances reportados que esperan su revisión. */
+function PendientesRevision({ ctx, abrir }: { ctx: Ctx; abrir: (id: string) => void }) {
+  const { d } = ctx;
+  const porPlan = new Map<string, { formulaciones: number; avances: number }>();
+  const sumar = (id: string, k: 'formulaciones' | 'avances') => {
+    const v = porPlan.get(id) ?? { formulaciones: 0, avances: 0 };
+    v[k]++;
+    porPlan.set(id, v);
+  };
+  for (const h of d.hallazgos) if (estadoDe(h) === 'enviado') sumar(h.plan_id, 'formulaciones');
+  for (const v of d.avances) if (v.estado === 'reportado') sumar(v.plan_id, 'avances');
+  if (!porPlan.size) return null;
+  return (
+    <section className="card" style={{ marginBottom: 14 }}>
+      <h3 style={{ margin: '0 0 6px' }}>Pendientes de su revisión</h3>
+      <div className="hint" style={{ marginBottom: 8 }}>
+        Formulaciones que enviaron las dependencias y avances reportados con su soporte. Abra el plan, revise
+        y valide o devuelva con observaciones.
+      </div>
+      {[...porPlan.entries()].map(([id, n]) => {
+        const p = d.planes.find(x => x.id === id);
+        if (!p) return null;
         return (
           <div
-            key={h.id}
+            key={id}
             style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', padding: '6px 0' }}
           >
-            <span className="pm-num">Hallazgo {h.numero}</span>
-            <span className={'pill ' + e.clase}>{e.texto}</span>
-            <span className="muted" style={{ fontSize: '.8rem', flex: 1, minWidth: 180 }}>
-              {textoCorto(p?.ejercicio || '', 90)}
-            </span>
+            <span style={{ flex: 1, minWidth: 200 }}>{textoCorto(p.ejercicio, 90)}</span>
+            {n.formulaciones > 0 && (
+              <span className="pill neutral">
+                {n.formulaciones} {n.formulaciones === 1 ? 'formulación' : 'formulaciones'} por revisar
+              </span>
+            )}
+            {n.avances > 0 && (
+              <span className="pill amarillo">
+                {n.avances} {n.avances === 1 ? 'avance' : 'avances'} por validar
+              </span>
+            )}
             <button
               type="button"
-              className="btn sm"
-              aria-label={'Formular hallazgo ' + h.numero + ' de ' + (p?.ejercicio || 'el plan')}
-              onClick={() => abrirPlan(h.plan_id)}
+              className="btn sm primary"
+              aria-label={'Revisar ' + p.ejercicio}
+              onClick={() => abrir(id)}
             >
-              <Icono nombre="fa-pen" /> Formular
+              <Icono nombre="fa-clipboard-check" /> Revisar
             </button>
           </div>
         );
@@ -1134,7 +1261,7 @@ function DetallePlan({
       [p.formato === 'F14_CGR' ? 'Modalidad de auditoría' : '', p.formato === 'F14_CGR' ? p.modalidad : ''],
       ['Fecha de suscripción', formatoCorto(p.fecha_suscripcion)],
       [
-        p.formato === 'F14_CGR' ? 'Periodo fiscal' : 'Vigencia PVCFT',
+        p.formato === 'F14_CGR' ? 'Periodo fiscal' : 'Vigencia auditada',
         p.formato === 'F14_CGR' ? p.periodo_auditado : p.vigencia_pvcft
       ],
       ['Informe', (p.numero_informe ?? '') + (p.fecha_informe ? ' · ' + formatoCorto(p.fecha_informe) : '')],
@@ -1145,7 +1272,7 @@ function DetallePlan({
   const tabs: [Pestana, string, number][] = [
     ['acciones', 'Hallazgos y acciones', accAll.length],
     ['validar', 'Por validar', pend.length],
-    ['calidad', 'Calidad de datos', issues.length],
+    ['calidad', 'Alertas del plan', issues.length],
     ['historial', 'Historial de avances', d.avances.filter(v => v.plan_id === p.id).length]
   ];
   // pmPlanView: el archivo documental no lo ven secretario ni enlace
@@ -1445,36 +1572,47 @@ function DetallePlan({
             </div>
           ))}
         </div>
-        <div className="pm-ind" style={{ marginTop: 14 }}>
-          <Medidor
-            label="Cumplimiento (CPM)"
-            v={ind.cpm}
-            color="var(--sem-v)"
-            hint={
-              ind.cpm == null
-                ? 'Sin metas vencidas a la fecha de evaluación'
-                : `Σ PLAVI ${numTxt(ind.plavi)} / Σ PAAVI ${numTxt(ind.pbec)}`
-            }
-          />
-          <Medidor
-            label="Avance del plan (AP)"
-            v={ind.ap}
-            color="var(--neo, #4c8dff)"
-            hint={`Σ PLAI ${numTxt(ind.plai)} / Σ plazo ${numTxt(ind.pbea)} semanas`}
-          />
-          <div className="field pm-fev">
-            <label htmlFor="pmEval">Fecha de evaluación</label>
-            <input
-              type="date"
-              id="pmEval"
-              value={fev}
-              max="2100-12-31"
-              onChange={e => /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) && setFev(e.target.value)}
-            />
-            <div className="hint">Usa el último avance validado hasta esta fecha</div>
+        {p.estado === 'formulacion' && (
+          <div className="hint" style={{ marginTop: 14 }}>
+            <Icono nombre="fa-circle-info" /> <b>Plan en formulación.</b> Cada dependencia formula el análisis
+            de causa y las acciones de sus hallazgos y los envía a Control Interno. La calificación y los
+            plazos empiezan a contar cuando el plan se suscribe.
           </div>
-        </div>
-        <CalificacionCgsc p={p} acc={accAll} ctx={ctx} fev={fev} />
+        )}
+        {p.estado !== 'formulacion' && (
+          <div className="pm-ind" style={{ marginTop: 14 }}>
+            <Medidor
+              label="Cumplimiento de metas vencidas"
+              v={ind.cpm}
+              color="var(--sem-v)"
+              hint={
+                ind.cpm == null
+                  ? 'Sin metas vencidas a la fecha de evaluación'
+                  : 'De lo que ya debía estar cumplido a la fecha, cuánto se cumplió'
+              }
+            />
+            <Medidor
+              label="Avance general del plan"
+              v={ind.ap}
+              color="var(--neo, #4c8dff)"
+              hint="Según el tiempo transcurrido de cada acción"
+            />
+            {!['secretario', 'enlace'].includes(ctx.rol) && (
+              <div className="field pm-fev">
+                <label htmlFor="pmEval">Fecha de evaluación</label>
+                <input
+                  type="date"
+                  id="pmEval"
+                  value={fev}
+                  max="2100-12-31"
+                  onChange={e => /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) && setFev(e.target.value)}
+                />
+                <div className="hint">Usa el último avance validado hasta esta fecha</div>
+              </div>
+            )}
+          </div>
+        )}
+        {p.estado !== 'formulacion' && <CalificacionCgsc p={p} acc={accAll} ctx={ctx} fev={fev} />}
         {d.v28 && (
           <EvaluacionContraloria
             p={p}
@@ -1489,8 +1627,10 @@ function DetallePlan({
           <span className="pm-chip">{hall.length} hallazgos</span>
           <span className="pm-chip">{cn.n} acciones</span>
           {cn.cumplida > 0 && <span className="pm-chip g">{cn.cumplida} cumplidas</span>}
-          {cn.vencida > 0 && <span className="pm-chip r">{cn.vencida} vencidas sin cumplir</span>}
-          {cn.proxima > 0 && (
+          {p.estado !== 'formulacion' && cn.vencida > 0 && (
+            <span className="pm-chip r">{cn.vencida} vencidas sin cumplir</span>
+          )}
+          {p.estado !== 'formulacion' && cn.proxima > 0 && (
             <span className="pm-chip y">
               {cn.proxima} vencen en {ALERTA_DIAS} días
             </span>

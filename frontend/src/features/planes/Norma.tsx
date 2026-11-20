@@ -126,8 +126,10 @@ export function TarjetaNorma({
     filas.push(
       <div className="pm-norma-r" key="pres">
         <span>
-          <small>Presentación del plan</small>Registre la fecha de radicación del informe final (Editar plan)
-          para controlar los 15 días hábiles del art. 7.
+          <small>Presentación del plan</small>
+          {edita
+            ? 'Registre la fecha de radicación del informe final (Editar plan) para controlar los 15 días hábiles del art. 7.'
+            : 'Control Interno registra la fecha de radicación del informe final para controlar los 15 días hábiles del art. 7.'}
         </span>
       </div>
     );
