@@ -1,6 +1,6 @@
 // Pruebas de scripts/copia-externa.mjs (sin red: el listado de Supabase se simula).
 import assert from 'node:assert/strict';
-import { listar, masReciente, diasDesde, cabeceras } from '../scripts/copia-externa.mjs';
+import { listar, masReciente, diasDesde, cabeceras, revisarClave } from '../scripts/copia-externa.mjs';
 
 let n = 0;
 const ok = (c, m) => {
@@ -48,5 +48,13 @@ ok(cabeceras('eyJabc').Authorization === 'Bearer eyJabc', 'clave antigua (JWT): 
 const rutas = l.map(o => o.ruta).sort();
 assert.deepEqual(rutas, ['plan-1/informe.pdf', 'plan-1/sub/oficio.pdf', 'raiz.pdf']);
 n++;
+
+// La clave pública se rechaza con mensaje claro; la secreta y la service_role pasan
+const jwt = rol => 'eyJx.' + Buffer.from(JSON.stringify({ role: rol })).toString('base64url') + '.y';
+assert.throws(() => revisarClave('sb_publishable_abc'), /PÚBLICA/);
+assert.throws(() => revisarClave(jwt('anon')), /PÚBLICA/);
+revisarClave('sb_secret_abc');
+revisarClave(jwt('service_role'));
+n += 4;
 
 console.log(`copia-externa: ${n} verificaciones correctas`);

@@ -27,6 +27,24 @@ export const cabeceras = clave =>
   /^eyJ/.test(clave) ? { Authorization: `Bearer ${clave}`, apikey: clave } : { apikey: clave };
 const MAX_DIAS = 9;
 
+/**
+ * La clave pública (sb_publishable_… o la JWT «anon») entra a Supabase pero NO ve los depósitos privados: la lista
+ * llega vacía sin error. Se rechaza antes, con un mensaje claro. No se imprime la clave.
+ */
+export function revisarClave(clave) {
+  let rol = '';
+  if (/^eyJ/.test(clave))
+    try {
+      rol = JSON.parse(Buffer.from(clave.split('.')[1], 'base64url').toString()).role || '';
+    } catch {
+      rol = '';
+    }
+  if (/^sb_publishable_/.test(clave) || rol === 'anon')
+    throw new Error(
+      'El secreto SUPABASE_SERVICE_ROLE_KEY tiene la clave PÚBLICA de Supabase (publishable/anon). Debe ser la SECRETA: Supabase → Project Settings → API Keys → Secret keys (empieza por sb_secret_).'
+    );
+}
+
 /** Lista recursivamente los objetos de un depósito (la API devuelve carpetas sin id). */
 export async function listar(base, clave, deposito, prefijo = '', fetchFn = fetch) {
   const salida = [];
@@ -90,6 +108,7 @@ async function principal() {
     throw new Error(
       'Falta el secreto SUPABASE_SERVICE_ROLE_KEY (GitHub → Settings → Secrets and variables → Actions).'
     );
+  revisarClave(clave);
   if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(base))
     throw new Error('configuracion.json no tiene una dirección de Supabase válida');
 
