@@ -29,7 +29,15 @@ describe('catálogos (entes y dependencias), igual que vCatalog, catModal y save
       'Dependencia',
       'Secretario(a) de Despacho',
       'Correo institucional',
-      'Teléfono celular (para WhatsApp)'
+      'Teléfono celular (para WhatsApp)',
+      'Cargo de quien firma los oficios (p. ej. Secretario de Gobierno)'
+    ]);
+    expect(CAMPOS_CATALOGO.entes.map(c => c[0])).toEqual([
+      'nombre',
+      'sigla',
+      'tipo',
+      'titularNombre',
+      'titularCargo'
     ]);
   });
 

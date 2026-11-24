@@ -13,6 +13,7 @@ import {
   TITULO_VENTANA,
   type TablaCatalogo
 } from '../../dominio/catalogos';
+import { pareceDocx } from '../../dominio/oficio-respuesta';
 import { Aviso, Boton, Icono, Modal, useAvisos } from '../../shared/ui';
 import { useDatos } from '../sesion/contexto';
 
@@ -20,9 +21,72 @@ type Registro = Ente | Dependencia;
 type Borrador = Record<string, string | boolean | number | undefined>;
 
 const NUEVO: Record<TablaCatalogo, Borrador> = {
-  entes: { nombre: '', sigla: '', tipo: TIPOS_ENTE[0], activo: true },
-  dependencias: { nombre: '', secretarioNombre: '', correo: '', telefono: '', activo: true }
+  entes: { nombre: '', sigla: '', tipo: TIPOS_ENTE[0], activo: true, titularNombre: '', titularCargo: '' },
+  dependencias: {
+    nombre: '',
+    secretarioNombre: '',
+    correo: '',
+    telefono: '',
+    activo: true,
+    cargoRemitente: ''
+  }
 };
+
+/** Plantilla de oficio de una dependencia (script 30): estado y botón para subirla o reemplazarla. */
+function CeldaPlantilla({ dep, tiene, admin }: { dep: Dependencia; tiene: boolean; admin: boolean }) {
+  const { catalogos } = useDatos();
+  const cliente = useQueryClient();
+  const avisar = useAvisos();
+  const [subiendo, setSubiendo] = useState(false);
+  const elegir = async (f: File | undefined) => {
+    if (!f) return;
+    const b = new Uint8Array(await f.arrayBuffer());
+    if (!/\.docx$/i.test(f.name) || !pareceDocx(b))
+      return avisar('Elija un documento de Word (.docx) con el membrete de la dependencia.', 'error');
+    if (b.length > 5 * 1024 * 1024) return avisar('La plantilla supera 5 MB.', 'error');
+    setSubiendo(true);
+    try {
+      await catalogos.subirPlantillaOficio(dep.id, f);
+      avisar('Plantilla de ' + dep.nombre + ' guardada', 'ok');
+      await cliente.invalidateQueries({ queryKey: ['plantillas-oficio'] });
+    } catch (e) {
+      avisar(e instanceof ErrorDatos ? e.message : 'No se pudo guardar la plantilla.', 'error');
+    } finally {
+      setSubiendo(false);
+    }
+  };
+  return (
+    <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center', whiteSpace: 'nowrap' }}>
+      {tiene ? (
+        <span className="pill verde" title="Tiene plantilla de oficio">
+          <i aria-hidden="true" />
+          SÍ
+        </span>
+      ) : (
+        <span className="pill neutral" title="Sin plantilla de oficio">
+          NO
+        </span>
+      )}
+      {admin && (
+        <label className="btn sm" style={{ cursor: subiendo ? 'wait' : 'pointer' }}>
+          <Icono nombre="fa-file-word" />{' '}
+          {subiendo ? 'Subiendo…' : tiene ? 'Reemplazar' : 'Plantilla de oficio'}
+          <input
+            type="file"
+            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            aria-label={'Plantilla de oficio de ' + dep.nombre}
+            style={{ display: 'none' }}
+            disabled={subiendo}
+            onChange={e => {
+              void elegir(e.target.files?.[0]);
+              e.target.value = '';
+            }}
+          />
+        </label>
+      )}
+    </span>
+  );
+}
 
 export function PantallaCatalogo({ tabla, perfil }: { tabla: TablaCatalogo; perfil: Perfil }) {
   const { catalogos } = useDatos();
@@ -30,6 +94,11 @@ export function PantallaCatalogo({ tabla, perfil }: { tabla: TablaCatalogo; perf
   const consulta = useQuery<Registro[]>({
     queryKey: [tabla],
     queryFn: () => (tabla === 'entes' ? catalogos.entes() : catalogos.dependencias())
+  });
+  const conPlantilla = useQuery({
+    queryKey: ['plantillas-oficio'],
+    queryFn: () => catalogos.dependenciasConPlantilla(),
+    enabled: tabla === 'dependencias'
   });
   const [edicion, setEdicion] = useState<Borrador | null>(null);
   const admin = puedeEditarCatalogos(perfil.rol);
@@ -59,6 +128,7 @@ export function PantallaCatalogo({ tabla, perfil }: { tabla: TablaCatalogo; perf
                   {t}
                 </th>
               ))}
+              {tabla === 'dependencias' && <th scope="col">Plantilla de oficio</th>}
               <th scope="col">Estado</th>
               <th scope="col" aria-label="Acciones" />
             </tr>
@@ -69,6 +139,15 @@ export function PantallaCatalogo({ tabla, perfil }: { tabla: TablaCatalogo; perf
                 {columnas.map(([c]) => (
                   <td key={c}>{textoCelda((x as unknown as Record<string, unknown>)[c])}</td>
                 ))}
+                {tabla === 'dependencias' && (
+                  <td>
+                    <CeldaPlantilla
+                      dep={x as Dependencia}
+                      tiene={(conPlantilla.data ?? []).includes(x.id)}
+                      admin={admin}
+                    />
+                  </td>
+                )}
                 <td>
                   {x.activo === false ? (
                     <span className="pill neutral">INACTIVO</span>

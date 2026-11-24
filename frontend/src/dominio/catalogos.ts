@@ -28,13 +28,18 @@ export const CAMPOS_CATALOGO = {
   entes: [
     ['nombre', 'Nombre completo'],
     ['sigla', 'Sigla'],
-    ['tipo', 'Tipo']
+    ['tipo', 'Tipo'],
+    // Destinatario del oficio de respuesta (script 30)
+    ['titularNombre', 'Nombre del titular (destinatario de los oficios)'],
+    ['titularCargo', 'Cargo del titular (p. ej. Contralor General de Santiago de Cali)']
   ],
   dependencias: [
     ['nombre', 'Dependencia'],
     ['secretarioNombre', 'Secretario(a) de Despacho'],
     ['correo', 'Correo institucional'],
-    ['telefono', 'Teléfono celular (para WhatsApp)']
+    ['telefono', 'Teléfono celular (para WhatsApp)'],
+    // Quien firma el oficio de respuesta (script 30)
+    ['cargoRemitente', 'Cargo de quien firma los oficios (p. ej. Secretario de Gobierno)']
   ]
 } as const;
 

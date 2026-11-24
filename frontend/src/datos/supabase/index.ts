@@ -20,6 +20,7 @@ import {
 } from '../../dominio/planes-memoria';
 import type { ArchivoInventario } from '../../dominio/respaldo-archivos';
 import { rutaSoporte } from '../../dominio/requerimientos';
+import { rutaPlantilla } from '../../dominio/oficio-respuesta';
 import type {
   Accion,
   Avance,
@@ -120,6 +121,12 @@ export function errorPlanes(error: { message: string }): ErrorDatos {
     return new ErrorDatos('otro', 'La fecha de terminación no puede ser anterior a la de inicio');
   return errorRequerimiento(error);
 }
+
+/** La base todavía no tiene una columna nueva (script sin instalar): 42703 de PostgreSQL o PGRST204 de la API. */
+export const faltaColumna = (e: { code?: string; message?: string }) =>
+  e.code === '42703' ||
+  e.code === 'PGRST204' ||
+  /column .* does not exist|Could not find the '.*' column/i.test(e.message ?? '');
 
 const red = () =>
   new ErrorDatos('red', 'No hay conexión con el servidor. Revise su internet e intente de nuevo.');
@@ -273,7 +280,19 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
       }
     },
     catalogos: {
+      // Con el script 30 se leen también el titular del ente y el cargo de quien firma; sin él, como antes
       async entes() {
+        const r = await sb
+          .from('entes')
+          .select('id, nombre, sigla, tipo, activo, titular_nombre, titular_cargo')
+          .order('nombre');
+        if (!r.error)
+          return (r.data ?? []).map(({ titular_nombre, titular_cargo, ...e }) => ({
+            ...e,
+            titularNombre: titular_nombre ?? '',
+            titularCargo: titular_cargo ?? ''
+          }));
+        if (!faltaColumna(r.error)) throw red();
         const { data, error } = await sb
           .from('entes')
           .select('id, nombre, sigla, tipo, activo')
@@ -282,19 +301,63 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         return data ?? [];
       },
       async dependencias() {
-        const { data, error } = await sb
+        const r = await sb
           .from('dependencias')
-          .select('id, nombre, secretario_nombre, correo, telefono, activo')
+          .select('id, nombre, secretario_nombre, correo, telefono, activo, cargo_remitente')
           .order('nombre');
-        if (error) throw red();
-        return (data ?? []).map(d => ({
+        let filas: {
+          id: number;
+          nombre: string;
+          secretario_nombre: string | null;
+          correo: string | null;
+          telefono: string | null;
+          activo: boolean;
+          cargo_remitente?: string | null;
+        }[];
+        if (!r.error) filas = r.data ?? [];
+        else {
+          if (!faltaColumna(r.error)) throw red();
+          const v = await sb
+            .from('dependencias')
+            .select('id, nombre, secretario_nombre, correo, telefono, activo')
+            .order('nombre');
+          if (v.error) throw red();
+          filas = v.data ?? [];
+        }
+        return filas.map(d => ({
           id: d.id,
           nombre: d.nombre,
           secretarioNombre: d.secretario_nombre ?? '',
           correo: d.correo ?? '',
           telefono: d.telefono ?? '',
-          activo: d.activo
+          activo: d.activo,
+          cargoRemitente: d.cargo_remitente ?? ''
         }));
+      },
+      async plantillaOficio(dependenciaId) {
+        const { data, error } = await sb.storage.from('plantillas').download(rutaPlantilla(dependenciaId));
+        if (error || !data) return null;
+        return new Uint8Array(await data.arrayBuffer());
+      },
+      async subirPlantillaOficio(dependenciaId, archivo) {
+        const { error } = await sb.storage
+          .from('plantillas')
+          .upload(rutaPlantilla(dependenciaId), await archivo.arrayBuffer(), {
+            contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            upsert: true
+          });
+        if (!error) return;
+        if (/bucket not found/i.test(error.message))
+          throw new ErrorDatos('otro', 'Falta instalar el script 30 (supabase/30_proyectar_respuesta.sql).');
+        throw errorGuardar(error, 'las plantillas');
+      },
+      async dependenciasConPlantilla() {
+        const { data, error } = await sb.storage.from('plantillas').list('oficio', { limit: 1000 });
+        if (error || !data) return [];
+        return data
+          .map(o => /^dep-(\d+)\.docx$/.exec(o.name)?.[1])
+          .filter((x): x is string => !!x)
+          .map(Number);
       },
       async configuracion() {
         const { data, error } = await sb
@@ -306,26 +369,33 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         return { diasRojo: data?.dias_rojo || 5, correoDisciplinario: data?.correo_disciplinario ?? '' };
       },
       // Igual que saveCatalog de la 2.x: update por id o insert. La auditoría la escribe el servidor (triggers).
+      // Sin el script 30, se guarda sin los campos nuevos (como antes).
       async guardarEnte({ id, ...e }) {
-        const fila = { nombre: e.nombre, sigla: e.sigla, tipo: e.tipo, activo: e.activo };
-        const { error } =
-          id === undefined
-            ? await sb.from('entes').insert(fila)
-            : await sb.from('entes').update(fila).eq('id', id);
+        const base = { nombre: e.nombre, sigla: e.sigla, tipo: e.tipo, activo: e.activo };
+        const guardar = (fila: typeof base & { titular_nombre?: string; titular_cargo?: string }) =>
+          id === undefined ? sb.from('entes').insert(fila) : sb.from('entes').update(fila).eq('id', id);
+        let { error } = await guardar({
+          ...base,
+          titular_nombre: e.titularNombre ?? '',
+          titular_cargo: e.titularCargo ?? ''
+        });
+        if (error && faltaColumna(error)) ({ error } = await guardar(base));
         if (error) throw errorGuardar(error, 'los catálogos');
       },
       async guardarDependencia({ id, ...d }) {
-        const fila = {
+        const base = {
           nombre: d.nombre,
           secretario_nombre: d.secretarioNombre,
           correo: d.correo,
           telefono: d.telefono,
           activo: d.activo
         };
-        const { error } =
+        const guardar = (fila: typeof base & { cargo_remitente?: string }) =>
           id === undefined
-            ? await sb.from('dependencias').insert(fila)
-            : await sb.from('dependencias').update(fila).eq('id', id);
+            ? sb.from('dependencias').insert(fila)
+            : sb.from('dependencias').update(fila).eq('id', id);
+        let { error } = await guardar({ ...base, cargo_remitente: d.cargoRemitente ?? '' });
+        if (error && faltaColumna(error)) ({ error } = await guardar(base));
         if (error) throw errorGuardar(error, 'los catálogos');
       }
     },
