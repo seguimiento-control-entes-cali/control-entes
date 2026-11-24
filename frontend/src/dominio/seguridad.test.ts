@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { errorClaveNueva, esLlegadaParaClave, exigenciaVerificacion } from './seguridad';
+import { errorClaveNueva, esLlegadaParaClave, exigenciaVerificacion, leerEnlaceConfirmar } from './seguridad';
 import { ROLES } from './roles';
 
 describe('contraseña nueva (igual que guardarClave de la 2.x)', () => {
@@ -34,5 +34,20 @@ describe('llegada desde el correo', () => {
     expect(esLlegadaParaClave('#access_token=x&type=signup')).toBe(false);
     expect(esLlegadaParaClave('#/mando')).toBe(false);
     expect(esLlegadaParaClave('')).toBe(false);
+  });
+  it('lee el enlace protegido (#confirmar=1&token_hash=…&tipo=…) y rechaza lo que no lo es', () => {
+    expect(leerEnlaceConfirmar('#confirmar=1&token_hash=pkce_abc123DEF456&tipo=invite')).toEqual({
+      tokenHash: 'pkce_abc123DEF456',
+      tipo: 'invite'
+    });
+    expect(leerEnlaceConfirmar('#confirmar=1&tipo=recovery&token_hash=0123456789abcdef')).toEqual({
+      tokenHash: '0123456789abcdef',
+      tipo: 'recovery'
+    });
+    expect(leerEnlaceConfirmar('#confirmar=1&token_hash=0123456789abcdef&tipo=signup')).toBeNull();
+    expect(leerEnlaceConfirmar('#confirmar=1&token_hash=<script>&tipo=invite')).toBeNull();
+    expect(leerEnlaceConfirmar('#token_hash=0123456789abcdef&tipo=invite')).toBeNull();
+    expect(leerEnlaceConfirmar('#/mando')).toBeNull();
+    expect(leerEnlaceConfirmar('')).toBeNull();
   });
 });

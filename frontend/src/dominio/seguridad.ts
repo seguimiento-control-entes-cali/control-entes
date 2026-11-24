@@ -21,3 +21,30 @@ export function exigenciaVerificacion(rol: Rol): 'obligatoria' | 'recomendada' |
 export function esLlegadaParaClave(hash: string): boolean {
   return /type=(invite|recovery)/.test(hash);
 }
+
+/**
+ * Enlace del correo PROTEGIDO contra los filtros de correo (24-nov-2026): los filtros de seguridad abren los enlaces
+ * apenas llega el correo y gastan el enlace de un solo uso. Por eso la plantilla del correo de Supabase lleva a
+ * «…/v3/#confirmar=1&token_hash=…&tipo=invite|recovery» y el enlace solo se usa cuando la PERSONA oprime «Continuar».
+ */
+export interface EnlaceConfirmar {
+  tokenHash: string;
+  tipo: 'invite' | 'recovery';
+}
+export function leerEnlaceConfirmar(hash: string): EnlaceConfirmar | null {
+  if (!/(^#|&)confirmar=1(&|$)/.test(hash)) return null;
+  // Sin URLSearchParams: esta capa se compila sin las definiciones del navegador
+  const p = new Map(
+    hash
+      .replace(/^#/, '')
+      .split('&')
+      .map(par => {
+        const i = par.indexOf('=');
+        return [i < 0 ? par : par.slice(0, i), i < 0 ? '' : decodeURIComponent(par.slice(i + 1))] as const;
+      })
+  );
+  const tokenHash = (p.get('token_hash') ?? '').trim();
+  const tipo = p.get('tipo') ?? p.get('type') ?? '';
+  if (!/^[A-Za-z0-9_-]{10,200}$/.test(tokenHash) || (tipo !== 'invite' && tipo !== 'recovery')) return null;
+  return { tokenHash, tipo };
+}

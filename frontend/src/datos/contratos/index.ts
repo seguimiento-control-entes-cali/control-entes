@@ -57,6 +57,11 @@ export interface RepositorioAuth {
   recuperarClave(correo: string, volverA: string): Promise<void>;
   /** Cambia la contraseña de quien tiene la sesión (también al llegar por invitación o recuperación). */
   cambiarClave(nueva: string): Promise<void>;
+  /**
+   * Usa el enlace del correo (invitación o recuperación) cuando la persona oprime «Continuar»: abre su sesión para
+   * que defina la contraseña. Error claro si el enlace ya se usó o venció.
+   */
+  confirmarEnlace(tokenHash: string, tipo: 'invite' | 'recovery'): Promise<void>;
   /** true si la cuenta ya tiene al menos un celular verificado para la verificación en dos pasos. */
   tieneVerificacion(): Promise<boolean>;
   /** Empieza a activar la verificación en dos pasos: código QR y clave para la app autenticadora. */

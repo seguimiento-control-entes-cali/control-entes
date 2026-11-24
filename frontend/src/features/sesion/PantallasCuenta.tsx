@@ -11,6 +11,53 @@ import { useDatos } from './contexto';
 const mensaje = (e: unknown) =>
   e instanceof ErrorDatos ? e.message : 'No se pudo completar. Intente de nuevo.';
 
+/**
+ * Llegada desde el correo con el enlace protegido: el enlace SOLO se usa al oprimir «Continuar» (los filtros de
+ * correo abren la página pero no oprimen botones, así el enlace no se gasta antes de que llegue la persona).
+ */
+export function ConfirmarEnlace({
+  tipo,
+  alConfirmar
+}: {
+  tipo: 'invite' | 'recovery';
+  alConfirmar: () => Promise<void> | void;
+}) {
+  const [error, setError] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+  const continuar = async () => {
+    setError('');
+    setOcupado(true);
+    try {
+      await alConfirmar();
+    } catch (err) {
+      setError(mensaje(err));
+      setOcupado(false);
+    }
+  };
+  return (
+    <MarcoIngreso
+      titulo={tipo === 'invite' ? 'Bienvenido(a) a Control de Entes' : 'Cambiar su contraseña'}
+      subtitulo={
+        tipo === 'invite'
+          ? 'Oprima «Continuar» para activar su cuenta y definir su contraseña.'
+          : 'Oprima «Continuar» para definir una contraseña nueva.'
+      }
+    >
+      <Boton className="ancho" onClick={() => void continuar()} disabled={ocupado} style={{ width: '100%' }}>
+        {ocupado ? 'Verificando…' : 'Continuar'}
+      </Boton>
+      {error && (
+        <div style={{ marginTop: 14 }}>
+          <Aviso>{error}</Aviso>
+        </div>
+      )}
+      <p className="hint" style={{ marginTop: 14 }}>
+        Este enlace funciona una sola vez. Si ya lo usó o venció, pida uno nuevo.
+      </p>
+    </MarcoIngreso>
+  );
+}
+
 export function DefinirClave({ alGuardar }: { alGuardar: () => void }) {
   const { auth } = useDatos();
   const [a, setA] = useState('');

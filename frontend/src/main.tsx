@@ -2,13 +2,14 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
-import { arrancar, esLlegadaParaClave, recargarAlActualizar } from './app/arranque';
+import { arrancar, esLlegadaParaClave, leerEnlaceConfirmar, recargarAlActualizar } from './app/arranque';
 import './styles/diseno-2x.css';
 import './styles/base.css';
 
 recargarAlActualizar();
 // Se lee antes de crear el cliente de Supabase, que limpia el enlace de la barra de direcciones (igual que la 2.x)
 const llegadaClave = esLlegadaParaClave(location.hash);
+const enlace = leerEnlaceConfirmar(location.hash);
 const raiz = document.getElementById('raiz');
 if (!raiz) throw new Error('No se encontró el elemento #raiz en index.html');
 
@@ -16,6 +17,7 @@ createRoot(raiz).render(
   <StrictMode>
     <App
       llegadaClave={llegadaClave}
+      enlace={enlace}
       demo={(import.meta.env.VITE_VARIANTE || 'demo') === 'demo'}
       datos={arrancar({
         VITE_VARIANTE: import.meta.env.VITE_VARIANTE,

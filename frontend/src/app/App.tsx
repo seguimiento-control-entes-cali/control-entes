@@ -5,20 +5,29 @@ import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tan
 import { useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 import type { Datos } from '../datos/contratos';
-import { exigenciaVerificacion } from '../dominio/seguridad';
+import { exigenciaVerificacion, type EnlaceConfirmar } from '../dominio/seguridad';
 import { ContextoDatos, useDatos } from '../features/sesion/contexto';
 import { PantallaIngreso } from '../features/sesion/PantallaIngreso';
-import { ActivarVerificacion, DefinirClave } from '../features/sesion/PantallasCuenta';
+import { ActivarVerificacion, ConfirmarEnlace, DefinirClave } from '../features/sesion/PantallasCuenta';
 import { Marco } from '../features/navegacion/Marco';
 import { LimiteErrores, ProveedorAvisos, useAvisos } from '../shared/ui';
 
 const AVISO_RECOMENDADA = 'ce_mfa_aviso';
 
-function Inicio({ llegadaClave, demo }: { llegadaClave: boolean; demo: boolean }) {
+function Inicio({
+  llegadaClave,
+  demo,
+  enlace
+}: {
+  llegadaClave: boolean;
+  demo: boolean;
+  enlace: EnlaceConfirmar | null;
+}) {
   const datos = useDatos();
   const cliente = useQueryClient();
   const avisar = useAvisos();
   const [pedirClave, setPedirClave] = useState(llegadaClave);
+  const [porConfirmar, setPorConfirmar] = useState(enlace);
   const perfil = useQuery({ queryKey: ['perfil'], queryFn: () => datos.identidad.miPerfil() });
   const recargar = () => cliente.invalidateQueries({ queryKey: ['perfil'] });
   const usuario = perfil.data?.id;
@@ -51,6 +60,25 @@ function Inicio({ llegadaClave, demo }: { llegadaClave: boolean; demo: boolean }
     await recargar();
   };
 
+  // Enlace protegido del correo: se usa solo cuando la persona oprime «Continuar»
+  if (porConfirmar)
+    return (
+      <ConfirmarEnlace
+        tipo={porConfirmar.tipo}
+        alConfirmar={async () => {
+          await datos.auth.confirmarEnlace(porConfirmar.tokenHash, porConfirmar.tipo);
+          // El enlace ya no sirve: se quita de la barra de direcciones (y del historial)
+          try {
+            history.replaceState(null, '', location.pathname + location.search + '#/');
+          } catch {
+            // sin historial: no importa
+          }
+          setPedirClave(true);
+          setPorConfirmar(null);
+          await recargar();
+        }}
+      />
+    );
   if (perfil.isPending) return <p className="cargando">Cargando…</p>;
   if (!perfil.data) return <PantallaIngreso alIngresar={recargar} />;
   if (pedirClave)
@@ -81,7 +109,8 @@ export function App({
   datos,
   cliente = new QueryClient(),
   llegadaClave = false,
-  demo = false
+  demo = false,
+  enlace = null
 }: {
   datos: Datos;
   cliente?: QueryClient;
@@ -89,6 +118,8 @@ export function App({
   llegadaClave?: boolean;
   /** Variante de demostración: muestra "MODO DEMO" y el aviso de datos de ejemplo, como la 2.x. */
   demo?: boolean;
+  /** Enlace protegido del correo (#confirmar=1&token_hash=…&tipo=…), si la página se abrió con él. */
+  enlace?: EnlaceConfirmar | null;
 }) {
   return (
     <ContextoDatos.Provider value={datos}>
@@ -96,7 +127,7 @@ export function App({
         <ProveedorAvisos>
           <LimiteErrores>
             <HashRouter>
-              <Inicio llegadaClave={llegadaClave} demo={demo} />
+              <Inicio llegadaClave={llegadaClave} demo={demo} enlace={enlace} />
             </HashRouter>
           </LimiteErrores>
         </ProveedorAvisos>
