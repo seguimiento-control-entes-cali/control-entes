@@ -1,6 +1,6 @@
 // Pruebas de scripts/copia-externa.mjs (sin red: el listado de Supabase se simula).
 import assert from 'node:assert/strict';
-import { listar, masReciente, diasDesde } from '../scripts/copia-externa.mjs';
+import { listar, masReciente, diasDesde, cabeceras } from '../scripts/copia-externa.mjs';
 
 let n = 0;
 const ok = (c, m) => {
@@ -40,10 +40,11 @@ const arbol = {
 };
 const fetchFalso = async (url, op) => {
   const { prefix, offset } = JSON.parse(op.body);
-  ok(op.headers.Authorization.startsWith('Bearer '), 'envía la clave como Bearer');
+  ok(op.headers.apikey === 'sb_secret_x' && !op.headers.Authorization, 'clave nueva: solo apikey');
   return { ok: true, json: async () => (offset ? [] : arbol[prefix] || []) };
 };
-const l = await listar('https://x.supabase.co', 'clave', 'archivo', '', fetchFalso);
+const l = await listar('https://x.supabase.co', 'sb_secret_x', 'archivo', '', fetchFalso);
+ok(cabeceras('eyJabc').Authorization === 'Bearer eyJabc', 'clave antigua (JWT): también Bearer');
 const rutas = l.map(o => o.ruta).sort();
 assert.deepEqual(rutas, ['plan-1/informe.pdf', 'plan-1/sub/oficio.pdf', 'raiz.pdf']);
 n++;

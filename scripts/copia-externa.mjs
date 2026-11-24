@@ -18,6 +18,13 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const DEPOSITOS_ARCHIVOS = ['soportes', 'archivo'];
+
+/**
+ * Cabeceras de la clave. Las claves nuevas de Supabase (sb_secret_…) van SOLO en «apikey»: no son JWT y la API las
+ * rechaza en «Authorization: Bearer». Las claves antiguas (JWT, empiezan por eyJ) van en las dos.
+ */
+export const cabeceras = clave =>
+  /^eyJ/.test(clave) ? { Authorization: `Bearer ${clave}`, apikey: clave } : { apikey: clave };
 const MAX_DIAS = 9;
 
 /** Lista recursivamente los objetos de un depósito (la API devuelve carpetas sin id). */
@@ -26,7 +33,7 @@ export async function listar(base, clave, deposito, prefijo = '', fetchFn = fetc
   for (let offset = 0; ; offset += 1000) {
     const r = await fetchFn(`${base}/storage/v1/object/list/${deposito}`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${clave}`, apikey: clave, 'Content-Type': 'application/json' },
+      headers: { ...cabeceras(clave), 'Content-Type': 'application/json' },
       body: JSON.stringify({ prefix: prefijo, limit: 1000, offset, sortBy: { column: 'name', order: 'asc' } })
     });
     if (!r.ok)
@@ -64,7 +71,7 @@ async function descargar(base, clave, deposito, ruta) {
   const r = await fetch(
     `${base}/storage/v1/object/${deposito}/${ruta.split('/').map(encodeURIComponent).join('/')}`,
     {
-      headers: { Authorization: `Bearer ${clave}`, apikey: clave }
+      headers: cabeceras(clave)
     }
   );
   if (!r.ok) throw new Error(`No se pudo descargar ${deposito}/${ruta}: ${r.status}`);
@@ -128,5 +135,7 @@ async function principal() {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
   principal().catch(e => {
     console.error('COPIA EXTERNA FALLÓ: ' + e.message);
+    // En GitHub, el motivo queda a la vista en el resumen de la ejecución (sin datos ni claves)
+    if (process.env.GITHUB_ACTIONS) console.log('::error::' + e.message.replace(/\r?\n/g, ' '));
     process.exit(1);
   });
