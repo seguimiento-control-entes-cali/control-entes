@@ -102,6 +102,15 @@ const QR_DEMO =
       '<text x="50" y="55" font-size="12" text-anchor="middle" fill="#333">QR de demostración</text></svg>'
   );
 
+import plantillaOficioEjemplo from '../../../plantillas/oficio_respuesta_ejemplo.docx?inline';
+
+/** Plantilla genérica del oficio de respuesta (viene como data URL en base64; se convierte a bytes). */
+const plantillaEjemplo = () =>
+  Uint8Array.from(
+    (globalThis as unknown as { atob(s: string): string }).atob(plantillaOficioEjemplo.split(',')[1] ?? ''),
+    (c: string) => c.charCodeAt(0)
+  );
+
 /** Mismo orden que la base (order('nombre')). */
 const porNombre = (a: { nombre: string }, b: { nombre: string }) => a.nombre.localeCompare(b.nombre, 'es');
 
@@ -111,13 +120,15 @@ export function datosDemo(): Datos {
   const accesos: Record<string, string> = {};
   const verificados = new Set<string>();
   const directorio: Responsable[] = RESPONSABLES_DEMO.map(r => ({ ...r }));
-  const entes: Ente[] = ENTES_DEMO.map(e => ({ ...e }));
+  const entes: Ente[] = ENTES_DEMO.map(e => ({ titularNombre: '', titularCargo: '', ...e }));
   const dependencias: Dependencia[] = DEPENDENCIAS_DEMO.map(d => ({
     ...d,
     secretarioNombre: '',
     correo: '',
-    telefono: ''
+    telefono: '',
+    cargoRemitente: ''
   }));
+  const plantillasSubidas = new Map<number, Uint8Array>();
   // Pista de auditoría en memoria, como la demo de la 2.x (empieza con la carga inicial)
   const auditoria: EventoAuditoria[] = [];
   // Decisiones de Cruces y temas (la 2.x las guarda en el navegador en la demo; aquí, en memoria)
@@ -473,6 +484,17 @@ export function datosDemo(): Datos {
       },
       async guardarDependencia(d) {
         guardarEnCatalogo('dependencias', dependencias, d);
+      },
+      // En la demostración todas las dependencias usan la plantilla genérica de ejemplo (sin logos ni datos
+      // reales); la que se suba reemplaza la de esa dependencia mientras dure la sesión.
+      async plantillaOficio(dependenciaId) {
+        return plantillasSubidas.get(dependenciaId) ?? plantillaEjemplo();
+      },
+      async subirPlantillaOficio(dependenciaId, archivo) {
+        plantillasSubidas.set(dependenciaId, new Uint8Array(await archivo.arrayBuffer()));
+      },
+      async dependenciasConPlantilla() {
+        return dependencias.map(d => d.id);
       }
     },
     actividad: {

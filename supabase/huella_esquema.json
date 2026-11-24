@@ -908,6 +908,13 @@
       "nula": false,
       "tipo": "text",
       "tabla": "dependencias",
+      "columna": "cargo_remitente",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "dependencias",
       "columna": "correo",
       "defecto": "''::text"
     },
@@ -1043,6 +1050,20 @@
       "tabla": "entes",
       "columna": "tipo",
       "defecto": "'Otro'::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "entes",
+      "columna": "titular_cargo",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "entes",
+      "columna": "titular_nombre",
+      "defecto": "''::text"
     },
     {
       "nula": false,

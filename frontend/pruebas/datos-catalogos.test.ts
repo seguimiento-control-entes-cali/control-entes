@@ -59,37 +59,54 @@ describe('catálogos · demostración (como saveCatalog de la 2.x)', () => {
   });
 });
 
-function cliente(errorGuardar?: string) {
+function cliente(errorGuardar?: string, sinScript30 = false) {
   const llamadas: string[] = [];
+  // Sin el script 30, la base no conoce las columnas nuevas (42703 al leer, PGRST204 al guardar)
+  const nueva = (s: string) => /titular_|cargo_remitente/.test(s);
+  let ultimaSelect = '';
   const sb = {
     from: (tabla: string) => {
       const q = {
         select: (c: string) => {
           llamadas.push(`select ${tabla} ${c}`);
+          ultimaSelect = c;
           return q;
         },
         order: () =>
-          Promise.resolve({
-            data: [
-              {
-                id: 3,
-                nombre: 'Dep',
-                secretario_nombre: null,
-                correo: 'a@cali.gov.co',
-                telefono: '',
-                activo: true
-              }
-            ],
-            error: null
-          }),
+          Promise.resolve(
+            sinScript30 && nueva(ultimaSelect)
+              ? { data: null, error: { code: '42703', message: 'column does not exist' } }
+              : {
+                  data: [
+                    {
+                      id: 3,
+                      nombre: 'Dep',
+                      secretario_nombre: null,
+                      correo: 'a@cali.gov.co',
+                      telefono: '',
+                      activo: true
+                    }
+                  ],
+                  error: null
+                }
+          ),
         insert: (fila: unknown) => {
           llamadas.push(`insert ${tabla} ${JSON.stringify(fila)}`);
+          if (sinScript30 && nueva(JSON.stringify(fila)))
+            return Promise.resolve({
+              error: { code: 'PGRST204', message: "Could not find the 'titular_cargo' column" }
+            });
           return Promise.resolve({ error: errorGuardar ? { message: errorGuardar } : null });
         },
         update: (fila: unknown) => {
           llamadas.push(`update ${tabla} ${JSON.stringify(fila)}`);
           return {
-            eq: (c: string, v: number) => (llamadas.push(`eq ${c}=${v}`), Promise.resolve({ error: null }))
+            eq: (c: string, v: number) => (
+              llamadas.push(`eq ${c}=${v}`),
+              Promise.resolve({
+                error: sinScript30 && nueva(JSON.stringify(fila)) ? { code: 'PGRST204', message: 'x' } : null
+              })
+            )
           };
         }
       };
@@ -103,9 +120,37 @@ describe('catálogos · Supabase simulado', () => {
   it('lee las columnas de la dependencia y convierte los nombres', async () => {
     const x = cliente();
     expect(await x.c.dependencias()).toEqual([
-      { id: 3, nombre: 'Dep', secretarioNombre: '', correo: 'a@cali.gov.co', telefono: '', activo: true }
+      {
+        id: 3,
+        nombre: 'Dep',
+        secretarioNombre: '',
+        correo: 'a@cali.gov.co',
+        telefono: '',
+        activo: true,
+        cargoRemitente: ''
+      }
     ]);
-    expect(x.llamadas[0]).toBe('select dependencias id, nombre, secretario_nombre, correo, telefono, activo');
+    expect(x.llamadas[0]).toBe(
+      'select dependencias id, nombre, secretario_nombre, correo, telefono, activo, cargo_remitente'
+    );
+  });
+
+  it('sin el script 30 instalado, lee y guarda como antes (sin las columnas nuevas)', async () => {
+    const x = cliente(undefined, true);
+    expect((await x.c.dependencias())[0]).toMatchObject({ id: 3, cargoRemitente: '' });
+    expect(await x.c.entes()).toHaveLength(1);
+    await x.c.guardarEnte({
+      nombre: 'E',
+      sigla: 'S',
+      tipo: 'Fiscal',
+      activo: true,
+      titularNombre: 'T',
+      titularCargo: 'C'
+    });
+    expect(x.llamadas.slice(-2)).toEqual([
+      'insert entes {"nombre":"E","sigla":"S","tipo":"Fiscal","activo":true,"titular_nombre":"T","titular_cargo":"C"}',
+      'insert entes {"nombre":"E","sigla":"S","tipo":"Fiscal","activo":true}'
+    ]);
   });
 
   it('nuevo = insert; con id = update por id (igual que la 2.x)', async () => {
@@ -120,8 +165,8 @@ describe('catálogos · Supabase simulado', () => {
       activo: true
     });
     expect(x.llamadas).toEqual([
-      'insert entes {"nombre":"E","sigla":"S","tipo":"Fiscal","activo":true}',
-      'update dependencias {"nombre":"D","secretario_nombre":"N","correo":"c@cali.gov.co","telefono":"3001234567","activo":true}',
+      'insert entes {"nombre":"E","sigla":"S","tipo":"Fiscal","activo":true,"titular_nombre":"","titular_cargo":""}',
+      'update dependencias {"nombre":"D","secretario_nombre":"N","correo":"c@cali.gov.co","telefono":"3001234567","activo":true,"cargo_remitente":""}',
       'eq id=7'
     ]);
   });

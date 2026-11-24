@@ -347,5 +347,31 @@ async function flujo(pasos) {
   assert.strictEqual(r[12].filas?.[0]?.n, 1, 'Control Interno ve el documento'); ok();
 }
 
+// ---- 6. Script 30: plantillas de oficio (depósito «plantillas») y datos del titular del ente
+{
+  // Supabase da a authenticated estos permisos sobre storage.objects; la RLS decide qué filas
+  await db.exec(`grant select, insert, update, delete on storage.objects to authenticated;
+    insert into storage.objects (bucket_id, name) values ('plantillas', 'oficio/dep-${DEP.A.id}.docx');`);
+  const sube = quien => como(quien, `insert into storage.objects (bucket_id, name) values ('plantillas', 'oficio/dep-999.docx')`);
+  const ve = async quien => (await como(quien, `select count(*)::int as n from storage.objects where bucket_id = 'plantillas'`)).filas?.[0]?.n;
+  for (const q of ['secA', 'enlA', 'secB', 'ci', 'alcalde']) { assert.strictEqual(await ve(q), 1, q + ' lee la plantilla (descarga su membrete)'); ok(); }
+  assert.strictEqual(await ve('inactivo'), 0, 'una cuenta inactiva no lee plantillas'); ok();
+  assert.ok(!(await ve('anon')), 'sin sesión no se leen plantillas (rechazo o cero filas)'); ok();
+  for (const q of ['secA', 'enlA', 'ci', 'alcalde']) { assert.ok((await sube(q)).error, q + ' no sube plantillas'); ok(); }
+  assert.ok(!(await sube('admin')).error, 'el Super administrador sube plantillas'); ok();
+  assert.ok((await como('admin', `insert into storage.objects (bucket_id, name) values ('plantillas', 'x.docx')`, [], 'aal1')).error, 'el Super administrador sin código no sube'); ok();
+  const borra = quien => como(quien, `delete from storage.objects where bucket_id = 'plantillas'`);
+  assert.strictEqual((await borra('secA')).cambiadas, 0, 'el secretario no borra plantillas'); ok();
+  assert.strictEqual((await borra('admin')).cambiadas, 1, 'el Super administrador borra (reemplaza) plantillas'); ok();
+  const reemplaza = quien => como(quien, `update storage.objects set name = name where bucket_id = 'plantillas'`);
+  assert.strictEqual((await reemplaza('enlA')).cambiadas, 0, 'el enlace no reemplaza plantillas'); ok();
+  assert.strictEqual((await reemplaza('admin')).cambiadas, 1, 'el Super administrador reemplaza plantillas'); ok();
+  // Titular del ente y cargo del remitente: los edita solo el Super administrador (mismas reglas del catálogo)
+  assert.strictEqual((await como('secA', `update public.entes set titular_nombre = 'Persona inventada'`)).cambiadas, 0, 'el secretario no edita el titular'); ok();
+  assert.ok((await como('admin', `update public.entes set titular_nombre = 'Persona inventada', titular_cargo = 'Cargo inventado' where id = $1`, [ente])).cambiadas === 1, 'el Super administrador edita el titular'); ok();
+  assert.ok((await como('admin', `update public.dependencias set cargo_remitente = 'Secretario(a) inventado' where id = $1`, [DEP.A.id])).cambiadas === 1, 'el Super administrador edita el cargo del remitente'); ok();
+  assert.strictEqual((await como('enlA', `select count(*)::int as n from public.entes where titular_cargo = ''`)).filas?.[0]?.n > 0, true, 'todas las cuentas leen el titular (para armar el oficio)'); ok();
+}
+
 await db.close();
 console.log(`OK: ${n} verificaciones de permisos (RLS) rol por rol en PostgreSQL`);

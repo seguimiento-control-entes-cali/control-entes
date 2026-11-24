@@ -4,7 +4,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Perfil } from '../../datos/contratos';
+import type { Datos, Dependencia, Ente, Perfil } from '../../datos/contratos';
+import { llenarOficio, nombreOficio } from '../../dominio/oficio-respuesta';
+import { cargarSheetJS } from '../configuracion/leer-excel';
 import { formatoFechaHora } from '../../dominio/auditoria';
 import { sumarHabiles } from '../../dominio/dias-habiles';
 import { fechaColombia } from '../../dominio/fechas';
@@ -22,21 +24,85 @@ import { PildoraSemaforo, PUEDE_CERRAR, PUEDE_REGISTRAR, useRequerimientosVivos 
 
 const activos = <T extends { activo?: boolean }>(l: readonly T[]) => l.filter(x => x.activo !== false);
 
+/**
+ * «Proyectar respuesta» (script 30): descarga el borrador del oficio en la plantilla Word de la dependencia.
+ * Lo pendiente queda en amarillo; el recuadro de ORFEO (*RAD_S*) lo llena ORFEO al radicar.
+ */
+async function proyectarRespuesta(
+  catalogos: Datos['catalogos'],
+  r: RequerimientoVivo,
+  ente: Ente | undefined,
+  dep: Dependencia | undefined,
+  perfil: Perfil
+): Promise<'formato' | 'agregado'> {
+  const plantilla = await catalogos.plantillaOficio(r.dependencia_id);
+  if (!plantilla)
+    throw new Error(
+      'Falta la plantilla de oficio de ' +
+        r.dep_n +
+        '. Pídala al Super administrador (Dependencias → Plantilla de oficio).'
+    );
+  const X = await cargarSheetJS();
+  const { docx, modo } = llenarOficio(X, plantilla, {
+    radicado: r.radicado,
+    fechaRadicacion: r.fecha_radicacion,
+    fechaLimite: r.fecha_limite,
+    asunto: r.asunto,
+    ente: ente?.nombre ?? r.ente_n,
+    titularNombre: ente?.titularNombre ?? '',
+    titularCargo: ente?.titularCargo ?? '',
+    dependencia: dep?.nombre ?? r.dep_n,
+    remitenteNombre: dep?.secretarioNombre ?? '',
+    remitenteCargo: dep?.cargoRemitente ?? '',
+    proyecto: perfil.nombre || perfil.correo
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(
+    new Blob([docx.slice().buffer as ArrayBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    })
+  );
+  a.download = nombreOficio(r.radicado, r.dep_n);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  return modo;
+}
+
 function Detalle({
   r,
   cierra,
   demo,
   alCerrar,
-  registrar
+  registrar,
+  ente,
+  dep,
+  perfil
 }: {
   r: RequerimientoVivo;
   cierra: boolean;
   demo: boolean;
   alCerrar: () => void;
   registrar: () => void;
+  ente?: Ente;
+  dep?: Dependencia;
+  perfil: Perfil;
 }) {
-  const { requerimientos } = useDatos();
+  const { requerimientos, catalogos } = useDatos();
   const avisar = useAvisos();
+  const [proyectando, setProyectando] = useState(false);
+  const proyectar = async () => {
+    setProyectando(true);
+    try {
+      await proyectarRespuesta(catalogos, r, ente, dep, perfil);
+      avisar('Oficio descargado. Complete lo resaltado en amarillo y radíquelo en ORFEO.', 'ok');
+    } catch (e) {
+      avisar((e as Error).message, 'error');
+    } finally {
+      setProyectando(false);
+    }
+  };
   const verSoporte = async () => {
     try {
       window.open(await requerimientos.urlSoporte(r.soporte_path ?? ''), '_blank', 'noopener');
@@ -54,6 +120,17 @@ function Detalle({
           {r.soporte_path && !demo && (
             <button type="button" className="btn" onClick={() => void verSoporte()}>
               <Icono nombre="fa-file-pdf" /> Ver soporte
+            </button>
+          )}
+          {r.estado === 'abierto' && cierra && (
+            <button
+              type="button"
+              className="btn"
+              disabled={proyectando}
+              title="Descarga el borrador del oficio en la plantilla de la dependencia"
+              onClick={() => void proyectar()}
+            >
+              <Icono nombre="fa-file-word" /> {proyectando ? 'Preparando…' : 'Proyectar respuesta'}
             </button>
           )}
           {r.estado === 'abierto' && cierra && (
@@ -433,6 +510,9 @@ export function PantallaRequerimientos({ perfil, demo = false }: { perfil: Perfi
           demo={demo}
           alCerrar={() => setDetalle(null)}
           registrar={() => cerrar(detalle)}
+          ente={entes.find(e => e.id === detalle.ente_id)}
+          dep={deps.find(d => d.id === detalle.dependencia_id)}
+          perfil={perfil}
         />
       )}
       {nuevo && (

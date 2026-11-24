@@ -20,7 +20,7 @@ export default defineConfig({
   server: { fs: { allow: ['..'] } },
   // La plantilla oficial del Formato PM_01 CGSC (plantillas/*.xlsx) es un archivo: la app la pide con ?url
   // y las pruebas la leen con ?inline
-  assetsInclude: ['**/*.xlsx'],
+  assetsInclude: ['**/*.xlsx', '**/*.docx'],
   plugins: [
     react(),
     VitePWA({

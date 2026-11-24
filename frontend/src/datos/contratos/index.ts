@@ -100,6 +100,9 @@ export interface Ente {
   sigla: string;
   tipo: string;
   activo: boolean;
+  /** Destinatario del oficio de respuesta (script 30): nombre y cargo del titular del ente. */
+  titularNombre?: string;
+  titularCargo?: string;
 }
 export interface Dependencia {
   id: number;
@@ -109,6 +112,8 @@ export interface Dependencia {
   correo: string;
   telefono: string;
   activo: boolean;
+  /** Cargo de quien firma el oficio de respuesta (script 30), p. ej. «Secretario de Gobierno». */
+  cargoRemitente?: string;
 }
 export interface Configuracion {
   diasRojo: number;
@@ -122,6 +127,15 @@ export interface RepositorioCatalogos {
   guardarEnte(e: Omit<Ente, 'id'> & { id?: number }): Promise<void>;
   /** Crea (sin id) o actualiza una dependencia. Solo Super administrador (RLS deps_ins y deps_upd). */
   guardarDependencia(d: Omit<Dependencia, 'id'> & { id?: number }): Promise<void>;
+  /** Plantilla Word (.docx) del oficio de respuesta de la dependencia, o null si no tiene (script 30). */
+  plantillaOficio(dependenciaId: number): Promise<Uint8Array | null>;
+  /** Sube o reemplaza la plantilla de una dependencia. Solo Super administrador (RLS del depósito «plantillas»). */
+  subirPlantillaOficio(
+    dependenciaId: number,
+    archivo: { arrayBuffer(): Promise<ArrayBuffer> }
+  ): Promise<void>;
+  /** Ids de las dependencias que ya tienen plantilla (lista vacía si el script 30 no está instalado). */
+  dependenciasConPlantilla(): Promise<number[]>;
 }
 
 // ---------- directorio (hoy: directorio, historico_requerimientos para la lista de dependencias) ----------

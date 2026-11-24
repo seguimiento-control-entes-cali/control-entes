@@ -251,6 +251,7 @@ export interface Database {
           telefono: string;
           activo: boolean;
           created_at: string;
+          cargo_remitente: string;
         };
         Insert: {
           id?: never;
@@ -260,6 +261,7 @@ export interface Database {
           telefono?: string;
           activo?: boolean;
           created_at?: string;
+          cargo_remitente?: string;
         };
         Update: {
           id?: never;
@@ -269,6 +271,7 @@ export interface Database {
           telefono?: string;
           activo?: boolean;
           created_at?: string;
+          cargo_remitente?: string;
         };
         Relationships: [];
       };
@@ -313,6 +316,8 @@ export interface Database {
           tipo: string;
           activo: boolean;
           created_at: string;
+          titular_nombre: string;
+          titular_cargo: string;
         };
         Insert: {
           id?: never;
@@ -321,6 +326,8 @@ export interface Database {
           tipo?: string;
           activo?: boolean;
           created_at?: string;
+          titular_nombre?: string;
+          titular_cargo?: string;
         };
         Update: {
           id?: never;
@@ -329,6 +336,8 @@ export interface Database {
           tipo?: string;
           activo?: boolean;
           created_at?: string;
+          titular_nombre?: string;
+          titular_cargo?: string;
         };
         Relationships: [];
       };
