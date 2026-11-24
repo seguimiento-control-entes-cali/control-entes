@@ -204,6 +204,16 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         const { error } = await sb.auth.resetPasswordForEmail(correo.trim(), { redirectTo: volverA });
         if (error) throw new ErrorDatos('otro', 'No se pudo enviar el enlace: ' + error.message);
       },
+      async confirmarEnlace(tokenHash, tipo) {
+        const { error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type: tipo });
+        if (!error) return;
+        if (/expired|invalid|not found/i.test(error.message))
+          throw new ErrorDatos(
+            'otro',
+            'Este enlace ya se usó o venció. Pida al Super administrador que le envíe uno nuevo, o use «¿Olvidaste tu contraseña?».'
+          );
+        throw new ErrorDatos('otro', 'No se pudo confirmar el enlace: ' + error.message);
+      },
       async cambiarClave(nueva) {
         const { error } = await sb.auth.updateUser({ password: nueva });
         if (error) throw new ErrorDatos('otro', 'No se pudo guardar: ' + error.message);

@@ -114,6 +114,45 @@ describe('3.0 · contraseña nueva y verificación en dos pasos (demo)', () => {
     expect((await screen.findByRole('status')).textContent).toBe('Contraseña actualizada');
   });
 
+  it('enlace protegido del correo: NO se usa al abrir la página (filtros de correo), solo al oprimir «Continuar»', async () => {
+    const datos = arrancar({});
+    const usados: string[] = [];
+    datos.auth.confirmarEnlace = async (token, tipo) => {
+      usados.push(token + ':' + tipo);
+      // Simula la sesión que abre el enlace
+      await datos.auth.ingresar('enlace.demo@cali.gov.co', 'demo');
+    };
+    window.location.hash = '';
+    render(
+      <App
+        datos={datos}
+        enlace={{ tokenHash: 'abcdefghij123', tipo: 'invite' }}
+        cliente={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      />
+    );
+    expect(await screen.findByRole('heading', { name: 'Bienvenido(a) a Control de Entes' })).toBeTruthy();
+    // Abrir la página (lo que hace el filtro del correo) no gasta el enlace
+    expect(usados).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
+    expect(await screen.findByRole('heading', { name: 'Defina su contraseña' })).toBeTruthy();
+    expect(usados).toEqual(['abcdefghij123:invite']);
+  });
+
+  it('enlace ya usado o vencido: lo dice con claridad y no deja la pantalla en blanco', async () => {
+    const datos = arrancar({});
+    window.location.hash = '';
+    render(
+      <App
+        datos={datos}
+        enlace={{ tokenHash: 'abcdefghij123', tipo: 'recovery' }}
+        cliente={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      />
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Continuar' }));
+    expect((await screen.findByRole('alert')).textContent).toMatch(/demostración/);
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeTruthy();
+  });
+
   it('Super administrador sin celular verificado: debe activar la verificación antes de entrar', async () => {
     const datos = arrancar({});
     let activa = false;

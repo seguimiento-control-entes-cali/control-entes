@@ -437,6 +437,12 @@ export function datosDemo(): Datos {
         if (!actual) throw new ErrorDatos('otro', 'Primero ingrese con su correo y contraseña.');
         // En la demostración la contraseña no cambia (siempre es "demo").
       },
+      async confirmarEnlace() {
+        throw new ErrorDatos(
+          'otro',
+          'En la demostración no hay correos de invitación: ingrese con la contraseña «demo».'
+        );
+      },
       async tieneVerificacion() {
         return !!actual && (pideCodigo(actual.perfil) || verificados.has(actual.perfil.id));
       },
