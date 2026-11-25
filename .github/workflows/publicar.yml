@@ -7,14 +7,16 @@ on:
   workflow_dispatch:
     inputs:
       incluir_v3:
-        description: 'Publicar también la versión 3.0 de prueba (demostración, datos ficticios) en /v3/'
+        description: 'Publicar la versión 3.0 (la aplicación en uso) en /v3/'
         type: boolean
         default: true
+      # Por defecto INSTITUCIONAL (24-nov-2026, autorizado por la responsable): publicar «demo» por error dejó a
+      # todos sin poder ingresar. La demostración solo se publica escogiéndola a propósito.
       variante_v3:
-        description: 'Versión 3.0 en /v3/: demo (datos ficticios) o institucional (base real, el mismo proyecto que la 2.6.1)'
+        description: 'Versión 3.0 en /v3/: institucional (base real, la que usan todos) o demo (SOLO datos ficticios: nadie podrá ingresar con su clave)'
         type: choice
-        options: [demo, institucional]
-        default: demo
+        options: [institucional, demo]
+        default: institucional
 permissions:
   contents: read
   pages: write
