@@ -1170,7 +1170,9 @@ function CalificacionCgsc({ p, acc, ctx, fev }: { p: Plan; acc: Accion[]; ctx: C
             {k.sinEf > 0 && (
               <>
                 {' · '}
-                <b style={{ color: 'var(--amberink,#b7791f)' }}>{k.sinEf} por calificar</b>
+                <span style={{ color: 'var(--amberink,#b7791f)', fontWeight: 700 }}>
+                  {k.sinEf} por calificar
+                </span>
               </>
             )}
           </span>
