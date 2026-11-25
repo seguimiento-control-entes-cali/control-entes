@@ -57,6 +57,8 @@ export interface RepositorioAuth {
   recuperarClave(correo: string, volverA: string): Promise<void>;
   /** Cambia la contraseña de quien tiene la sesión (también al llegar por invitación o recuperación). */
   cambiarClave(nueva: string): Promise<void>;
+  /** true si la cuenta entró con una clave temporal que debe cambiar (la puso el Super administrador). */
+  debeCambiarClave(): Promise<boolean>;
   /**
    * Usa el enlace del correo (invitación o recuperación) cuando la persona oprime «Continuar»: abre su sesión para
    * que defina la contraseña. Error claro si el enlace ya se usó o venció.
@@ -265,6 +267,11 @@ export interface RepositorioCuentas {
   lista(): Promise<Cuenta[]>;
   /** Llama a gestion-cuentas (preparar, invitar, activar_invitar, cambiar_correo, enlace_clave, activar, desactivar). */
   gestionar(accion: AccionCuenta, datos: Record<string, unknown>): Promise<{ mensaje: string }>;
+  /**
+   * Pone una clave temporal a una cuenta (sin correo: los filtros del correo institucional gastan los enlaces).
+   * Devuelve la clave para entregarla en persona; al ingresar, la app obliga a cambiarla.
+   */
+  claveTemporal(id: string): Promise<{ clave: string; mensaje: string }>;
   /** Cambia rol, dependencia o estado de una cuenta (tabla profiles). */
   guardar(c: Pick<Cuenta, 'id' | 'rol' | 'dependencia_id' | 'activo'>): Promise<void>;
 }

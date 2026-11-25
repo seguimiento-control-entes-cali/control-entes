@@ -454,6 +454,9 @@ export function datosDemo(): Datos {
         if (!actual) throw new ErrorDatos('otro', 'Primero ingrese con su correo y contraseña.');
         // En la demostración la contraseña no cambia (siempre es "demo").
       },
+      async debeCambiarClave() {
+        return false;
+      },
       async confirmarEnlace() {
         throw new ErrorDatos(
           'otro',
@@ -1209,6 +1212,19 @@ export function datosDemo(): Datos {
         }
         auditar('cuentas_eventos', 'INSERT', accion, { accion, ...datos }, p.correo);
         return { mensaje };
+      },
+      async claveTemporal(id) {
+        const p = actual?.perfil;
+        if (!p || p.rol !== 'admin')
+          throw new ErrorDatos('sin_permiso', 'Solo el Super administrador gestiona cuentas.');
+        const c = cuentas.find(x => x.id === id);
+        if (!c) throw new ErrorDatos('otro', 'La cuenta no existe.');
+        auditar('cuentas_eventos', 'INSERT', 'clave_temporal', { accion: 'clave_temporal', id }, p.correo);
+        return {
+          clave: 'CaliDEMOdemo23',
+          mensaje:
+            'Clave temporal para ' + c.email + ' (simulada: en la demostración la clave siempre es «demo»).'
+        };
       },
       async guardar(c) {
         const p = actual?.perfil;
