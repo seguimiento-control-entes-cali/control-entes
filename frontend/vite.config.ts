@@ -8,6 +8,10 @@ import paquete from './package.json';
 
 // Fecha de construcción en Colombia (AAAA-MM-DD), como CE_BUILD.construido de la 2.x
 const construido = new Date(Date.now() - 5 * 3600_000).toISOString().slice(0, 10);
+// La app de prueba (demo, publicada en /prueba/) se instala con otro nombre para no confundirla con la real (/v3/).
+// Vite lee este archivo con Node; se declara solo lo que se usa de process (el proyecto no instala @types/node).
+declare const process: { env: Record<string, string | undefined> };
+const esDemo = (process.env.VITE_VARIANTE || 'demo').trim() === 'demo';
 
 export default defineConfig({
   base: './',
@@ -28,8 +32,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'script-defer',
       manifest: {
-        name: 'Control de Entes 3.0 - Alcaldía de Santiago de Cali',
-        short_name: 'Control Entes 3',
+        name: esDemo
+          ? 'Control de Entes 3.0 PRUEBA - Alcaldía de Santiago de Cali'
+          : 'Control de Entes 3.0 - Alcaldía de Santiago de Cali',
+        short_name: esDemo ? 'Entes PRUEBA' : 'Control Entes 3',
         description: 'Seguimiento a requerimientos de entes de control',
         lang: 'es-CO',
         start_url: './',

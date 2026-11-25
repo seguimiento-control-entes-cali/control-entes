@@ -420,8 +420,17 @@ export function datosDemo(): Datos {
     auth: {
       async ingresar(correo, clave) {
         const perfil = PERFILES_DEMO.find(p => p.correo === correo.trim().toLowerCase());
-        if (!perfil || clave !== CLAVE_DEMO)
-          throw new ErrorDatos('credenciales', 'Correo o contraseña incorrectos.');
+        // Cuenta real escrita en la app de prueba: se explica (24-nov-2026, la responsable se confundió de app)
+        if (!perfil)
+          throw new ErrorDatos(
+            'credenciales',
+            'Esta es la APP DE PRUEBA: su cuenta real no funciona aquí. Use un usuario de prueba de la lista (contraseña «demo») o entre a la aplicación real.'
+          );
+        if (clave !== CLAVE_DEMO)
+          throw new ErrorDatos(
+            'credenciales',
+            'En la app de prueba la contraseña de todos los usuarios es «demo».'
+          );
         if (pideCodigo(perfil)) {
           pendiente = perfil;
           return { tipo: 'requiere_codigo' };

@@ -9,7 +9,17 @@ import { useDatos } from './contexto';
 const mensaje = (e: unknown) =>
   e instanceof ErrorDatos ? e.message : 'No se pudo completar. Intente de nuevo.';
 
-export function PantallaIngreso({ alIngresar }: { alIngresar: () => void }) {
+/** Usuarios de la app de prueba (datos ficticios; contraseña «demo»). */
+const USUARIOS_PRUEBA: readonly [string, string][] = [
+  ['Super administrador (código 123456)', 'admin.demo@cali.gov.co'],
+  ['Alcalde y Despacho', 'despacho.demo@cali.gov.co'],
+  ['Control Interno', 'control.interno.demo@cali.gov.co'],
+  ['Secretario(a) · Salud Pública', 'secretaria.demo@cali.gov.co'],
+  ['Enlace operativo · Salud Pública', 'enlace.demo@cali.gov.co']
+];
+const APP_REAL = 'https://seguimiento-control-entes-cali.github.io/control-entes/v3/';
+
+export function PantallaIngreso({ alIngresar, demo = false }: { alIngresar: () => void; demo?: boolean }) {
   const { auth } = useDatos();
   const [paso, setPaso] = useState<'clave' | 'codigo'>('clave');
   const [correo, setCorreo] = useState('');
@@ -53,7 +63,40 @@ export function PantallaIngreso({ alIngresar }: { alIngresar: () => void }) {
   }
 
   return (
-    <MarcoIngreso titulo="Control de Entes" subtitulo="Alcaldía de Santiago de Cali · Acceso institucional">
+    <MarcoIngreso
+      titulo={demo ? 'Control de Entes · APP DE PRUEBA' : 'Control de Entes'}
+      subtitulo={
+        demo
+          ? 'Datos ficticios · aquí NO funciona su cuenta real'
+          : 'Alcaldía de Santiago de Cali · Acceso institucional'
+      }
+    >
+      {demo && paso === 'clave' && (
+        <div className="pm-note y" role="note" aria-label="Usuarios de prueba" style={{ marginBottom: 14 }}>
+          <b>Elija un usuario de prueba</b> (contraseña <b className="mono">demo</b>):
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+            {USUARIOS_PRUEBA.map(([rol, c]) => (
+              <button
+                key={c}
+                type="button"
+                className="btn sm"
+                style={{ justifyContent: 'space-between', width: '100%' }}
+                onClick={() => {
+                  setCorreo(c);
+                  setClave('demo');
+                  setError('');
+                }}
+              >
+                <span>{rol}</span>
+                <span className="mono muted">{c}</span>
+              </button>
+            ))}
+          </div>
+          <div className="hint" style={{ marginTop: 8 }}>
+            Para su cuenta real: <a href={APP_REAL}>abra la aplicación real</a>.
+          </div>
+        </div>
+      )}
       <form onSubmit={enviar} noValidate>
         {paso === 'clave' ? (
           <>
@@ -90,7 +133,7 @@ export function PantallaIngreso({ alIngresar }: { alIngresar: () => void }) {
           Ingresar
         </Boton>
       </form>
-      {paso === 'clave' && (
+      {paso === 'clave' && !demo && (
         <Boton
           variante="secundario"
           onClick={recuperar}
