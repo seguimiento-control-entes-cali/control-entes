@@ -373,5 +373,20 @@ async function flujo(pasos) {
   assert.strictEqual((await como('enlA', `select count(*)::int as n from public.entes where titular_cargo = ''`)).filas?.[0]?.n > 0, true, 'todas las cuentas leen el titular (para armar el oficio)'); ok();
 }
 
+// ---- 7. Script 31: seguimiento del DACI a las metas cumplidas (solo Control Interno y Super administrador)
+{
+  const acc = '00000000-0000-4000-8000-0000000000d1';
+  const verifica = q => como(q, `update public.pm_acciones set daci_verificacion = 'verificada', daci_fecha = '2026-11-24', daci_por = 'x' where id = '${acc}'`);
+  assert.strictEqual((await verifica('ci')).cambiadas, 1, 'Control Interno registra la verificación del DACI: ' + JSON.stringify(await verifica('ci'))); ok();
+  assert.strictEqual((await verifica('admin')).cambiadas, 1, 'el Super administrador también'); ok();
+  const dep = await verifica('enlA');
+  assert.ok((dep.error && /Control Interno/.test(dep.error)) || dep.cambiadas === 0, 'el enlace de la dependencia NO la registra: ' + JSON.stringify(dep)); ok();  const sec = await verifica('secA');
+  assert.ok(sec.error || sec.cambiadas === 0, 'el secretario NO la registra'); ok();
+  assert.ok((await como('ci', `update public.pm_acciones set daci_verificacion = 'aprobada' where id = '${acc}'`)).error, 'solo verificada o no_verificada'); ok();
+  assert.ok((await como('ci', `update public.pm_acciones set accion = 'otra' where id = '${acc}'`)).error, 'Control Interno sigue sin poder reescribir la acción'); ok();
+  assert.ok((await como('enlA', `insert into public.pm_acciones (plan_id, hallazgo_id, dependencia_id, accion, fecha_fin, daci_verificacion)
+    values ('00000000-0000-4000-8000-0000000000b1', '00000000-0000-4000-8000-0000000000c1', ${DEP.A.id}, 'x', '2026-12-31', 'verificada')`)).error, 'la dependencia no crea una acción ya verificada'); ok();
+}
+
 await db.close();
 console.log(`OK: ${n} verificaciones de permisos (RLS) rol por rol en PostgreSQL`);

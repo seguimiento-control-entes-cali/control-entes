@@ -216,7 +216,11 @@ export function datosDemo(): Datos {
     'obs_ci_at',
     'cal_cumplimiento',
     'cal_efectividad',
-    'dependencia_id'
+    'dependencia_id',
+    'daci_verificacion',
+    'daci_fecha',
+    'daci_observacion',
+    'daci_por'
   ];
   const CAUSA = ['causa_metodo', 'causa_raiz', 'causa_documento', 'causa_detalle'];
   const cambia = (antes: Record<string, unknown> | undefined, o: Record<string, unknown>, k: string) =>
@@ -259,6 +263,19 @@ export function datosDemo(): Datos {
       const antesEval = (tipo === 'hall' ? hallDe(id) : planes.planes.find(x => x.id === id)) as unknown as
         | Record<string, unknown>
         | undefined;
+      // Script 31: la verificación del DACI la registra Control Interno
+      const DACI = ['daci_verificacion', 'daci_fecha', 'daci_observacion', 'daci_por'];
+      if (
+        tipo === 'acc' &&
+        DACI.some(k =>
+          cambia(
+            planes.acciones.find(a => a.id === id) as unknown as Record<string, unknown> | undefined,
+            o,
+            k
+          )
+        )
+      )
+        throw new ErrorDatos('sin_permiso', 'La verificación de las metas la registra Control Interno');
       if ((tipo === 'hall' || tipo === 'plan') && EVAL.some(k => cambia(antesEval, o, k)))
         throw new ErrorDatos('sin_permiso', 'La evaluación de la Contraloría la registra Control Interno');
       const h =
@@ -619,6 +636,7 @@ export function datosDemo(): Datos {
             v19: true,
             v20: true,
             v28: true,
+            v31: true,
             prorrogas: [],
             informes: [],
             // Script 29: la dependencia ve los documentos que ella misma subió
@@ -633,6 +651,7 @@ export function datosDemo(): Datos {
           v19: true,
           v20: true,
           v28: true,
+          v31: true,
           prorrogas: JSON.parse(JSON.stringify(prorrogas)) as Prorroga[],
           informes: JSON.parse(JSON.stringify(informesAvance)) as InformeAvance[],
           documentos: JSON.parse(JSON.stringify(documentos)) as DocumentoArchivo[]
