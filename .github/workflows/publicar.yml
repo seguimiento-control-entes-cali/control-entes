@@ -17,6 +17,12 @@ on:
         type: choice
         options: [institucional, demo]
         default: institucional
+      # App de prueba (25-nov-2026, pedida por la responsable): la demostración con datos ficticios en su propia
+      # dirección, /prueba/, para entrar con los usuarios de prueba (contraseña «demo») SIN tocar /v3/.
+      incluir_prueba:
+        description: 'Publicar también la app de prueba (datos ficticios, usuarios demo) en /prueba/. No cambia /v3/'
+        type: boolean
+        default: true
 permissions:
   contents: read
   pages: write
@@ -45,11 +51,11 @@ jobs:
       # mismo proyecto que la 2.6.1 (dirección y clave publicable de configuracion.json; si no es una clave
       # publicable sb_publishable_, no se publica). Antes de publicarla corre todas sus verificaciones en las dos zonas horarias.
       - name: Versión 3.0 · dependencias
-        if: ${{ inputs.incluir_v3 }}
+        if: ${{ inputs.incluir_v3 || inputs.incluir_prueba }}
         working-directory: frontend
         run: npm ci
       - name: Versión 3.0 · verificaciones en UTC y America/Bogota
-        if: ${{ inputs.incluir_v3 }}
+        if: ${{ inputs.incluir_v3 || inputs.incluir_prueba }}
         working-directory: frontend
         run: |
           TZ=UTC npm run verificar
@@ -72,6 +78,21 @@ jobs:
           npm run build
           rm -rf ../dist/institucional/v3
           cp -r dist ../dist/institucional/v3
+      # Se construye DESPUÉS y por separado: /v3/ ya quedó copiado tal cual. Sin dirección ni clave de Supabase; si
+      # por error el resultado trae la dirección del proyecto de producción, no se publica nada.
+      - name: App de prueba · construir (demo, datos ficticios) y copiar a /prueba/
+        if: ${{ inputs.incluir_prueba }}
+        working-directory: frontend
+        env:
+          VITE_VARIANTE: demo
+        run: |
+          unset VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY VITE_REMITENTE
+          rm -rf dist
+          npm run build
+          ref="$(node -p "new URL(require('../configuracion.json').supabaseUrl).hostname.split('.')[0]")"
+          if grep -rqF "$ref" dist; then echo "La app de prueba trae la dirección de producción: no se publica"; exit 1; fi
+          rm -rf ../dist/institucional/prueba
+          cp -r dist ../dist/institucional/prueba
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

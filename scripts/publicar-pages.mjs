@@ -1,5 +1,6 @@
 // Publica en GitHub Pages lo que está en main (tarea "Publicar en GitHub Pages", publicar.yml) y comprueba el sitio.
-// Siempre con la 2.x institucional y la 3.0 institucional en /v3/ (la misma base que la 2.x). Solo hace eso:
+// Siempre con la 2.x institucional, la 3.0 institucional en /v3/ (la misma base que la 2.x) y la app de prueba
+// (demo, datos ficticios) en /prueba/. Solo hace eso:
 //   1. revisa que main local esté igual a origin/main y sin cambios pendientes (publica lo que ya pasó por PR);
 //   2. lanza la tarea y espera a que termine;
 //   3. comprueba en el sitio en línea la versión (package.json), la caché del service worker (public/sw.js) y /v3/;
@@ -51,7 +52,10 @@ const api = async (ruta, opciones = {}) => {
 const antes = (await api(`/actions/workflows/${WORKFLOW}/runs?per_page=1`)).workflow_runs[0]?.id ?? 0;
 await api(`/actions/workflows/${WORKFLOW}/dispatches`, {
   method: 'POST',
-  body: JSON.stringify({ ref: 'main', inputs: { incluir_v3: 'true', variante_v3: 'institucional' } })
+  body: JSON.stringify({
+    ref: 'main',
+    inputs: { incluir_v3: 'true', variante_v3: 'institucional', incluir_prueba: 'true' }
+  })
 });
 console.log(`Publicación pedida (main ${remoto.slice(0, 7)}, 3.0 institucional). Esperando…`);
 let corrida;
@@ -72,14 +76,18 @@ const cache = (/const CACHE = '([^']+)'/.exec(fs.readFileSync('public/sw.js', 'u
 let ok = false;
 for (let i = 0; i < 18 && !ok; i++) {
   const t = Date.now();
-  const [html, sw, v3] = await Promise.all([
+  const [html, sw, v3, prueba] = await Promise.all([
     fetch(SITIO + 'index.html?t=' + t).then(r => r.text()),
     fetch(SITIO + 'sw.js?t=' + t).then(r => r.text()),
-    fetch(SITIO + 'v3/?t=' + t).then(r => r.status)
+    fetch(SITIO + 'v3/?t=' + t).then(r => r.status),
+    fetch(SITIO + 'prueba/?t=' + t).then(r => r.status)
   ]);
-  ok = html.includes(version) && sw.includes(cache) && v3 === 200;
+  ok = html.includes(version) && sw.includes(cache) && v3 === 200 && prueba === 200;
   if (!ok) await espera(10000);
-  else console.log(`En línea: versión ${version} · caché ${cache} · /v3/ responde ${v3}`);
+  else
+    console.log(
+      `En línea: versión ${version} · caché ${cache} · /v3/ responde ${v3} · /prueba/ responde ${prueba}`
+    );
 }
 if (!ok)
   falla(`la tarea terminó bien, pero el sitio aún no muestra la versión ${version} con la caché ${cache}.`);
@@ -92,7 +100,7 @@ async function archivosDe(base) {
   return { html, urls: [...new Set(urls)] };
 }
 const faltan = [];
-for (const base of [SITIO, SITIO + 'v3/']) {
+for (const base of [SITIO, SITIO + 'v3/', SITIO + 'prueba/']) {
   const { html, urls } = await archivosDe(base);
   if (!/<link rel="icon"/.test(html))
     faltan.push(base + ' no declara su ícono (rel="icon"): el navegador pediría /favicon.ico y daría 404');
