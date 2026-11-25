@@ -214,8 +214,13 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           );
         throw new ErrorDatos('otro', 'No se pudo confirmar el enlace: ' + error.message);
       },
+      async debeCambiarClave() {
+        const { data } = await sb.auth.getUser();
+        return data?.user?.user_metadata?.debe_cambiar_clave === true;
+      },
       async cambiarClave(nueva) {
-        const { error } = await sb.auth.updateUser({ password: nueva });
+        // Al cambiarla se quita la marca de clave temporal
+        const { error } = await sb.auth.updateUser({ password: nueva, data: { debe_cambiar_clave: false } });
         if (error) throw new ErrorDatos('otro', 'No se pudo guardar: ' + error.message);
       },
       async tieneVerificacion() {
@@ -978,6 +983,29 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         const r = (data ?? {}) as { mensaje?: string; error?: string };
         if (r.error) throw new ErrorDatos('otro', r.error);
         return { mensaje: r.mensaje ?? 'Listo' };
+      },
+      async claveTemporal(id) {
+        const { data, error } = await sb.functions.invoke('gestion-cuentas', {
+          body: { accion: 'clave_temporal', id }
+        });
+        if (error) {
+          let msg = error.message;
+          try {
+            const contexto = (error as { context?: { json(): Promise<{ error?: string }> } }).context;
+            const j = contexto ? await contexto.json() : {};
+            if (j.error) msg = j.error;
+          } catch {
+            /* la respuesta no trae JSON */
+          }
+          if (/Acción desconocida/i.test(msg))
+            msg =
+              'Falta actualizar la función gestion-cuentas en Supabase (ver docs/DESPLIEGUE.md, sección Cuentas).';
+          throw new ErrorDatos('otro', msg);
+        }
+        const r = (data ?? {}) as { clave?: string; mensaje?: string; error?: string };
+        if (r.error || !r.clave)
+          throw new ErrorDatos('otro', r.error ?? 'No se pudo generar la clave temporal.');
+        return { clave: r.clave, mensaje: r.mensaje ?? '' };
       },
       async guardar({ id, ...c }) {
         const { error } = await sb.from('profiles').update(c).eq('id', id);

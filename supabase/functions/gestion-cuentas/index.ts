@@ -197,6 +197,40 @@ Deno.serve(async req => {
         return responder({ ok: true, mensaje: `Enlace enviado a ${correo}.` });
       }
 
+      // ---- Clave temporal (24-nov-2026): sin correo. Los filtros de seguridad del correo institucional gastan los
+      //      enlaces de un solo uso; el Super administrador genera una clave temporal y se la entrega en persona.
+      //      La cuenta queda marcada (debe_cambiar_clave) y la app obliga a cambiarla al ingresar. ----
+      case 'clave_temporal': {
+        const id = String(b.id ?? '');
+        if (!/^[0-9a-f-]{36}$/.test(id)) return responder({ error: 'Cuenta no válida.' }, 400);
+        if (id === quien.user.id)
+          return responder({ error: 'Para su propia cuenta use Mi cuenta y seguridad → Cambiar mi contraseña.' }, 400);
+        const { data: dest } = await admin.from('profiles').select('email, activo').eq('id', id).maybeSingle();
+        if (!dest) return responder({ error: 'No existe esa cuenta.' }, 404);
+        if (!dest.activo) return responder({ error: 'La cuenta está desactivada: actívela primero.' }, 400);
+        // 14 caracteres sin letras ni números confundibles (sin 0/O, 1/l/I): «Cali» + 4 mayúsculas + 4 minúsculas + 2 números
+        const elegir = (s: string, n: number) => {
+          const r = crypto.getRandomValues(new Uint32Array(n));
+          return Array.from(r, x => s[x % s.length]).join('');
+        };
+        const clave = 'Cali' + elegir('ABCDEFGHJKLMNPQRSTUVWXYZ', 4) + elegir('abcdefghjkmnpqrstuvwxyz', 4) + elegir('23456789', 2);
+        const { data: u } = await admin.auth.admin.getUserById(id);
+        const meta = { ...(u?.user?.user_metadata ?? {}), debe_cambiar_clave: true };
+        const { error } = await admin.auth.admin.updateUserById(id, {
+          password: clave,
+          email_confirm: true,
+          user_metadata: meta
+        });
+        if (error) return responder({ error: 'No se pudo poner la clave temporal: ' + error.message }, 400);
+        // La clave NO se guarda en el registro: solo quién la generó y para quién
+        await registrar('clave_temporal', { id, correo: dest.email });
+        return responder({
+          ok: true,
+          clave,
+          mensaje: `Clave temporal para ${dest.email}. Entréguela en persona o por teléfono; al ingresar se le pedirá cambiarla.`
+        });
+      }
+
       // ---- Activar o desactivar (desactivar también bloquea el inicio de sesión) ----
       case 'activar':
       case 'desactivar': {

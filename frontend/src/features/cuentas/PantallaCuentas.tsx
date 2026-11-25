@@ -251,6 +251,79 @@ function VentanaInvitar({ orgs, alCerrar }: { orgs: string[]; alCerrar: () => vo
   );
 }
 
+/**
+ * Clave temporal (sin correo): el Super administrador la genera, la entrega en persona y, al ingresar, la app obliga
+ * a cambiarla. Reemplaza a los enlaces del correo, que los filtros de seguridad del correo institucional gastan.
+ */
+export function BotonClaveTemporal({ id, correo }: { id: string; correo: string }) {
+  const { cuentas } = useDatos();
+  const avisar = useAvisos();
+  const [ocupado, setOcupado] = useState(false);
+  const [clave, setClave] = useState<string | null>(null);
+  const generar = async () => {
+    if (
+      !window.confirm(
+        `Se pondrá una clave temporal a ${correo}. Su clave actual dejará de servir. ¿Continuar?`
+      )
+    )
+      return;
+    setOcupado(true);
+    try {
+      setClave((await cuentas.claveTemporal(id)).clave);
+    } catch (e) {
+      avisar((e as Error).message, 'error');
+    }
+    setOcupado(false);
+  };
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(clave ?? '');
+      avisar('Clave copiada', 'ok');
+    } catch {
+      avisar('No se pudo copiar: selecciónela y cópiela a mano', 'error');
+    }
+  };
+  return (
+    <>
+      <button type="button" className="btn sm" disabled={ocupado} onClick={() => void generar()}>
+        <Icono nombre="fa-key" /> {ocupado ? 'Generando…' : 'Clave temporal'}
+      </button>
+      {clave && (
+        <Modal
+          abierto
+          titulo="Clave temporal"
+          alCerrar={() => setClave(null)}
+          pie={
+            <>
+              <button type="button" className="btn" onClick={() => void copiar()}>
+                <Icono nombre="fa-copy" /> Copiar
+              </button>
+              <button type="button" className="btn primary" onClick={() => setClave(null)}>
+                Listo
+              </button>
+            </>
+          }
+        >
+          <p>
+            Clave temporal para <b>{correo}</b>:
+          </p>
+          <p
+            className="mono"
+            style={{ fontSize: '1.6rem', letterSpacing: '.06em', margin: '10px 0', userSelect: 'all' }}
+            aria-label="Clave temporal"
+          >
+            {clave}
+          </p>
+          <div className="hint">
+            Entréguela en persona, por teléfono o por WhatsApp (no por correo). Al ingresar, la aplicación le
+            pedirá cambiarla. Esta clave no se vuelve a mostrar: si se pierde, genere otra.
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
 function FilaOtra({ p, deps }: { p: Cuenta; deps: readonly { id: number; nombre: string }[] }) {
   const { cuentas } = useDatos();
   const avisar = useAvisos();
@@ -298,7 +371,8 @@ function FilaOtra({ p, deps }: { p: Cuenta; deps: readonly { id: number; nombre:
           <option value="false">No</option>
         </select>
       </td>
-      <td className="right">
+      <td className="right" style={{ whiteSpace: 'nowrap' }}>
+        {p.activo && <BotonClaveTemporal id={p.id} correo={p.email} />}{' '}
         <button type="button" className="btn sm primary" onClick={() => void guardar()}>
           Guardar
         </button>
@@ -541,9 +615,10 @@ export function PantallaCuentas() {
                       className="btn sm"
                       onClick={() => void accion(o, 'enlace_clave', { correo: p.email })}
                     >
-                      <Icono nombre="fa-key" /> Reenviar enlace de contraseña
+                      <Icono nombre="fa-envelope" /> Reenviar enlace de contraseña
                     </button>
                   )}
+                  {p?.activo && <BotonClaveTemporal id={p.id} correo={p.email} />}
                   {p?.activo && (
                     <button
                       type="button"

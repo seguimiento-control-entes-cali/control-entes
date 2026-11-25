@@ -83,3 +83,41 @@ describe('3.0 · Cuentas y roles (demo)', () => {
     expect(await screen.findByText('Cuenta actualizada')).toBeTruthy();
   });
 });
+
+describe('3.0 · Clave temporal (sin correo)', () => {
+  it('el Super administrador genera la clave temporal y la ve para entregarla', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    await entrarAdmin();
+    fireEvent.click((await screen.findAllByRole('button', { name: /Clave temporal/ }))[0] as HTMLElement);
+    const v = await screen.findByRole('dialog');
+    expect(within(v).getByLabelText('Clave temporal').textContent).toMatch(/^Cali\w{10}$/);
+    expect(within(v).getByText(/le pedirá cambiarla/)).toBeTruthy();
+  });
+
+  it('quien entra con clave temporal debe cambiarla antes de usar la app', async () => {
+    const datos = arrancar({});
+    let temporal = true;
+    datos.auth.debeCambiarClave = async () => temporal;
+    const cambiar = datos.auth.cambiarClave;
+    datos.auth.cambiarClave = async n => {
+      await cambiar(n);
+      temporal = false;
+    };
+    window.location.hash = '';
+    render(
+      <App datos={datos} cliente={new QueryClient({ defaultOptions: { queries: { retry: false } } })} />
+    );
+    await screen.findByLabelText(/correo institucional/i);
+    fireEvent.change(screen.getByLabelText(/correo institucional/i), {
+      target: { value: 'enlace.demo@cali.gov.co' }
+    });
+    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'demo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
+    expect(await screen.findByRole('heading', { name: 'Defina su contraseña' })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(/contraseña nueva/i), { target: { value: 'abcde12345' } });
+    fireEvent.change(screen.getByLabelText(/repita la contraseña/i), { target: { value: 'abcde12345' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar contraseña' }));
+    await screen.findByRole('navigation', { name: 'Menú principal' });
+    expect(temporal).toBe(false);
+  });
+});

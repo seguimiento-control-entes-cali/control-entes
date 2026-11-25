@@ -30,6 +30,15 @@ function Inicio({
   const [porConfirmar, setPorConfirmar] = useState(enlace);
   const perfil = useQuery({ queryKey: ['perfil'], queryFn: () => datos.identidad.miPerfil() });
   const recargar = () => cliente.invalidateQueries({ queryKey: ['perfil'] });
+  // Clave temporal puesta por el Super administrador: hay que cambiarla antes de usar la app
+  const temporal = useQuery({
+    queryKey: ['clave-temporal', perfil.data?.id],
+    queryFn: () => datos.auth.debeCambiarClave(),
+    enabled: !!perfil.data && !pedirClave
+  });
+  useEffect(() => {
+    if (temporal.data) setPedirClave(true);
+  }, [temporal.data]);
   const usuario = perfil.data?.id;
   const exigencia = perfil.data ? exigenciaVerificacion(perfil.data.rol) : 'opcional';
   const verificacion = useQuery({
@@ -86,6 +95,7 @@ function Inicio({
       <DefinirClave
         alGuardar={() => {
           setPedirClave(false);
+          cliente.setQueryData(['clave-temporal', perfil.data?.id], false);
           avisar('Contraseña actualizada', 'ok');
         }}
       />
