@@ -53,6 +53,48 @@ describe('3.0 · ingreso y menú (demo)', () => {
     expect(screen.queryByRole('button', { name: /Olvidaste/ })).toBeNull();
   });
 
+  it('la app real lleva las cuentas de prueba a la app de prueba; las demás siguen igual', async () => {
+    window.location.hash = '';
+    render(
+      <App
+        appPrueba="https://ejemplo.gov.co/control-entes/prueba/"
+        datos={arrancar({})}
+        cliente={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      />
+    );
+    await screen.findByLabelText(/correo institucional/i);
+    // Una cuenta real no se desvía: se consulta como siempre
+    escribir(/correo institucional/i, 'persona.real@cali.gov.co');
+    escribir(/contraseña/i, 'x');
+    ingresar();
+    await screen.findByRole('alert');
+    expect(screen.queryByText(/Abriéndola/)).toBeNull();
+    // Una cuenta de prueba: aviso y paso a la app de prueba
+    escribir(/correo institucional/i, ' Secretaria.Demo@cali.gov.co ');
+    escribir(/contraseña/i, 'demo');
+    ingresar();
+    expect(await screen.findByText(/cuenta de la APP DE PRUEBA/)).toBeTruthy();
+  });
+
+  it('la app de prueba deja puesto el usuario que llega desde la app real', async () => {
+    window.history.replaceState(null, '', '/?correo=control.interno.demo%40cali.gov.co');
+    try {
+      window.location.hash = '';
+      render(
+        <App
+          demo
+          datos={arrancar({})}
+          cliente={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+        />
+      );
+      const correo = (await screen.findByLabelText(/correo institucional/i)) as HTMLInputElement;
+      expect(correo.value).toBe('control.interno.demo@cali.gov.co');
+      expect((screen.getByLabelText(/contraseña/i) as HTMLInputElement).value).toBe('demo');
+    } finally {
+      window.history.replaceState(null, '', '/');
+    }
+  });
+
   it('enlace: entra sin código, ve "Mi dependencia" y no ve opciones de supervisión', async () => {
     montar();
     await screen.findByLabelText(/correo institucional/i);

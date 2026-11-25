@@ -18,12 +18,27 @@ const USUARIOS_PRUEBA: readonly [string, string][] = [
   ['Enlace operativo · Salud Pública', 'enlace.demo@cali.gov.co']
 ];
 const APP_REAL = 'https://seguimiento-control-entes-cali.github.io/control-entes/v3/';
+const esCuentaPrueba = (c: string) => USUARIOS_PRUEBA.some(([, u]) => u === c.trim().toLowerCase());
+/** En la app de prueba, el usuario que viene de la app real (?correo=…) ya queda puesto. */
+const correoQueLlega = () => {
+  const c = new URLSearchParams(globalThis.location?.search ?? '').get('correo') ?? '';
+  return esCuentaPrueba(c) ? c.trim().toLowerCase() : '';
+};
 
-export function PantallaIngreso({ alIngresar, demo = false }: { alIngresar: () => void; demo?: boolean }) {
+export function PantallaIngreso({
+  alIngresar,
+  demo = false,
+  appPrueba
+}: {
+  alIngresar: () => void;
+  demo?: boolean;
+  /** Solo en la app real: quien escriba una cuenta de prueba pasa a esta dirección (la app de prueba). */
+  appPrueba?: string;
+}) {
   const { auth } = useDatos();
   const [paso, setPaso] = useState<'clave' | 'codigo'>('clave');
-  const [correo, setCorreo] = useState('');
-  const [clave, setClave] = useState('');
+  const [correo, setCorreo] = useState(() => (demo ? correoQueLlega() : ''));
+  const [clave, setClave] = useState(() => (demo && correoQueLlega() ? 'demo' : ''));
   const [codigo, setCodigo] = useState('');
   const [error, setError] = useState('');
   const [nota, setNota] = useState('');
@@ -33,6 +48,12 @@ export function PantallaIngreso({ alIngresar, demo = false }: { alIngresar: () =
     e.preventDefault();
     setError('');
     setNota('');
+    // Una cuenta de prueba en la app real: no se consulta la base; se lleva a la app de prueba con el usuario puesto
+    if (appPrueba && paso === 'clave' && esCuentaPrueba(correo)) {
+      setNota('Esa es una cuenta de la APP DE PRUEBA. Abriéndola…');
+      location.assign(appPrueba + '?correo=' + encodeURIComponent(correo.trim().toLowerCase()));
+      return;
+    }
     setOcupado(true);
     try {
       if (paso === 'clave') {
@@ -80,7 +101,14 @@ export function PantallaIngreso({ alIngresar, demo = false }: { alIngresar: () =
                 key={c}
                 type="button"
                 className="btn sm"
-                style={{ justifyContent: 'space-between', width: '100%' }}
+                style={{
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  height: 'auto',
+                  flexWrap: 'wrap',
+                  gap: 4,
+                  textAlign: 'left'
+                }}
                 onClick={() => {
                   setCorreo(c);
                   setClave('demo');
@@ -88,7 +116,9 @@ export function PantallaIngreso({ alIngresar, demo = false }: { alIngresar: () =
                 }}
               >
                 <span>{rol}</span>
-                <span className="mono muted">{c}</span>
+                <span className="mono muted" style={{ overflowWrap: 'anywhere' }}>
+                  {c}
+                </span>
               </button>
             ))}
           </div>
