@@ -27,7 +27,30 @@ describe('3.0 · ingreso y menú (demo)', () => {
     escribir(/correo institucional/i, 'enlace.demo@cali.gov.co');
     escribir(/contraseña/i, 'otra');
     ingresar();
-    expect((await screen.findByRole('alert')).textContent).toMatch(/incorrectos/);
+    expect((await screen.findByRole('alert')).textContent).toMatch(
+      /contraseña de todos los usuarios es «demo»/
+    );
+    // Una cuenta real escrita en la app de prueba: lo dice claramente
+    escribir(/correo institucional/i, 'persona.real@cali.gov.co');
+    ingresar();
+    expect((await screen.findByRole('alert')).textContent).toMatch(/APP DE PRUEBA/);
+  });
+
+  it('la app de prueba muestra los usuarios de prueba y los llena con un clic', async () => {
+    window.location.hash = '';
+    render(
+      <App
+        demo
+        datos={arrancar({})}
+        cliente={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      />
+    );
+    const lista = await screen.findByRole('note', { name: 'Usuarios de prueba' });
+    fireEvent.click(within(lista).getByRole('button', { name: /Control Interno/ }));
+    expect((screen.getByLabelText(/correo institucional/i) as HTMLInputElement).value).toBe(
+      'control.interno.demo@cali.gov.co'
+    );
+    expect(screen.queryByRole('button', { name: /Olvidaste/ })).toBeNull();
   });
 
   it('enlace: entra sin código, ve "Mi dependencia" y no ve opciones de supervisión', async () => {

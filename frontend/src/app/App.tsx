@@ -89,7 +89,7 @@ function Inicio({
       />
     );
   if (perfil.isPending) return <p className="cargando">Cargando…</p>;
-  if (!perfil.data) return <PantallaIngreso alIngresar={recargar} />;
+  if (!perfil.data) return <PantallaIngreso alIngresar={recargar} demo={demo} />;
   if (pedirClave)
     return (
       <DefinirClave
