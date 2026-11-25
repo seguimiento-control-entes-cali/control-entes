@@ -17,11 +17,13 @@ const AVISO_RECOMENDADA = 'ce_mfa_aviso';
 function Inicio({
   llegadaClave,
   demo,
-  enlace
+  enlace,
+  appPrueba
 }: {
   llegadaClave: boolean;
   demo: boolean;
   enlace: EnlaceConfirmar | null;
+  appPrueba?: string;
 }) {
   const datos = useDatos();
   const cliente = useQueryClient();
@@ -89,7 +91,7 @@ function Inicio({
       />
     );
   if (perfil.isPending) return <p className="cargando">Cargando…</p>;
-  if (!perfil.data) return <PantallaIngreso alIngresar={recargar} demo={demo} />;
+  if (!perfil.data) return <PantallaIngreso alIngresar={recargar} demo={demo} appPrueba={appPrueba} />;
   if (pedirClave)
     return (
       <DefinirClave
@@ -120,7 +122,8 @@ export function App({
   cliente = new QueryClient(),
   llegadaClave = false,
   demo = false,
-  enlace = null
+  enlace = null,
+  appPrueba
 }: {
   datos: Datos;
   cliente?: QueryClient;
@@ -130,6 +133,8 @@ export function App({
   demo?: boolean;
   /** Enlace protegido del correo (#confirmar=1&token_hash=…&tipo=…), si la página se abrió con él. */
   enlace?: EnlaceConfirmar | null;
+  /** Solo en la app real: dirección de la app de prueba, adonde se lleva a quien escriba una cuenta de prueba. */
+  appPrueba?: string;
 }) {
   return (
     <ContextoDatos.Provider value={datos}>
@@ -137,7 +142,7 @@ export function App({
         <ProveedorAvisos>
           <LimiteErrores>
             <HashRouter>
-              <Inicio llegadaClave={llegadaClave} demo={demo} enlace={enlace} />
+              <Inicio llegadaClave={llegadaClave} demo={demo} enlace={enlace} appPrueba={appPrueba} />
             </HashRouter>
           </LimiteErrores>
         </ProveedorAvisos>

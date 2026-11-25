@@ -19,6 +19,11 @@ createRoot(raiz).render(
       llegadaClave={llegadaClave}
       enlace={enlace}
       demo={(import.meta.env.VITE_VARIANTE || 'demo') === 'demo'}
+      appPrueba={
+        import.meta.env.VITE_VARIANTE === 'institucional'
+          ? new URL('../prueba/', location.href).href
+          : undefined
+      }
       datos={arrancar({
         VITE_VARIANTE: import.meta.env.VITE_VARIANTE,
         VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
