@@ -606,6 +606,8 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
         }
         // Script 28 (quién hace qué): si falta, la pantalla funciona como antes
         const v28 = !(await sb.from('pm_hallazgos').select('formulacion_estado').limit(1)).error;
+        // Script 31 (seguimiento del DACI): si falta, no se muestra el bloque
+        const v31 = !(await sb.from('pm_acciones').select('daci_verificacion').limit(1)).error;
         return {
           planes,
           hallazgos,
@@ -615,6 +617,7 @@ export function datosSupabase(sb: ClienteSupabase): Datos {
           v19,
           v20,
           v28,
+          v31,
           prorrogas,
           informes,
           documentos

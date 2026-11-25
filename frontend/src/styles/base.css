@@ -34,3 +34,23 @@ a.tab,
 a.btn {
   text-decoration: none;
 }
+
+/* Seguimiento del DACI a las metas cumplidas (script 31) */
+.pm-daci-l {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.pm-daci-f {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+}
+.pm-daci-t {
+  flex: 1 1 280px;
+  min-width: 0;
+}

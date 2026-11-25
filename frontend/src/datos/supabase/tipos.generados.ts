@@ -585,6 +585,10 @@ export interface Database {
           obs_ci_estado: string;
           obs_ci_at: string | null;
           fecha_fin_original: string | null;
+          daci_verificacion: string | null;
+          daci_fecha: string | null;
+          daci_observacion: string;
+          daci_por: string;
         };
         Insert: {
           id?: string;
@@ -613,6 +617,10 @@ export interface Database {
           obs_ci_estado?: string;
           obs_ci_at?: string | null;
           fecha_fin_original?: string | null;
+          daci_verificacion?: string | null;
+          daci_fecha?: string | null;
+          daci_observacion?: string;
+          daci_por?: string;
         };
         Update: {
           id?: string;
@@ -641,6 +649,10 @@ export interface Database {
           obs_ci_estado?: string;
           obs_ci_at?: string | null;
           fecha_fin_original?: string | null;
+          daci_verificacion?: string | null;
+          daci_fecha?: string | null;
+          daci_observacion?: string;
+          daci_por?: string;
         };
         Relationships: [];
       };

@@ -75,6 +75,7 @@ import {
   reportarHabilitado
 } from '../../dominio/formulacion';
 import { VentanaImportar } from './Importar';
+import { SeguimientoDaci } from './SeguimientoDaci';
 import { TabDocumentos, VentanaDocumento, VentanaPapelera } from './Memoria';
 import { TrasladosHallazgo, VentanaTraslado } from './Traslados';
 import { TarjetaOficio, VentanaAprobar, VentanaNotificarPlanes } from './Oficio';
@@ -154,6 +155,8 @@ interface Ctx {
   dep: (id: number | null | undefined) => string;
   edita: boolean;
   rol: string;
+  /** Correo de quien usa la app (queda en la verificación del DACI). */
+  correo: string;
   depPropia: number | null;
   verHistorial: (a: Accion) => void;
   abrir: (v: VentanaPlanes) => void;
@@ -1167,7 +1170,9 @@ function CalificacionCgsc({ p, acc, ctx, fev }: { p: Plan; acc: Accion[]; ctx: C
             {k.sinEf > 0 && (
               <>
                 {' · '}
-                <b style={{ color: 'var(--amberink,#b7791f)' }}>{k.sinEf} por calificar</b>
+                <span style={{ color: 'var(--amberink,#b7791f)', fontWeight: 700 }}>
+                  {k.sinEf} por calificar
+                </span>
               </>
             )}
           </span>
@@ -1612,6 +1617,14 @@ function DetallePlan({
             )}
           </div>
         )}
+        {p.estado !== 'formulacion' && d.v31 && (
+          <SeguimientoDaci
+            acciones={accAll}
+            hoy={ctx.hoy}
+            verifica={['admin', 'control_interno'].includes(ctx.rol)}
+            correo={ctx.correo}
+          />
+        )}
         {p.estado !== 'formulacion' && <CalificacionCgsc p={p} acc={accAll} ctx={ctx} fev={fev} />}
         {d.v28 && (
           <EvaluacionContraloria
@@ -1839,6 +1852,7 @@ export function PantallaPlanes({ perfil, demo = false }: { perfil: Perfil; demo?
     dep: id => (id == null ? '' : (deps.data?.find(x => x.id === id)?.nombre ?? '')),
     edita: EDITA.includes(perfil.rol),
     rol: perfil.rol,
+    correo: perfil.correo,
     depPropia: perfil.dependenciaId,
     verHistorial: setHistorial,
     abrir: setVentana,

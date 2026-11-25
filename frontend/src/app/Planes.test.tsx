@@ -63,6 +63,32 @@ describe('3.0 · Planes de mejoramiento (demo, consulta)', () => {
     expect(within(v).getByText(/Se capacitó a la totalidad de supervisores/)).toBeTruthy();
   });
 
+  it('Control Interno: seguimiento del DACI a las metas cumplidas, antes de la calificación CGSC', async () => {
+    const menu = await entrar('control.interno.demo@cali.gov.co');
+    fireEvent.click(menu.getByRole('link', { name: /Planes de mejoramiento/ }));
+    fireEvent.click(
+      await screen.findByRole(
+        'button',
+        { name: /Abrir Auditoría de cumplimiento a la contratación/ },
+        { timeout: 8000 }
+      )
+    );
+    const bloque = await screen.findByLabelText('Seguimiento del DACI a las metas cumplidas');
+    // Va después de «Cumplimiento de metas vencidas» y antes de la calificación CGSC
+    const cgsc = screen.getByText('Calificación según la metodología de la CGSC');
+    expect(bloque.compareDocumentPosition(cgsc) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const pend = Number(within(bloque).getByText('Pendientes de verificar').nextElementSibling?.textContent);
+    expect(pend).toBeGreaterThan(0);
+    fireEvent.click(within(bloque).getAllByRole('button', { name: /^Verificar meta/ })[0] as HTMLElement);
+    const v = await screen.findByRole('dialog');
+    fireEvent.click(within(v).getByRole('button', { name: /Guardar/ }));
+    expect(await screen.findByText('Verificación del DACI registrada')).toBeTruthy();
+    const bloque2 = await screen.findByLabelText('Seguimiento del DACI a las metas cumplidas');
+    expect(Number(within(bloque2).getByText('Verificadas por el DACI').nextElementSibling?.textContent)).toBe(
+      1
+    );
+  });
+
   it('el Informe ejecutivo incluye la sección de planes', async () => {
     const menu = await entrar('admin.demo@cali.gov.co');
     fireEvent.click(menu.getByRole('link', { name: 'Informe ejecutivo' }));

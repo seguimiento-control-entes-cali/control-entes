@@ -123,6 +123,11 @@ export interface Accion {
   cal_efectividad?: number | null;
   obs_ci?: string | null;
   obs_ci_estado?: string | null;
+  /** Seguimiento del DACI a la meta cumplida (script 31): null = pendiente. */
+  daci_verificacion?: 'verificada' | 'no_verificada' | null;
+  daci_fecha?: string | null;
+  daci_observacion?: string;
+  daci_por?: string;
 }
 export interface Avance {
   id: string;
@@ -168,6 +173,8 @@ export interface DatosPlanes {
   v20?: boolean;
   /** Script 28 instalado (quién hace qué: la dependencia formula, Control Interno valida). */
   v28?: boolean;
+  /** Script 31 instalado (seguimiento del DACI a las metas cumplidas). */
+  v31?: boolean;
   prorrogas?: Prorroga[];
   informes?: InformeAvance[];
   documentos?: DocumentoArchivo[];

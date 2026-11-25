@@ -1515,6 +1515,34 @@
     },
     {
       "nula": true,
+      "tipo": "date",
+      "tabla": "pm_acciones",
+      "columna": "daci_fecha",
+      "defecto": null
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "daci_observacion",
+      "defecto": "''::text"
+    },
+    {
+      "nula": false,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "daci_por",
+      "defecto": "''::text"
+    },
+    {
+      "nula": true,
+      "tipo": "text",
+      "tabla": "pm_acciones",
+      "columna": "daci_verificacion",
+      "defecto": null
+    },
+    {
+      "nula": true,
       "tipo": "bigint",
       "tabla": "pm_acciones",
       "columna": "dependencia_id",
@@ -2887,7 +2915,7 @@
       "seguridad_definidor": false
     },
     {
-      "md5": "1169a143a16836433189a5be6c94434e",
+      "md5": "7a2357f9f2dd65f1991e435f43388d19",
       "nombre": "pm_acciones_rol_guard",
       "devuelve": "trigger",
       "argumentos": "",
@@ -4178,6 +4206,11 @@
       "tabla": "pm_acciones",
       "nombre": "pm_acciones_cantidad_check",
       "definicion": "CHECK ((cantidad > (0)::numeric))"
+    },
+    {
+      "tabla": "pm_acciones",
+      "nombre": "pm_acciones_daci_verificacion_check",
+      "definicion": "CHECK (((daci_verificacion IS NULL) OR (daci_verificacion = ANY (ARRAY['verificada'::text, 'no_verificada'::text]))))"
     },
     {
       "tabla": "pm_acciones",
